@@ -13,11 +13,6 @@ export const requestLogger = (req, res, next) => {
       timestamp: new Date().toISOString()
     };
     
-    if (req.user) {
-      logData.userId = req.user.userId;
-      logData.userType = req.user.role;
-    }
-    
     // Log suspicious activity
     if (res.statusCode >= 400) {
       console.warn('Suspicious request:', logData);
