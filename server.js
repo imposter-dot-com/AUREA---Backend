@@ -4,12 +4,17 @@ import cors from 'cors';
 import connectDB from './src/config/database.js';
 import { errorHandler, notFound } from './src/middleware/errorHandler.js';
 import { requestLogger } from './src/middleware/requestLogger.js';
+import { initCloudinary } from './src/config/cloudinary.js';
 
 // Route imports
-import authRoutes from './src/routes/authRoute.js';
-import portfolioRoutes from './src/routes/portfolios.js';
+import authRoutes from './src/routes/authRoutes.js';
+import portfolioRoutes from './src/routes/portfolioRoutes.js';
+import uploadRoutes from './src/routes/uploadRoutes.js';
 
 dotenv.config();
+
+// Initialize Cloudinary after environment variables are loaded
+initCloudinary();
 
 const app = express();
 
@@ -45,6 +50,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/portfolios', portfolioRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Root route
 app.get('/', (req, res) => {
