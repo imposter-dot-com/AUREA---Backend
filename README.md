@@ -44,23 +44,6 @@ This project now uses modern ES6 module syntax:
 - All file imports include `.js` extensions
 - Modern async/await patterns throughout
 
-## 🔧 Environment Variables
-
-```bash
-# MongoDB Configuration - REPLACE <aureaverysecuredpassword> with your actual password!
-MONGO_URI=mongodb+srv://aureaAdmin:YOUR_ACTUAL_PASSWORD@aurea-backend.v0ccn50.mongodb.net/?retryWrites=true&w=majority&appName=aurea-backend
-
-# JWT Configuration
-JWT_SECRET=aureasupersecretkeythatshouldbelongenough
-
-# Server Configuration
-PORT=5000
-NODE_ENV=development
-
-# CORS Configuration
-CLIENT_URL=http://localhost:3000
-```
-
 ## 🚨 IMPORTANT: Fix Authentication Error
 
 The server is currently showing: `❌ Error connecting to MongoDB: bad auth : authentication failed`
