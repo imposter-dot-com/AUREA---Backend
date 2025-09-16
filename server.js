@@ -3,9 +3,10 @@ import express from 'express';
 import cors from 'cors';
 import connectDB from './src/config/database.js';
 import { errorHandler, notFound } from './src/middleware/errorHandler.js';
+import { requestLogger } from './src/middleware/requestLogger.js';
 
 // Route imports
-import authRoutes from './src/routes/auth.js';
+import authRoutes from './src/routes/authRoute.js';
 import portfolioRoutes from './src/routes/portfolios.js';
 
 dotenv.config();
@@ -28,13 +29,8 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Request logging middleware (development)
-if (process.env.NODE_ENV === 'development') {
-  app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
-    next();
-  });
-}
+// Enhanced request logging middleware
+app.use(requestLogger);
 
 // Health check route
 app.get('/health', (req, res) => {

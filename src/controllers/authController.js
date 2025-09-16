@@ -1,21 +1,16 @@
-import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import { auth } from '../middleware/auth.js';
 
-const router = express.Router();
-
-// Generate JWT token
+// Generate JWT token utility function
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: '30d',
   });
 };
 
-// @route   POST /api/auth/signup
 // @desc    Register user
 // @access  Public
-router.post('/signup', async (req, res) => {
+export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -79,12 +74,11 @@ router.post('/signup', async (req, res) => {
       message: 'Server error during user registration'
     });
   }
-});
+};
 
-// @route   POST /api/auth/login
 // @desc    Authenticate user & get token
 // @access  Public
-router.post('/login', async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -135,12 +129,11 @@ router.post('/login', async (req, res) => {
       message: 'Server error during login'
     });
   }
-});
+};
 
-// @route   GET /api/auth/me
 // @desc    Get current user
 // @access  Private
-router.get('/me', auth, async (req, res) => {
+export const getCurrentUser = async (req, res) => {
   try {
     res.json({
       success: true,
@@ -155,12 +148,11 @@ router.get('/me', auth, async (req, res) => {
       message: 'Server error getting user data'
     });
   }
-});
+};
 
-// @route   PUT /api/auth/me
 // @desc    Update current user
 // @access  Private
-router.put('/me', auth, async (req, res) => {
+export const updateCurrentUser = async (req, res) => {
   try {
     const { name, email } = req.body;
     const updateData = {};
@@ -209,6 +201,4 @@ router.put('/me', auth, async (req, res) => {
       message: 'Server error updating profile'
     });
   }
-});
-
-export default router;
+};
