@@ -4,7 +4,7 @@ const sectionSchema = new mongoose.Schema({
   type: {
     type: String,
     required: [true, 'Section type is required'],
-    enum: ['about', 'projects', 'contact', 'skills', 'experience', 'education', 'custom'],
+    enum: ['hero', 'about', 'portfolio', 'projects', 'contact', 'skills', 'experience', 'education', 'custom'],
     trim: true
   },
   content: {
@@ -26,6 +26,12 @@ const portfolioSchema = new mongoose.Schema({
     trim: true,
     maxlength: [100, 'Title cannot be more than 100 characters']
   },
+  description: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Description cannot be more than 500 characters'],
+    default: ''
+  },
   template: {
     type: String,
     required: [true, 'Template is required'],
@@ -39,6 +45,10 @@ const portfolioSchema = new mongoose.Schema({
       { type: 'projects', content: {} },
       { type: 'contact', content: {} }
     ]
+  },
+  styling: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
   },
   published: {
     type: Boolean,
