@@ -5,11 +5,13 @@ import connectDB from './src/config/database.js';
 import { errorHandler, notFound } from './src/middleware/errorHandler.js';
 import { requestLogger } from './src/middleware/requestLogger.js';
 import { initCloudinary } from './src/config/cloudinary.js';
+import { setupSwagger } from './src/config/swagger.js';
 
 // Route imports
 import authRoutes from './src/routes/authRoutes.js';
 import portfolioRoutes from './src/routes/portfolioRoutes.js';
 import uploadRoutes from './src/routes/uploadRoutes.js';
+import proposalExtractRoutes from './src/routes/proposalExtract.routes.js';
 
 dotenv.config();
 
@@ -47,10 +49,25 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Favicon route (prevents 404 errors in browser)
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end(); // No content response
+});
+
+// Common browser requests
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain');
+  res.send('User-agent: *\nDisallow: /api/\nAllow: /');
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/portfolios', portfolioRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/proposals', proposalExtractRoutes);
+
+// Setup Swagger documentation
+setupSwagger(app);
 
 // Root route
 app.get('/', (req, res) => {
@@ -61,7 +78,10 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: '/api/auth',
       portfolios: '/api/portfolios',
-      health: '/health'
+      upload: '/api/upload',
+      proposals: '/api/proposals',
+      health: '/health',
+      docs: '/api-docs'
     }
   });
 });
@@ -78,6 +98,7 @@ const server = app.listen(PORT, () => {
 📊 Environment: ${process.env.NODE_ENV || 'development'}
 🌐 API Base URL: http://localhost:${PORT}
 📖 Health Check: http://localhost:${PORT}/health
+📚 API Documentation: http://localhost:${PORT}/api-docs
   `);
 });
 
