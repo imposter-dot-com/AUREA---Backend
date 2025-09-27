@@ -26,34 +26,6 @@ A modern Node.js/Express backend for the AUREA Portfolio Builder platform featur
 npm install
 ```
 
-### 2. Environment Configuration
-```bash
-# Copy environment template
-cp .env.example .env
-```
-
-**Required Environment Variables:**
-```env
-# Database
-MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/aurea
-
-# Authentication
-JWT_SECRET=your-super-secure-jwt-secret-key
-
-# AI Processing (for PDF extraction)
-GEMINI_API_KEY=your-gemini-api-key-from-google-ai-studio
-
-# Image Upload
-CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
-CLOUDINARY_API_KEY=your-cloudinary-api-key  
-CLOUDINARY_API_SECRET=your-cloudinary-api-secret
-
-# Server Configuration
-PORT=5000
-NODE_ENV=development
-CLIENT_URL=http://localhost:3000
-```
-
 ### 3. Start Development Server
 ```bash
 npm run dev
