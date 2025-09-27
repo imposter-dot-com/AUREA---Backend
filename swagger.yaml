@@ -1,0 +1,992 @@
+openapi: 3.0.0
+info:
+  title: AUREA Backend API
+  description: Portfolio Builder Platform API with MongoDB Atlas integration
+  version: 1.0.0
+  contact:
+    name: AUREA Team
+    email: support@aurea.com
+  license:
+    name: ISC
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+  - url: https://api.aurea.com
+    description: Production server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier
+        name:
+          type: string
+          description: User's full name
+        email:
+          type: string
+          format: email
+          description: User's email address
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - name
+        - email
+    
+    Portfolio:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier
+        userId:
+          type: string
+          description: Reference to user ID
+        title:
+          type: string
+          description: Portfolio title
+        template:
+          type: string
+          description: Portfolio template name
+        sections:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                description: Section type (about, projects, contact, etc.)
+              content:
+                type: object
+                description: Flexible JSON content
+        published:
+          type: boolean
+          description: Whether portfolio is published
+        isPublic:
+          type: boolean
+          description: Whether portfolio is public
+        slug:
+          type: string
+          description: SEO-friendly URL slug
+        viewCount:
+          type: number
+          description: Number of portfolio views
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - title
+        - template
+    
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            token:
+              type: string
+              description: JWT authentication token
+    
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: false
+        message:
+          type: string
+          description: Error message
+        error:
+          type: string
+          description: Detailed error information
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Check if the server is running
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Server is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "AUREA Backend is running"
+                  timestamp:
+                    type: string
+                    format: date-time
+                  environment:
+                    type: string
+                    example: "development"
+
+  /api/auth/signup:
+    post:
+      summary: Register a new user
+      description: Create a new user account
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  minimum: 6
+                  example: "password123"
+              required:
+                - name
+                - email
+                - password
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/login:
+    post:
+      summary: User login
+      description: Authenticate user and get JWT token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  example: "password123"
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/me:
+    get:
+      summary: Get current user profile
+      description: Retrieve the authenticated user's profile
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      summary: Update user profile
+      description: Update the authenticated user's profile
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Updated Name"
+                email:
+                  type: string
+                  format: email
+                  example: "updated@example.com"
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/portfolios:
+    post:
+      summary: Create a new portfolio
+      description: Create a new portfolio for the authenticated user
+      tags:
+        - Portfolios
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "My UI/UX Portfolio"
+                template:
+                  type: string
+                  example: "modern"
+                sections:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: "about"
+                      content:
+                        type: object
+                        example:
+                          text: "About me..."
+                          image: "profile.jpg"
+              required:
+                - title
+                - template
+      responses:
+        '201':
+          description: Portfolio created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      portfolio:
+                        $ref: '#/components/schemas/Portfolio'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/portfolios/me:
+    get:
+      summary: Get current user's portfolios
+      description: Retrieve all portfolios for the authenticated user
+      tags:
+        - Portfolios
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Portfolios retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      portfolios:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Portfolio'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/portfolios/public:
+    get:
+      summary: Get public portfolios
+      description: Retrieve all public portfolios
+      tags:
+        - Portfolios
+      responses:
+        '200':
+          description: Public portfolios retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      portfolios:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Portfolio'
+
+  /api/portfolios/{id}:
+    get:
+      summary: Get portfolio by ID
+      description: Retrieve a specific portfolio by its ID
+      tags:
+        - Portfolios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Portfolio ID
+      responses:
+        '200':
+          description: Portfolio retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      portfolio:
+                        $ref: '#/components/schemas/Portfolio'
+        '404':
+          description: Portfolio not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      summary: Update portfolio
+      description: Update a portfolio (owner only)
+      tags:
+        - Portfolios
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Portfolio ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                template:
+                  type: string
+                sections:
+                  type: array
+                  items:
+                    type: object
+                published:
+                  type: boolean
+                isPublic:
+                  type: boolean
+      responses:
+        '200':
+          description: Portfolio updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      portfolio:
+                        $ref: '#/components/schemas/Portfolio'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Not the owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Portfolio not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      summary: Delete portfolio
+      description: Delete a portfolio (owner only)
+      tags:
+        - Portfolios
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Portfolio ID
+      responses:
+        '200':
+          description: Portfolio deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Not the owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Portfolio not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/portfolios/slug/{slug}:
+    get:
+      summary: Get portfolio by slug
+      description: Retrieve a portfolio by its SEO-friendly slug
+      tags:
+        - Portfolios
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Portfolio slug
+          example: "john-doe-portfolio"
+      responses:
+        '200':
+          description: Portfolio retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      portfolio:
+                        $ref: '#/components/schemas/Portfolio'
+        '404':
+          description: Portfolio not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/proposals/extract:
+    post:
+      tags:
+        - Proposal Extraction
+      summary: Upload and extract data from PDF proposal (Two-Step AI Processing)
+      description: |
+        Upload a PDF file and extract structured data using Google's GenAI library with two-step processing:
+        
+        **Step 1**: Complete document analysis - extracts ALL information from the document
+        **Step 2**: Pricing-focused filtering - filters only pricing calculator relevant data
+        
+        Uses Gemini 2.5 Pro with fallback to other models (2.5 Flash, 1.5 Pro, 1.5 Flash, Pro).
+        Authentication is optional - user ID will be set to 'anonymous' if not authenticated.
+        
+        Perfect for pricing calculator tools requiring comprehensive document analysis.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                pdf:
+                  type: string
+                  format: binary
+                  description: PDF file to extract data from (max 10MB)
+              required:
+                - pdf
+      responses:
+        '200':
+          description: PDF processed successfully with two-step analysis
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "PDF processed successfully with two-step method"
+                  data:
+                    type: object
+                    properties:
+                      step1_complete_analysis:
+                        type: object
+                        description: Complete document analysis with all extracted information
+                        properties:
+                          clientInfo:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                              contact:
+                                type: object
+                              address:
+                                type: string
+                          projectDetails:
+                            type: object
+                            properties:
+                              title:
+                                type: string
+                              description:
+                                type: string
+                              scope:
+                                type: array
+                                items:
+                                  type: string
+                          requirements:
+                            type: array
+                            items:
+                              type: string
+                          timeline:
+                            type: object
+                            properties:
+                              startDate:
+                                type: string
+                              endDate:
+                                type: string
+                              milestones:
+                                type: array
+                                items:
+                                  type: object
+                          budget:
+                            type: object
+                            properties:
+                              total:
+                                type: number
+                              currency:
+                                type: string
+                              breakdown:
+                                type: array
+                                items:
+                                  type: object
+                          deliverables:
+                            type: array
+                            items:
+                              type: string
+                          constraints:
+                            type: array
+                            items:
+                              type: string
+                          assumptions:
+                            type: array
+                            items:
+                              type: string
+                          risks:
+                            type: array
+                            items:
+                              type: string
+                      step2_pricing_focused:
+                        type: object
+                        description: Pricing calculator specific data filtered from complete analysis
+                        properties:
+                          requirementsComplexity:
+                            type: object
+                            properties:
+                              level:
+                                type: string
+                                enum: [low, medium, high, very_high]
+                              factors:
+                                type: array
+                                items:
+                                  type: string
+                          projectOverview:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                              scope:
+                                type: string
+                              complexity:
+                                type: string
+                          deadlineUrgency:
+                            type: object
+                            properties:
+                              urgency:
+                                type: string
+                                enum: [low, medium, high, urgent]
+                              timeframe:
+                                type: string
+                              factors:
+                                type: array
+                                items:
+                                  type: string
+                          budgetInfo:
+                            type: object
+                            properties:
+                              hasBudget:
+                                type: boolean
+                              range:
+                                type: string
+                              flexibility:
+                                type: string
+                          clientProjectInfo:
+                            type: object
+                            properties:
+                              industry:
+                                type: string
+                              size:
+                                type: string
+                              experience:
+                                type: string
+                          pricingFactors:
+                            type: array
+                            items:
+                              type: string
+                  processing:
+                    type: object
+                    properties:
+                      method:
+                        type: string
+                        example: "two-step"
+                      step1:
+                        type: string
+                        example: "Complete document analysis"
+                      step2:
+                        type: string
+                        example: "Pricing-focused filtering"
+                      model_used:
+                        type: string
+                        example: "gemini-2.5-pro"
+                      processing_time:
+                        type: string
+                        example: "45.2s"
+                  metadata:
+                    type: object
+                    properties:
+                      fileName:
+                        type: string
+                        example: "client_proposal.pdf"
+                      fileSize:
+                        type: number
+                        example: 2048576
+                      pagesProcessed:
+                        type: number
+                        example: 12
+                      processedAt:
+                        type: string
+                        format: date-time
+                      userId:
+                        type: string
+                        example: "anonymous"
+                      extractionMethod:
+                        type: string
+                        example: "direct-pdf-text"
+        '400':
+          description: No file uploaded or invalid file type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Processing failed or GenAI API error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/proposals/history:
+    get:
+      tags:
+        - Proposal Extraction
+      summary: Get extraction history
+      description: |
+        Retrieve history of PDF extractions. Currently returns empty array.
+        Authentication is optional - user ID will be set to 'anonymous' if not authenticated.
+      responses:
+        '200':
+          description: History retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                  message:
+                    type: string
+                    example: "Extraction history retrieved successfully"
+                  userId:
+                    type: string
+                    example: "anonymous"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/proposals/test-gemini:
+    get:
+      tags:
+        - Proposal Extraction
+      summary: Test GenAI API connection and models
+      description: |
+        Test the connection to Google's GenAI API using @google/genai library.
+        Tests multiple Gemini models: 2.5 Pro, 2.5 Flash, 1.5 Pro, 1.5 Flash, Pro.
+        Returns detailed information about working models and API status.
+        Authentication is optional - user ID will be set to 'anonymous' if not authenticated.
+      responses:
+        '200':
+          description: GenAI API connection successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Google GenAI connection successful! 3 model(s) working."
+                  data:
+                    type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            model:
+                              type: string
+                              example: "gemini-2.5-pro"
+                            success:
+                              type: boolean
+                              example: true
+                            response:
+                              type: string
+                              example: "Hello! I'm Gemini, ready to help with AI tasks."
+                            error:
+                              type: string
+                              nullable: true
+                        example:
+                          - model: "gemini-2.5-pro"
+                            success: true
+                            response: "Hello! I'm Gemini, ready to help with AI tasks."
+                            error: null
+                          - model: "gemini-2.5-flash"
+                            success: true
+                            response: "Hello! I'm Gemini Flash, ready for quick responses."
+                            error: null
+                          - model: "gemini-1.5-pro"
+                            success: false
+                            response: null
+                            error: "Quota exceeded"
+                      workingModels:
+                        type: array
+                        items:
+                          type: string
+                        example: ["gemini-2.5-pro", "gemini-2.5-flash"]
+                      apiKeyConfigured:
+                        type: boolean
+                        example: true
+                      library:
+                        type: string
+                        example: "@google/genai"
+                      userId:
+                        type: string
+                        example: "anonymous"
+                      testedAt:
+                        type: string
+                        format: date-time
+                        example: "2024-01-26T10:15:30.000Z"
+        '500':
+          description: GenAI API connection failed or API key missing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Google GenAI connection failed"
+                  error:
+                    type: string
+                    example: "API key not configured"
+                  data:
+                    type: object
+                    properties:
+                      apiKeyConfigured:
+                        type: boolean
+                        example: false
+                      library:
+                        type: string
+                        example: "@google/genai"
+
+tags:
+  - name: Health
+    description: Server health check endpoints
+  - name: Authentication
+    description: User authentication and profile management
+  - name: Portfolios
+    description: Portfolio CRUD operations and management
+  - name: Proposal Extraction
+    description: |
+      PDF proposal processing and data extraction using Google's Gemini AI.
+      Features dual implementation with @google/generative-ai and @google/genai libraries.
+      Supports Gemini 2.5 Pro, 1.5 Pro, and 1.5 Flash models with automatic fallback.
+      Authentication optional - works with or without JWT tokens.
