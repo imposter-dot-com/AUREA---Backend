@@ -52,15 +52,16 @@ components:
         _id:
           type: string
           description: Unique identifier
-        userId:
-          type: string
-          description: Reference to user ID
         title:
           type: string
           description: Portfolio title
+        description:
+          type: string
+          description: Portfolio description
         template:
           type: string
           description: Portfolio template name
+          example: minimal-designer
         sections:
           type: array
           items:
@@ -68,10 +69,84 @@ components:
             properties:
               type:
                 type: string
-                description: Section type (about, projects, contact, etc.)
+                description: Section type
+                enum: [hero, about, projects, contact]
               content:
                 type: object
-                description: Flexible JSON content
+                description: Section content based on type
+                properties:
+                  name:
+                    type: string
+                    description: Name (hero section)
+                  title:
+                    type: string
+                    description: Professional title (hero section)
+                  description:
+                    type: string
+                    description: Description text
+                  image:
+                    type: string
+                    description: Cloudinary image URL
+                  skills:
+                    type: array
+                    items:
+                      type: string
+                    description: Skills list (about section)
+                  social_links:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        platform:
+                          type: string
+                        url:
+                          type: string
+                    description: Social media links (contact section)
+        styling:
+          type: object
+          properties:
+            colors:
+              type: object
+              properties:
+                primary:
+                  type: string
+                  example: "#1f2937"
+                secondary:
+                  type: string
+                  example: "#6b7280"
+                accent:
+                  type: string
+                  example: "#3b82f6"
+                background:
+                  type: string
+                  example: "#ffffff"
+                surface:
+                  type: string
+                  example: "#f8fafc"
+                text:
+                  type: string
+                  example: "#1f2937"
+                textSecondary:
+                  type: string
+                  example: "#6b7280"
+            fonts:
+              type: object
+              properties:
+                heading:
+                  type: string
+                  example: "Inter"
+                body:
+                  type: string
+                  example: "Inter"
+                accent:
+                  type: string
+                  example: "Inter"
+            spacing:
+              type: object
+            borderRadius:
+              type: object
+            shadows:
+              type: object
         published:
           type: boolean
           description: Whether portfolio is published
@@ -81,6 +156,9 @@ components:
         slug:
           type: string
           description: SEO-friendly URL slug
+        url:
+          type: string
+          description: Portfolio URL path
         viewCount:
           type: number
           description: Number of portfolio views
@@ -93,6 +171,132 @@ components:
       required:
         - title
         - template
+
+    Site:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier
+        userId:
+          type: string
+          description: Reference to user ID
+        portfolioId:
+          type: string
+          description: Reference to portfolio ID
+        subdomain:
+          type: string
+          description: Unique subdomain for the site
+          example: my-awesome-portfolio
+        customDomain:
+          type: string
+          description: Optional custom domain
+          example: www.myportfolio.com
+        deploymentId:
+          type: string
+          description: Vercel deployment ID
+        vercelUrl:
+          type: string
+          description: Generated Vercel URL
+          example: https://my-awesome-portfolio.vercel.app
+        status:
+          type: string
+          enum: [deployed, failed, pending]
+          description: Deployment status
+        isActive:
+          type: boolean
+          description: Whether site is active
+        lastDeployed:
+          type: string
+          format: date-time
+          description: Last deployment timestamp
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - subdomain
+        - portfolioId
+
+    PublishRequest:
+      type: object
+      properties:
+        portfolioId:
+          type: string
+          description: ID of portfolio to publish
+          example: 60f7b1234567890abcdef123
+        customDomain:
+          type: string
+          description: Optional custom domain
+          example: www.myportfolio.com
+      required:
+        - portfolioId
+
+    PublishResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Portfolio published successfully!
+        data:
+          type: object
+          properties:
+            site:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: 60f7b1234567890abcdef456
+                subdomain:
+                  type: string
+                  example: my-awesome-portfolio
+                url:
+                  type: string
+                  example: /portfolio/my-awesome-portfolio
+                vercelUrl:
+                  type: string
+                  example: https://my-awesome-portfolio.vercel.app
+                customDomain:
+                  type: string
+                  example: www.myportfolio.com
+                deploymentId:
+                  type: string
+                  example: deployment-12345
+            portfolio:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: 60f7b1234567890abcdef123
+                title:
+                  type: string
+                  example: John Doe's Portfolio
+                published:
+                  type: boolean
+                  example: true
+            files:
+              type: object
+              properties:
+                generated:
+                  type: number
+                  example: 3
+                totalSize:
+                  type: number
+                  example: 15724
+                directory:
+                  type: string
+                  example: /generated-files/my-awesome-portfolio
+            deployment:
+              type: object
+              description: Deployment details and metadata
+            vercel:
+              type: object
+              description: Vercel deployment information
     
     AuthResponse:
       type: object
@@ -619,6 +823,302 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/site/publish:
+    post:
+      summary: Publish portfolio as a website
+      description: Generate HTML files and deploy portfolio to a live website with Vercel integration. Subdomain is automatically generated from user's name in hero section.
+      tags:
+        - Site Publishing
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishRequest'
+      responses:
+        '200':
+          description: Portfolio published successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishResponse'
+        '400':
+          description: Invalid request or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Portfolio not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error during deployment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/site/debug-generate:
+    post:
+      summary: Generate HTML files for portfolio (debug mode)
+      description: Generate HTML files for a portfolio without deploying, for testing and debugging purposes
+      tags:
+        - Site Publishing
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                portfolioId:
+                  type: string
+                  description: ID of portfolio to generate HTML for
+                  example: 60f7b1234567890abcdef123
+              required:
+                - portfolioId
+      responses:
+        '200':
+          description: HTML generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: HTML generated successfully
+                  data:
+                    type: object
+                    properties:
+                      html:
+                        type: string
+                        description: Generated HTML content
+                      portfolio:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          title:
+                            type: string
+                          template:
+                            type: string
+                      files:
+                        type: object
+                        properties:
+                          generated:
+                            type: number
+                            example: 1
+                          totalSize:
+                            type: number
+                            example: 15724
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Portfolio not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/site/user-sites:
+    get:
+      summary: Get user's published sites
+      description: Retrieve all sites published by the authenticated user
+      tags:
+        - Site Publishing
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sites retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      sites:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Site'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/site/{siteId}:
+    get:
+      summary: Get site details
+      description: Retrieve details of a specific published site
+      tags:
+        - Site Publishing
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: siteId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Site ID
+      responses:
+        '200':
+          description: Site details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      site:
+                        $ref: '#/components/schemas/Site'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Site not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      summary: Update site
+      description: Update site configuration or redeploy with latest portfolio changes
+      tags:
+        - Site Publishing
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: siteId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Site ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customDomain:
+                  type: string
+                  description: Update custom domain
+                  example: www.myportfolio.com
+                isActive:
+                  type: boolean
+                  description: Activate or deactivate site
+                redeploy:
+                  type: boolean
+                  description: Trigger redeployment with latest portfolio data
+                  example: true
+      responses:
+        '200':
+          description: Site updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      site:
+                        $ref: '#/components/schemas/Site'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Site not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      summary: Delete site
+      description: Delete a published site and remove it from deployment
+      tags:
+        - Site Publishing
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: siteId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Site ID
+      responses:
+        '200':
+          description: Site deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: Site deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Site not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /api/proposals/extract:
     post:
       tags:
@@ -977,6 +1477,299 @@ paths:
                         type: string
                         example: "@google/genai"
 
+  /api/site/status:
+    get:
+      tags:
+        - Site Publishing
+      summary: Get deployment status and analytics
+      description: |
+        Retrieve current deployment status, published URL, build logs, and site analytics.
+        **Authentication required** - returns user's site information.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Site status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        enum: [draft, building, published, error]
+                        example: "published"
+                      url:
+                        type: string
+                        example: "https://aurea-portfolio-64f5a1b2c3d4e5f6.vercel.app"
+                      lastPublished:
+                        type: string
+                        format: date-time
+                        example: "2024-01-26T14:30:00.000Z"
+                      buildLogs:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            timestamp:
+                              type: string
+                              format: date-time
+                            message:
+                              type: string
+                            level:
+                              type: string
+                              enum: [info, warn, error]
+                        example:
+                          - timestamp: "2024-01-26T14:29:45.000Z"
+                            message: "Starting deployment..."
+                            level: "info"
+                          - timestamp: "2024-01-26T14:30:00.000Z"
+                            message: "Deployment successful"
+                            level: "info"
+                      analytics:
+                        type: object
+                        properties:
+                          views:
+                            type: number
+                            example: 156
+                          lastViewed:
+                            type: string
+                            format: date-time
+                            example: "2024-01-26T16:45:30.000Z"
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: No site configuration found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/site/config:
+    get:
+      tags:
+        - Site Publishing
+      summary: Get site configuration
+      description: |
+        Retrieve current site configuration including theme, colors, fonts, and sections.
+        **Authentication required** - returns user's site configuration.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Site configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      config:
+                        type: object
+                        properties:
+                          title:
+                            type: string
+                            example: "John Doe Portfolio"
+                          description:
+                            type: string
+                            example: "Full-stack developer and UI/UX designer"
+                          theme:
+                            type: string
+                            enum: [modern, classic, minimal, creative]
+                            example: "modern"
+                          colors:
+                            type: object
+                            properties:
+                              primary:
+                                type: string
+                                example: "#3b82f6"
+                              secondary:
+                                type: string
+                                example: "#1f2937"
+                              accent:
+                                type: string
+                                example: "#f59e0b"
+                              background:
+                                type: string
+                                example: "#ffffff"
+                              text:
+                                type: string
+                                example: "#1f2937"
+                          fonts:
+                            type: object
+                            properties:
+                              heading:
+                                type: string
+                                example: "Inter"
+                              body:
+                                type: string
+                                example: "Inter"
+                          sections:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum: [hero, about, projects, skills, contact, custom]
+                                title:
+                                  type: string
+                                content:
+                                  type: object
+                                order:
+                                  type: number
+                                visible:
+                                  type: boolean
+                      deployment:
+                        type: object
+                        properties:
+                          status:
+                            type: string
+                            enum: [draft, building, published, error]
+                          url:
+                            type: string
+                          lastPublished:
+                            type: string
+                            format: date-time
+    
+    put:
+      tags:
+        - Site Publishing
+      summary: Update site configuration
+      description: |
+        Update site configuration including theme, colors, fonts, and custom CSS.
+        **Authentication required** - can only update own site configuration.
+        Changes require republishing to take effect on live site.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                config:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      example: "Updated Portfolio Title"
+                    description:
+                      type: string
+                      example: "Updated description"
+                    theme:
+                      type: string
+                      enum: [modern, classic, minimal, creative]
+                      example: "minimal"
+                    colors:
+                      type: object
+                      properties:
+                        primary:
+                          type: string
+                          example: "#000000"
+                        secondary:
+                          type: string
+                          example: "#333333"
+                        accent:
+                          type: string
+                          example: "#666666"
+                        background:
+                          type: string
+                          example: "#ffffff"
+                        text:
+                          type: string
+                          example: "#333333"
+                    fonts:
+                      type: object
+                      properties:
+                        heading:
+                          type: string
+                          example: "Roboto"
+                        body:
+                          type: string
+                          example: "Open Sans"
+                    customCSS:
+                      type: string
+                      example: ".custom-class { margin-bottom: 2rem; }"
+      responses:
+        '200':
+          description: Configuration updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Site configuration updated successfully"
+                  data:
+                    type: object
+                    properties:
+                      config:
+                        type: object
+                        description: Updated site configuration
+
+  /api/site/analytics/view:
+    post:
+      tags:
+        - Site Publishing
+      summary: Track site view (Public endpoint)
+      description: |
+        Track a view on a published portfolio site. This is a public endpoint
+        called automatically by published sites for analytics tracking.
+        **No authentication required** - used by published sites.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  example: "https://aurea-portfolio-64f5a1b2c3d4e5f6.vercel.app"
+              required:
+                - url
+      responses:
+        '200':
+          description: View tracked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "View tracked successfully"
+        '400':
+          description: URL missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 tags:
   - name: Health
     description: Server health check endpoints
@@ -990,3 +1783,9 @@ tags:
       Features dual implementation with @google/generative-ai and @google/genai libraries.
       Supports Gemini 2.5 Pro, 1.5 Pro, and 1.5 Flash models with automatic fallback.
       Authentication optional - works with or without JWT tokens.
+  - name: Site Publishing
+    description: |
+      Portfolio publishing and deployment system powered by Vercel.
+      Convert portfolio data into modern static websites with live URLs.
+      Features responsive design, multiple themes, analytics, and SEO optimization.
+      Authentication required for publishing operations.

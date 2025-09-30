@@ -1,12 +1,14 @@
 # 🌟 AUREA Backend API
 
-A modern Node.js/Express backend for the AUREA Portfolio Builder platform featuring **AI-powered PDF extraction** for pricing calculator tools, MongoDB Atlas integration, Cloudinary image handling, and comprehensive API documentation.
+A modern Node.js/Express backend for the AUREA Portfolio Builder platform featuring **dynamic HTML portfolio generation**, **AI-powered PDF extraction** for pricing calculator tools, **site publishing**, MongoDB Atlas integration, Cloudinary image handling, and comprehensive API documentation.
 
 ## ✨ Key Features
 
+- 🎨 **Dynamic HTML Portfolio Generation** - Convert portfolio data to deployable HTML sites
+- 🚀 **Site Publishing & Deployment** - Publish portfolios with custom subdomains
 - 🤖 **Two-Step AI PDF Processing** - Advanced document analysis with Gemini AI
 - 📊 **Pricing Calculator Integration** - Extract pricing-relevant data from client briefs  
-- � **JWT Authentication** - Secure user management with optional auth
+- 🔐 **JWT Authentication** - Secure user management with optional auth
 - 📁 **Portfolio Management** - Complete portfolio CRUD operations
 - 🖼️ **Image Upload** - Cloudinary integration for media handling
 - 📖 **Interactive Documentation** - Swagger UI with live testing
@@ -26,6 +28,40 @@ A modern Node.js/Express backend for the AUREA Portfolio Builder platform featur
 npm install
 ```
 
+### 2. Environment Configuration
+<<<<<<< Updated upstream
+=======
+```bash
+# Copy environment template
+cp .env.example .env
+```
+
+**Required Environment Variables:**
+```env
+# Database
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/aurea
+
+# Authentication
+JWT_SECRET=your-super-secure-jwt-secret-key
+
+# AI Processing (for PDF extraction)
+GEMINI_API_KEY=your-gemini-api-key-from-google-ai-studio
+
+# Image Upload
+CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
+CLOUDINARY_API_KEY=your-cloudinary-api-key  
+CLOUDINARY_API_SECRET=your-cloudinary-api-secret
+
+# Site Publishing & Deployment
+VERCEL_TOKEN=your-vercel-deployment-token
+
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+CLIENT_URL=http://localhost:3000
+```
+
+>>>>>>> Stashed changes
 ### 3. Start Development Server
 ```bash
 npm run dev
@@ -39,7 +75,38 @@ npm run dev
 📚 API Documentation: http://localhost:5000/api-docs
 ```
 
-## 🎯 **MAIN FEATURE: Two-Step PDF Extraction**
+## � **MAIN FEATURE: Dynamic HTML Portfolio Generation**
+
+Our advanced portfolio generation system converts user portfolio data into fully deployable HTML websites with:
+
+### ✨ Key Capabilities
+- **Dynamic Content Integration** - Uses actual user data (name, bio, projects, images)
+- **Cloudinary Image Integration** - Automatically includes uploaded images
+- **Custom Styling** - Applies user's color schemes and font preferences
+- **Responsive Design** - TailwindCSS-powered responsive layouts
+- **No External Dependencies** - Self-contained HTML with inline CSS/JS
+- **SEO Optimized** - Proper meta tags and semantic HTML structure
+- **Auto-Generated Subdomains** - Creates unique domains from user's name in portfolio
+
+### 🛠️ How It Works
+1. **Portfolio Data Processing** - Converts database portfolio format to template-ready data
+2. **Dynamic HTML Generation** - Uses `generateExactHTML.js` service to create complete HTML
+3. **Image Integration** - Replaces placeholders with actual Cloudinary URLs
+4. **Site Publishing** - Generates deployable files with unique subdomains
+5. **Vercel Deployment** - Ready for immediate deployment
+
+### 📂 Generated Site Structure
+```
+generated-files/portfolio-subdomain/
+├── index.html          # Complete responsive portfolio
+├── package.json        # Deployment configuration
+└── vercel.json        # Vercel deployment settings
+```
+
+### 🚀 Quick Test
+Visit the API documentation at `http://localhost:5000/api-docs` to test the portfolio publishing functionality.
+
+## 🎯 **SECONDARY FEATURE: Two-Step PDF Extraction**
 
 Our flagship feature extracts comprehensive data from client proposal PDFs using advanced AI processing:
 
@@ -48,77 +115,53 @@ Our flagship feature extracts comprehensive data from client proposal PDFs using
 **Step 2**: Pricing-focused filtering - filters pricing calculator relevant data
 
 ### � Extracted Data Structure
-```javascript
-{
-  "step1_complete_analysis": {
-    "clientInfo": { "name": "...", "contact": {...}, "address": "..." },
-    "projectDetails": { "title": "...", "description": "...", "scope": [...] },
-    "requirements": [...],
-    "timeline": { "startDate": "...", "endDate": "...", "milestones": [...] },
-    "budget": { "total": 50000, "currency": "USD", "breakdown": [...] },
-    "deliverables": [...],
-    "constraints": [...],
-    "assumptions": [...],
-    "risks": [...]
-  },
-  "step2_pricing_focused": {
-    "requirementsComplexity": { "level": "high", "factors": [...] },
-    "projectOverview": { "type": "...", "scope": "...", "complexity": "..." },
-    "deadlineUrgency": { "urgency": "medium", "timeframe": "...", "factors": [...] },
-    "budgetInfo": { "hasBudget": true, "range": "...", "flexibility": "..." },
-    "clientProjectInfo": { "industry": "...", "size": "...", "experience": "..." },
-    "pricingFactors": [...]
-  }
-}
-```
+The system extracts comprehensive project information including client details, project requirements, timeline, budget, deliverables, and pricing factors through a two-step analysis process.
 
 ### 🛠️ Quick Test
-```bash
-# Test API connectivity
-curl http://localhost:5000/api/proposals/test-gemini
-
-# Upload and process PDF (via Swagger UI)
-# Visit: http://localhost:5000/api-docs
-# Navigate to: POST /api/proposals/extract
-```
+- Test API connectivity: `GET /api/proposals/test-gemini`
+- Upload and process PDF via Swagger UI at `http://localhost:5000/api-docs`
+- Navigate to: `POST /api/proposals/extract`
 
 ## 📊 Database Schema
 
 ### Users Collection
-```javascript
-{
-  _id: ObjectId,
-  name: String,
-  email: { type: String, unique: true },
-  password: String, // bcrypt hashed
-  createdAt: Date,
-  updatedAt: Date
-}
-```
+Complete user information including name, email, hashed password, and embedded portfolio documents with timestamps.
 
-### Portfolios Collection
-```javascript
-{
-  _id: ObjectId,
-  userId: ObjectId, // Reference to Users
-  title: String,
-  template: String,
-  sections: [
-    {
-      type: String, // 'about', 'projects', 'contact', etc.
-      content: Object // Flexible JSON content
-    }
-  ],
-  published: Boolean,
-  isPublic: Boolean,
-  slug: String,
-  viewCount: Number,
-  createdAt: Date,
-  updatedAt: Date
-}
-```
+### Portfolios Collection (Embedded in Users)
+Portfolio data structure including title, description, template selection, dynamic sections (hero, about, projects, contact), comprehensive styling options (colors, fonts, spacing), publishing status, and metadata.
+
+### Sites Collection
+Site publishing data including user and portfolio references, subdomain and custom domain settings, Vercel deployment information, status tracking, and deployment timestamps.
 
 ## 🔗 API Endpoints Overview
+
+### 🎨 Site Publishing Routes (`/api/site`) - **NEW FEATURE**
+
+#### `POST /api/site/publish` - Publish Portfolio as Website
+Convert portfolio data to deployable HTML and publish with custom subdomain.
+
+**Features:**
+- Dynamic HTML generation with user's actual data
+- Cloudinary image integration
+- Custom styling application
+- Vercel deployment ready
+- Unique subdomain assignment
+
+**Request Parameters:**
+- `portfolioId`: Portfolio ID to publish
+- `customDomain`: Optional custom domain
+
+**Subdomain Generation:**
+Automatically generates unique subdomain from user's name in the hero section (e.g., "John Doe" becomes "john-doe-portfolio")
+
+**Response:**
+Returns success status, site information (auto-generated subdomain, URLs, deployment ID), portfolio details, and file generation summary.
+
+#### `POST /api/site/debug-generate` - Debug HTML Generation
+Test HTML generation without publishing.
+
+#### `GET /api/site/user-sites` - Get User's Published Sites
+Retrieve all sites published by the authenticated user.
 
 ### 📝 Proposal Extraction (Main Feature)
 
@@ -132,29 +175,10 @@ Upload and extract structured data from PDF proposals using advanced AI analysis
 - Perfect for pricing calculator workflows
 
 **Request:**
-```bash
-curl -X POST http://localhost:5000/api/proposals/extract \
-  -H "Content-Type: multipart/form-data" \
-  -F "pdf=@client_proposal.pdf"
-```
+Upload PDF file via multipart/form-data
 
-**Response Structure:**
-```javascript
-{
-  "success": true,
-  "message": "PDF processed successfully with two-step method",
-  "data": {
-    "step1_complete_analysis": { /* Complete document data */ },
-    "step2_pricing_focused": { /* Pricing calculator specific data */ }
-  },
-  "processing": {
-    "method": "two-step",
-    "model_used": "gemini-2.5-pro",
-    "processing_time": "42.3s"
-  },
-  "metadata": { /* File info and extraction details */ }
-}
-```
+**Response:**
+Returns structured data with complete document analysis and pricing-focused information, processing details including model used and timing, plus metadata about the extraction.
 
 #### `GET /api/proposals/test-gemini` - Test AI Connection
 Verify GenAI API connectivity and available models.
@@ -214,63 +238,29 @@ Retrieve PDF extraction history (currently returns empty array).
 
 ```
 AUREA---Backend/
-├── src/
-│   ├── config/
-│   │   ├── database.js           # MongoDB Atlas connection
-│   │   ├── cloudinary.js        # Image upload configuration
-│   │   └── swagger.js           # API documentation setup
-│   ├── controllers/
-│   │   ├── authController.js     # User authentication logic
-│   │   ├── portfolioController.js # Portfolio CRUD operations
-│   │   ├── proposalExtract.genai.controller.js # 🎯 Main PDF AI processor
-│   │   └── uploadController.js   # Image upload handling
-│   ├── middleware/
-│   │   ├── auth.js              # JWT authentication middleware
-│   │   ├── errorHandler.js      # Global error handling
-│   │   ├── requestLogger.js     # Request logging middleware
-│   │   └── upload.js           # Multer file upload middleware
-│   ├── models/
-│   │   ├── User.js             # User database schema
-│   │   └── Portfolio.js        # Portfolio database schema
-│   └── routes/
-│       ├── authRoutes.js        # Authentication endpoints
-│       ├── portfolioRoutes.js   # Portfolio endpoints  
-│       ├── proposalExtract.routes.js # 🎯 PDF extraction endpoints
-│       └── uploadRoutes.js      # Image upload endpoints
-├── uploads/                     # File upload directory
-├── swagger.yaml                 # 📖 Complete API documentation
-├── package.json                 # 📦 Clean dependencies (optimized)
-├── server.js                    # 🚀 Application entry point
-├── .env                         # Environment configuration
-└── README.md                    # 📋 This documentation
+├── src/                          # Source code directory
+│   ├── config/                   # Configuration files
+│   ├── controllers/              # Business logic controllers
+│   ├── middleware/               # Express middleware
+│   ├── models/                   # Database schemas
+│   ├── routes/                   # API route definitions
+│   └── services/                 # External service integrations
+│       └── generateExactHTML.js  # Core HTML generation engine
+├── generated-files/              # Generated portfolio sites
+├── uploads/                      # File upload directory
+├── swagger.yaml                  # Complete API documentation
+├── package.json                  # Dependencies and scripts
+├── server.js                     # Application entry point
+└── README.md                     # Project documentation
 ```
 
 ## � Optimized Dependencies
 
 **Production Dependencies:**
-```json
-{
-  "@google/genai": "^1.21.0",           // AI processing for PDF extraction
-  "bcrypt": "^6.0.0",                   // Password hashing
-  "cloudinary": "^2.7.0",               // Image upload service
-  "cors": "^2.8.5",                     // Cross-origin requests
-  "dotenv": "^17.2.2",                  // Environment management
-  "express": "^5.1.0",                  // Web framework
-  "jsonwebtoken": "^9.0.2",             // JWT authentication
-  "mongoose": "^8.18.1",                // MongoDB ODM
-  "multer": "^2.0.2",                   // File upload handling
-  "pdf-text-extract": "^1.5.0",        // PDF text extraction
-  "swagger-jsdoc": "^6.2.8",            // API documentation
-  "swagger-ui-express": "^5.0.1"        // Interactive documentation UI
-}
-```
+Core packages including AI processing, authentication, image handling, web framework, database ODM, and API documentation tools.
 
 **Development Dependencies:**
-```json
-{
-  "nodemon": "^3.1.10"                  // Auto-restart development server
-}
-```
+Auto-restart development server with nodemon.
 
 **🧹 Removed Unused Dependencies:**
 - `@google/generative-ai` (duplicate AI library)
@@ -280,26 +270,13 @@ AUREA---Backend/
 ## 🚀 Development Workflow
 
 ### 1. Setup & Start
-```bash
-# Install clean dependencies
-npm install
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your credentials
-
-# Start development server
-npm run dev
-```
+- Install dependencies: `npm install`
+- Configure environment: Copy `.env.example` to `.env` and edit with your credentials
+- Start development server: `npm run dev`
 
 ### 2. Testing PDF Extraction
-```bash
-# Test AI connectivity
-curl http://localhost:5000/api/proposals/test-gemini
-
-# Interactive testing
-open http://localhost:5000/api-docs
-```
+- Test AI connectivity: `GET /api/proposals/test-gemini`
+- Interactive testing: Visit `http://localhost:5000/api-docs`
 
 ### 3. API Documentation
 - **Interactive UI**: `http://localhost:5000/api-docs`
@@ -307,20 +284,17 @@ open http://localhost:5000/api-docs
 - **YAML Spec**: `http://localhost:5000/api-docs.yaml`
 
 ### 4. Health Monitoring
-```bash
-# Server health check
-curl http://localhost:5000/health
-
-# Expected response:
-{
-  "success": true,
-  "message": "AUREA Backend is running",
-  "timestamp": "2025-09-26T...",
-  "environment": "development"
-}
-```
+Server health check available at `GET /health` endpoint.
 
 ## 🎯 Use Cases & Integration
+
+### Portfolio Publishing Platform
+Perfect for creative professionals who need to:
+1. **Create Dynamic Portfolios** with custom sections and styling
+2. **Upload & Manage Images** via Cloudinary integration
+3. **Publish Live Websites** with custom subdomains
+4. **Deploy Instantly** to Vercel with zero configuration
+5. **Share Professional Portfolios** with clients and employers
 
 ### Pricing Calculator Integration
 Perfect for agencies and freelancers who need to:
@@ -329,110 +303,46 @@ Perfect for agencies and freelancers who need to:
 3. **Analyze complexity factors** for accurate pricing
 4. **Generate pricing recommendations** based on extracted data
 
-### Portfolio Builder Features  
-Complete platform for creative professionals:
-- **User Registration & Authentication**
-- **Portfolio Creation & Management**
-- **Template Selection & Customization**
-- **Image Upload & Media Management**
-- **Public Portfolio Sharing**
-- **SEO-Friendly URLs**
-
-### Frontend Integration Example
-```javascript
-// React/Next.js integration
-const uploadPDF = async (file) => {
-  const formData = new FormData();
-  formData.append('pdf', file);
-  
-  const response = await fetch('/api/proposals/extract', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`, // Optional
-    },
-    body: formData
-  });
-  
-  const result = await response.json();
-  
-  // Use extracted data for pricing calculator
-  const { step1_complete_analysis, step2_pricing_focused } = result.data;
-  
-  // Calculate pricing based on complexity, deadline, etc.
-  const pricing = calculatePricing(step2_pricing_focused);
-};
-```
-
 ## 🐛 Troubleshooting
 
 ### Common Issues & Solutions
 
 #### 🔑 Authentication Errors
-```bash
-# "bad auth : authentication failed"
-# ✅ Solution: Replace <password> in MONGO_URI with actual password
-MONGO_URI=mongodb+srv://username:REAL_PASSWORD@cluster.mongodb.net/aurea
-```
+**Issue**: "bad auth : authentication failed"  
+**Solution**: Replace `<password>` in MONGO_URI with actual password
 
 #### 🤖 AI Processing Errors  
-```bash
-# "API key not configured" or "Quota exceeded"
-# ✅ Solution: Get fresh API key from https://aistudio.google.com
-GEMINI_API_KEY=your-fresh-api-key-here
-```
+**Issue**: "API key not configured" or "Quota exceeded"  
+**Solution**: Get fresh API key from https://aistudio.google.com
 
 #### 📁 File Upload Issues
-```bash
-# "No file uploaded" or file size errors
-# ✅ Solution: Check file type (PDF only) and size (max 10MB)
-curl -X POST -F "pdf=@document.pdf" http://localhost:5000/api/proposals/extract
-```
+**Issue**: "No file uploaded" or file size errors  
+**Solution**: Check file type (PDF only) and size (max 10MB)
 
 #### 🌐 CORS Issues
-```bash
-# Frontend can't connect to backend
-# ✅ Solution: Update CLIENT_URL in .env
-CLIENT_URL=http://localhost:3000  # Match your frontend URL
-```
+**Issue**: Frontend can't connect to backend  
+**Solution**: Update CLIENT_URL in .env to match your frontend URL
 
 #### 📦 Dependency Issues
-```bash
-# Node.js version warnings
-# ✅ Solution: Use Node.js 18+ (20+ recommended for GenAI)
-node --version  # Should be v18+
-```
+**Issue**: Node.js version warnings  
+**Solution**: Use Node.js 18+ (20+ recommended for GenAI)
 
 ### Debug Mode
-```bash
-# Enable detailed logging
-NODE_ENV=development npm run dev
+Enable detailed logging by setting `NODE_ENV=development` when running `npm run dev`.
 
-# Check logs for:
-# ✅ MongoDB connection success
-# ✅ Swagger UI availability  
-# ✅ GenAI API connectivity
-```
+Check logs for:
+- MongoDB connection success
+- Swagger UI availability  
+- GenAI API connectivity
 
 ## 🚀 Production Deployment
 
 ### Environment Setup
-```env
-# Production environment variables
-NODE_ENV=production
-PORT=5000
-CLIENT_URL=https://your-frontend-domain.com
-MONGO_URI=mongodb+srv://user:pass@production-cluster.mongodb.net/aurea
-GEMINI_API_KEY=prod-api-key
-```
+Configure production environment variables including NODE_ENV, PORT, CLIENT_URL, MONGO_URI, and GEMINI_API_KEY.
 
 ### Build & Start
-```bash
-# Production build check
-npm run build
-
-# Start production server
-npm start
-```
+- Production build check: `npm run build`
+- Start production server: `npm start`
 
 ### Health Monitoring
 Monitor these endpoints in production:

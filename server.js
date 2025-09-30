@@ -12,6 +12,7 @@ import authRoutes from './src/routes/authRoutes.js';
 import portfolioRoutes from './src/routes/portfolioRoutes.js';
 import uploadRoutes from './src/routes/uploadRoutes.js';
 import proposalExtractRoutes from './src/routes/proposalExtract.routes.js';
+import siteRoutes from './src/routes/siteRoutes.js';
 
 dotenv.config();
 
@@ -88,6 +89,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/portfolios', portfolioRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/proposals', proposalExtractRoutes);
+app.use('/api/site', siteRoutes);
 
 // Setup Swagger documentation
 setupSwagger(app);
@@ -103,6 +105,7 @@ app.get('/', (req, res) => {
       portfolios: '/api/portfolios',
       upload: '/api/upload',
       proposals: '/api/proposals',
+      site: '/api/site',
       health: '/health',
       docs: '/api-docs'
     }

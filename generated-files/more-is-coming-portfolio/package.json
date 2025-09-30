@@ -1,0 +1,8 @@
+{
+  "name": "more-is-coming-portfolio-site",
+  "version": "1.0.0",
+  "description": "Portfolio site for Your Name's Portfolio",
+  "scripts": {
+    "build": "echo 'Static site ready'"
+  }
+}

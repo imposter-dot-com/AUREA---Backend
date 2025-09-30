@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MOre is COMING?????? - Professional Title Portfolio</title>
+  <meta name="description" content="Passionate professional title with expertise in creating exceptional experiences.">
+  <!-- <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"> -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        fontFamily: {
+          sans: ["Inter"]
+        },
+        extend: {
+          colors: {
+            primary: '#1f2937',
+            secondary: '#6b7280',
+            accent: '#1f2937',
+            background: '#ffffff',
+            surface: '#f8fafc',
+            text: '#1f2937',
+            textSecondary: '#6b7280'
+          },
+          spacing: {
+            section: '5rem',
+            element: '2rem',
+            tight: '1rem'
+          },
+          borderRadius: {
+            'custom-sm': '0.375rem',
+            'custom-md': '0.5rem',
+            'custom-lg': '0.75rem'
+          },
+          boxShadow: {
+            'custom-sm': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+            'custom-md': '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            'custom-lg': '0 10px 15px -3px rgb(0 0 0 / 0.1)'
+          },
+          animation: {
+            'blob': 'blob 7s infinite',
+            'blob-delay-2': 'blob 7s infinite 2s',
+            'blob-delay-4': 'blob 7s infinite 4s',
+          },
+          keyframes: {
+            blob: {
+              '0%': {
+                transform: 'translate(0px, 0px) scale(1)',
+              },
+              '33%': {
+                transform: 'translate(30px, -50px) scale(1.1)',
+              },
+              '66%': {
+                transform: 'translate(-20px, 20px) scale(0.9)',
+              },
+              '100%': {
+                transform: 'translate(0px, 0px) scale(1)',
+              },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .animation-delay-2000 {
+      animation-delay: 2s;
+    }
+    .animation-delay-4000 {
+      animation-delay: 4s;
+    }
+    
+    /* Masonry Grid Styles */
+    .masonry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    @media (min-width: 768px) {
+      .masonry-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+      }
+      .masonry-large {
+        grid-column: span 2;
+        grid-row: span 2;
+      }
+      .masonry-medium {
+        grid-row: span 2;
+      }
+    }
+  </style>
+</head>
+<body class="font-sans bg-white">
+  <!-- Hero Section -->
+  <section class="min-h-screen flex items-center justify-center relative overflow-hidden" style="background-color: #ffffff;">
+    <!-- Animated Background Blobs -->
+    <div class="absolute inset-0 overflow-hidden">
+      <div class="absolute -top-4 -left-4 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+      <div class="absolute -top-4 -right-4 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+      <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+    </div>
+    
+    <div class="text-center max-w-5xl mx-auto px-6 relative z-10">
+      <div class="mb-8">
+        <!-- Profile Image with Decorative Rings -->
+        <div class="relative inline-block mb-8">
+          
+          <div class="w-40 h-40 rounded-full mx-auto ring-4 ring-white shadow-2xl relative overflow-hidden">
+            <img 
+              src="https://res.cloudinary.com/dbacso9ht/image/upload/q_auto:good,f_auto/v1759240047/aurea-portfolios/eimczpd8ftfktofix7sx.jpg" 
+              alt="MOre is COMING??????" 
+              class="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+          
+          <!-- Decorative rings -->
+          <div class="absolute -inset-4 rounded-full border-2 border-blue-200 opacity-30 animate-ping pointer-events-none"></div>
+          <div class="absolute -inset-8 rounded-full border border-purple-200 opacity-20 animate-pulse pointer-events-none"></div>
+        </div>
+        
+        <h1 class="text-6xl lg:text-7xl font-bold mb-6 text-black">
+          MOre is COMING??????
+        </h1>
+        
+        <h2 class="text-2xl lg:text-3xl mb-8 text-gray-600 font-light">
+          Professional Title
+        </h2>
+        
+        <p class="text-xl max-w-3xl mx-auto leading-relaxed text-gray-700 mb-12">
+          Passionate professional title with expertise in creating exceptional experiences.
+        </p>
+        
+        <div class="text-center">
+          <p class="text-lg text-gray-600 font-medium">Scroll to see my work</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="py-20 relative" style="background-color: #f8fafc;">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <h2 class="text-4xl font-bold mb-6">
+            About Me
+          </h2>
+          
+          <p class="text-lg leading-relaxed mb-8">
+            Add your professional bio here. You can edit this later.
+          </p>
+          
+          <div>
+            <h3 class="text-xl font-semibold mb-4">Skills</h3>
+            <div class="flex flex-wrap gap-3">
+              
+              <span class="px-3 py-2 text-sm font-medium rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
+                Skill 1
+              </span>
+              
+              <span class="px-3 py-2 text-sm font-medium rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
+                Skill 2
+              </span>
+              
+              <span class="px-3 py-2 text-sm font-medium rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
+                Skill 3
+              </span>
+              
+              <span class="px-3 py-2 text-sm font-medium rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
+                java
+              </span>
+              
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          
+          <div class="aspect-square rounded-lg relative overflow-hidden">
+            <img 
+              src="https://res.cloudinary.com/dbacso9ht/image/upload/q_auto:good,f_auto/v1759240036/aurea-portfolios/txliho60y0te3wruk3gh.jpg" 
+              alt="About MOre is COMING??????" 
+              class="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Portfolio Section -->
+  <section class="py-20 relative">
+    <div class="max-w-7xl mx-auto px-6">
+      <h2 class="text-5xl font-bold text-center mb-16">
+        My Work
+      </h2>
+      
+      <!-- Masonry Portfolio Grid -->
+      <div class="masonry-grid">
+        
+        <div class="col-span-full text-center py-20">
+          <div class="max-w-lg mx-auto">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-3">No Projects Yet</h3>
+            <p class="text-gray-600">Projects will appear here once they're added to your portfolio.</p>
+          </div>
+        </div>
+        
+      </div>
+      
+      <!-- Portfolio Statistics -->
+      <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="text-center p-6 rounded-xl bg-white/50 backdrop-blur-sm">
+          <div class="text-3xl font-bold text-gray-900">0</div>
+          <div class="text-sm text-gray-600 mt-1">Projects</div>
+        </div>
+        <div class="text-center p-6 rounded-xl bg-white/50 backdrop-blur-sm">
+          <div class="text-3xl font-bold text-gray-900">0</div>
+          <div class="text-sm text-gray-600 mt-1">Technologies</div>
+        </div>
+        <div class="text-center p-6 rounded-xl bg-white/50 backdrop-blur-sm">
+          <div class="text-3xl font-bold text-gray-900">100%</div>
+          <div class="text-sm text-gray-600 mt-1">Success Rate</div>
+        </div>
+        <div class="text-center p-6 rounded-xl bg-white/50 backdrop-blur-sm">
+          <div class="text-3xl font-bold text-gray-900">24/7</div>
+          <div class="text-sm text-gray-600 mt-1">Support</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="py-20 relative" style="background-color: #f8fafc;">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+      <h2 class="text-4xl font-bold mb-6">
+        Let's Work Together
+      </h2>
+      
+      <p class="text-lg mb-12">
+        I'm always interested in new projects and opportunities.
+      </p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <a
+          href="https://"
+          class="block p-6 bg-white rounded-lg hover:shadow-lg transition-shadow cursor-pointer"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div class="text-2xl font-semibold capitalize">New Platform</div>
+          <div class="text-gray-600 mt-2">Connect with me</div>
+        </a>
+        
+        <a
+          href="https://"
+          class="block p-6 bg-white rounded-lg hover:shadow-lg transition-shadow cursor-pointer"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div class="text-2xl font-semibold capitalize">New Platform</div>
+          <div class="text-gray-600 mt-2">Connect with me</div>
+        </a>
+        
+        <a
+          href="https://"
+          class="block p-6 bg-white rounded-lg hover:shadow-lg transition-shadow cursor-pointer"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div class="text-2xl font-semibold capitalize">New Platform</div>
+          <div class="text-gray-600 mt-2">Connect with me</div>
+        </a>
+        
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Smooth scroll behavior for any internal links
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add smooth scrolling animation
+      document.documentElement.style.scrollBehavior = 'smooth';
+      
+      // Add intersection observer for fade-in animations
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      };
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+          }
+        });
+      }, observerOptions);
+      
+      // Observe all sections
+      document.querySelectorAll('section').forEach(section => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
+        section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(section);
+      });
+      
+      // Trigger first section immediately
+      document.querySelector('section').style.opacity = '1';
+      document.querySelector('section').style.transform = 'translateY(0)';
+    });
+  </script>
+</body>
+</html>
