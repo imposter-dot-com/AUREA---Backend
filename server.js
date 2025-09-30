@@ -23,26 +23,35 @@ const app = express();
 // Connect to database
 connectDB();
 
-// CORS configuration - Allow all origins
-
+// CORS configuration
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://aurea-frontend.vercel.app/",
-  "https://localhost:3000"
-]
+  "https://aurea-frontend.vercel.app",
+  "http://localhost:3000",
+  "https://localhost:3000",
+  process.env.FRONTEND_URL
+];
 
 const corsOptions = {
   origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true); 
-    if (allowedOrigins.includes(origin)) {
+    
+    // Remove any trailing slashes for comparison
+    const cleanOrigin = origin.replace(/\/$/, '');
+    const cleanAllowedOrigins = allowedOrigins.map(o => o ? o.replace(/\/$/, '') : o);
+    
+    if (cleanAllowedOrigins.includes(cleanOrigin)) {
       return callback(null, true);
     } else {
+      console.log(`CORS blocked origin: ${origin}`);
       return callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
 // Middleware
