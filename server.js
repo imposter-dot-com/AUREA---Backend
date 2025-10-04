@@ -29,6 +29,7 @@ const allowedOrigins = [
   "https://aurea-frontend.vercel.app",
   "http://localhost:3000",
   "https://localhost:5173",
+  "https://aurea.tools",
   process.env.FRONTEND_URL
 ];
 
