@@ -9,7 +9,8 @@ const auth = async (req, res, next) => {
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'No token provided, authorization denied'
+        error: 'No token provided, authorization denied',
+        code: 'UNAUTHORIZED'
       });
     }
 
@@ -23,7 +24,8 @@ const auth = async (req, res, next) => {
       if (!user) {
         return res.status(401).json({
           success: false,
-          message: 'Token is not valid - user not found'
+          error: 'Token is not valid - user not found',
+          code: 'UNAUTHORIZED'
         });
       }
 
@@ -32,14 +34,16 @@ const auth = async (req, res, next) => {
     } catch (jwtError) {
       return res.status(401).json({
         success: false,
-        message: 'Token is not valid'
+        error: 'Token is not valid',
+        code: 'UNAUTHORIZED'
       });
     }
   } catch (error) {
     console.error('Auth middleware error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error in authentication'
+      error: 'Server error in authentication',
+      code: 'SERVER_ERROR'
     });
   }
 };

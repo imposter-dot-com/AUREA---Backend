@@ -1,27 +1,39 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
 import connectDB from './src/config/database.js';
 import { errorHandler, notFound } from './src/middleware/errorHandler.js';
 import { requestLogger } from './src/middleware/requestLogger.js';
+import { generalApiLimiter } from './src/middleware/rateLimiter.js';
 import { initCloudinary } from './src/config/cloudinary.js';
+import { initRedis } from './src/utils/cache.js';
 import { setupSwagger } from './src/config/swagger.js';
 
 // Route imports
 import authRoutes from './src/routes/authRoutes.js';
 import portfolioRoutes from './src/routes/portfolioRoutes.js';
+import caseStudyRoutes from './src/routes/caseStudyRoutes.js';
 import uploadRoutes from './src/routes/uploadRoutes.js';
 import proposalExtractRoutes from './src/routes/proposalExtract.routes.js';
 
 dotenv.config();
 
-// Initialize Cloudinary after environment variables are loaded
+// Initialize services after environment variables are loaded
 initCloudinary();
+initRedis();
 
 const app = express();
 
 // Connect to database
 connectDB();
+
+// Security and performance middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+app.use(compression());
 
 // CORS configuration
 const allowedOrigins = [
@@ -29,14 +41,22 @@ const allowedOrigins = [
   "https://aurea-frontend.vercel.app",
   "http://localhost:3000",
   "https://localhost:5173",
+  "https://localhost:5000",
   "https://www.aurea.tools",
   process.env.FRONTEND_URL
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (like mobile apps, curl requests, Swagger UI)
     if (!origin) return callback(null, true); 
+    
+    // In development, allow all localhost origins for Swagger UI
+    if (process.env.NODE_ENV !== 'production') {
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        return callback(null, true);
+      }
+    }
     
     // Remove any trailing slashes for comparison
     const cleanOrigin = origin.replace(/\/$/, '');
@@ -52,6 +72,7 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
   optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
@@ -62,6 +83,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Enhanced request logging middleware
 app.use(requestLogger);
+
+// Apply general rate limiting to all routes
+app.use('/api/', generalApiLimiter);
 
 // Health check route
 app.get('/health', (req, res) => {
@@ -87,6 +111,7 @@ app.get('/robots.txt', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/portfolios', portfolioRoutes);
+app.use('/api/case-studies', caseStudyRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/proposals', proposalExtractRoutes);
 
@@ -102,6 +127,7 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: '/api/auth',
       portfolios: '/api/portfolios',
+      caseStudies: '/api/case-studies',
       upload: '/api/upload',
       proposals: '/api/proposals',
       health: '/health',

@@ -1,18 +1,5 @@
 import mongoose from 'mongoose';
 
-const sectionSchema = new mongoose.Schema({
-  type: {
-    type: String,
-    required: [true, 'Section type is required'],
-    enum: ['hero', 'about', 'portfolio', 'projects', 'contact', 'skills', 'experience', 'education', 'custom'],
-    trim: true
-  },
-  content: {
-    type: mongoose.Schema.Types.Mixed,
-    default: {}
-  }
-}, { _id: true });
-
 const portfolioSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -24,52 +11,63 @@ const portfolioSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Portfolio title is required'],
     trim: true,
-    maxlength: [100, 'Title cannot be more than 100 characters']
+    maxlength: [200, 'Title cannot be more than 200 characters']
   },
   description: {
     type: String,
     trim: true,
-    maxlength: [500, 'Description cannot be more than 500 characters'],
+    maxlength: [1000, 'Description cannot be more than 1000 characters'],
     default: ''
   },
-  template: {
+  templateId: {
     type: String,
-    required: [true, 'Template is required'],
-    trim: true,
-    default: 'default'
+    required: [true, 'Template ID is required'],
+    enum: ['echelon'],
+    default: 'echelon'
   },
-  sections: {
-    type: [sectionSchema],
-    default: [
-      { type: 'about', content: {} },
-      { type: 'projects', content: {} },
-      { type: 'contact', content: {} }
-    ]
+  content: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
   },
   styling: {
     type: mongoose.Schema.Types.Mixed,
     default: {}
   },
-  published: {
+  isPublished: {
     type: Boolean,
-    default: false
+    default: false,
+    index: true
+  },
+  publishedAt: {
+    type: Date,
+    default: null
+  },
+  unpublishedAt: {
+    type: Date,
+    default: null
   },
   slug: {
     type: String,
     trim: true,
     lowercase: true,
-    sparse: true, // Allows multiple null values
-    index: { sparse: true }, // Create sparse index on slug
-    match: [/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens']
-  },
-  isPublic: {
-    type: Boolean,
-    default: false
+    sparse: true,
+    index: { unique: true, sparse: true },
+    minlength: [3, 'Slug must be at least 3 characters'],
+    maxlength: [50, 'Slug cannot be more than 50 characters'],
+    match: [/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug can only contain lowercase letters, numbers, and hyphens (no consecutive hyphens)']
   },
   viewCount: {
     type: Number,
     default: 0
-  }
+  },
+  lastViewedAt: {
+    type: Date,
+    default: null
+  },
+  caseStudies: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'CaseStudy'
+  }]
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
@@ -78,11 +76,18 @@ const portfolioSchema = new mongoose.Schema({
 
 // Create indexes
 portfolioSchema.index({ userId: 1, createdAt: -1 });
-portfolioSchema.index({ published: 1, isPublic: 1 });
+portfolioSchema.index({ isPublished: 1, publishedAt: -1 });
+portfolioSchema.index({ userId: 1, isPublished: 1 });
+portfolioSchema.index({ templateId: 1 });
 
 // Virtual for portfolio URL
 portfolioSchema.virtual('url').get(function() {
   return this.slug ? `/portfolio/${this.slug}` : `/portfolio/${this._id}`;
+});
+
+// Virtual for public URL
+portfolioSchema.virtual('publicUrl').get(function() {
+  return this.slug ? `${process.env.FRONTEND_URL}/portfolio/${this.slug}` : null;
 });
 
 // Instance method to increment view count
@@ -95,14 +100,14 @@ portfolioSchema.methods.incrementViews = function() {
 portfolioSchema.statics.findByUser = function(userId, includeUnpublished = true) {
   const query = { userId };
   if (!includeUnpublished) {
-    query.published = true;
+    query.isPublished = true;
   }
   return this.find(query).sort({ createdAt: -1 });
 };
 
 // Static method to find public portfolios
 portfolioSchema.statics.findPublic = function(limit = 10) {
-  return this.find({ published: true, isPublic: true })
+  return this.find({ isPublished: true })
     .populate('userId', 'name')
     .sort({ createdAt: -1 })
     .limit(limit);

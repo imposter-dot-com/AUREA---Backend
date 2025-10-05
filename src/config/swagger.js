@@ -44,9 +44,13 @@ const swaggerOptions = {
     },
   },
   apis: [
-    './src/routes/*.js',
-    './src/controllers/*.js',
-    './swagger.yaml'
+    join(__dirname, '../routes/authRoutes.js'),
+    join(__dirname, '../routes/portfolioRoutes.js'),
+    join(__dirname, '../routes/caseStudyRoutes.js'),
+    join(__dirname, '../routes/uploadRoutes.js'),
+    join(__dirname, '../routes/proposalExtract.routes.js'),
+    join(__dirname, '../controllers/*.js'),
+    join(__dirname, '../../swagger.yaml'),
   ],
 };
 
