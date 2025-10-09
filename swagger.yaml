@@ -1,11 +1,28 @@
 openapi: 3.0.0
 info:
   title: AUREA Backend API
-  description: Portfolio Builder Platform API with MongoDB Atlas integration
+  description: |
+    Comprehensive Portfolio Management Platform API with 18 professional endpoints.
+    
+    **Features:**
+    - JWT Authentication System
+    - Complete Portfolio CRUD Operations
+    - One-Click Vercel Deployment
+    - Dynamic HTML Generation from User Data
+    - Case Study Management
+    - Professional Image Upload (Cloudinary)
+    - Publishing System with Slug Management
+    - View Tracking & Analytics
+    
+    **Total Endpoints: 18**
+    - Authentication: 3 endpoints
+    - Portfolio Management: 8 endpoints
+    - Site Publishing & Deployment: 3 endpoints
+    - Case Study Management: 4 endpoints
+    - Image Upload: 2 endpoints
   version: 1.0.0
   contact:
-    name: AUREA Team
-    email: support@aurea.com
+    name: AUREA Development Team
   license:
     name: ISC
 
@@ -14,6 +31,22 @@ servers:
     description: Development server
   - url: https://api.aurea.com
     description: Production server
+
+tags:
+  - name: Health
+    description: Server health check endpoints
+  - name: Authentication
+    description: User registration and authentication (3 endpoints)
+  - name: Portfolios
+    description: Portfolio CRUD operations and publishing system (8 endpoints)
+  - name: Site Publishing
+    description: One-click portfolio publishing to Vercel with HTML generation (3 endpoints)
+  - name: Case Studies
+    description: Case study management linked to portfolios (4 endpoints)
+  - name: Image Upload
+    description: Upload and delete images via Cloudinary (2 endpoints)
+  - name: Proposal Extraction
+    description: Legacy AI-powered PDF extraction (optional feature)
 
 components:
   securitySchemes:
@@ -57,33 +90,51 @@ components:
           description: Reference to user ID
         title:
           type: string
+          maxLength: 200
           description: Portfolio title
-        template:
+        description:
           type: string
-          description: Portfolio template name
-        sections:
-          type: array
-          items:
-            type: object
-            properties:
-              type:
-                type: string
-                description: Section type (about, projects, contact, etc.)
-              content:
-                type: object
-                description: Flexible JSON content
-        published:
+          maxLength: 1000
+          description: Portfolio description
+        templateId:
+          type: string
+          enum: [echelon]
+          description: Portfolio template identifier
+        content:
+          type: object
+          description: Flexible portfolio content structure
+        styling:
+          type: object
+          description: Custom styling configuration
+        isPublished:
           type: boolean
-          description: Whether portfolio is published
-        isPublic:
-          type: boolean
-          description: Whether portfolio is public
+          default: false
+          description: Publication status
+        publishedAt:
+          type: string
+          format: date-time
+          description: First publication timestamp
+        unpublishedAt:
+          type: string
+          format: date-time
+          description: Last unpublish timestamp
         slug:
           type: string
-          description: SEO-friendly URL slug
+          pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+          description: SEO-friendly URL slug (required for publishing)
         viewCount:
           type: number
+          default: 0
           description: Number of portfolio views
+        lastViewedAt:
+          type: string
+          format: date-time
+          description: Last view timestamp
+        caseStudies:
+          type: array
+          items:
+            type: string
+          description: Array of case study IDs
         createdAt:
           type: string
           format: date-time
@@ -92,7 +143,148 @@ components:
           format: date-time
       required:
         - title
-        - template
+        - templateId
+    
+    CaseStudy:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier
+        portfolioId:
+          type: string
+          description: Reference to portfolio
+        userId:
+          type: string
+          description: Reference to user
+        projectId:
+          type: string
+          description: Project ID from portfolio content
+        content:
+          type: object
+          properties:
+            hero:
+              type: object
+              properties:
+                title:
+                  type: string
+                subtitle:
+                  type: string
+                coverImage:
+                  type: string
+                client:
+                  type: string
+                year:
+                  type: string
+                role:
+                  type: string
+                duration:
+                  type: string
+            overview:
+              type: object
+              properties:
+                heading:
+                  type: string
+                description:
+                  type: string
+                challenge:
+                  type: string
+                solution:
+                  type: string
+                results:
+                  type: string
+            sections:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  type:
+                    type: string
+                  heading:
+                    type: string
+                  content:
+                    type: string
+                  image:
+                    type: string
+                  images:
+                    type: array
+                    items:
+                      type: string
+                  layout:
+                    type: string
+            additionalContext:
+              type: object
+              properties:
+                heading:
+                  type: string
+                content:
+                  type: string
+            nextProject:
+              type: object
+              properties:
+                id:
+                  type: string
+                title:
+                  type: string
+                image:
+                  type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - portfolioId
+        - userId
+        - projectId
+    
+    Site:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier
+        portfolioId:
+          type: string
+          description: Reference to portfolio
+        userId:
+          type: string
+          description: Reference to user
+        subdomain:
+          type: string
+          description: Subdomain name (derived from designer name)
+        deploymentUrl:
+          type: string
+          description: Live Vercel deployment URL
+        deploymentId:
+          type: string
+          description: Vercel deployment ID
+        status:
+          type: string
+          enum: [draft, published, unpublished]
+          description: Site publication status
+        filesGenerated:
+          type: array
+          items:
+            type: string
+          description: List of generated HTML files
+        lastDeployedAt:
+          type: string
+          format: date-time
+          description: Last deployment timestamp
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - portfolioId
+        - userId
+        - subdomain
     
     AuthResponse:
       type: object
@@ -154,7 +346,7 @@ paths:
   /api/auth/signup:
     post:
       summary: Register a new user
-      description: Create a new user account
+      description: Create a new user account with email and password
       tags:
         - Authentication
       requestBody:
@@ -174,7 +366,7 @@ paths:
                 password:
                   type: string
                   minimum: 6
-                  example: "password123"
+                  example: "securepass123"
               required:
                 - name
                 - email
@@ -320,7 +512,7 @@ paths:
   /api/portfolios:
     post:
       summary: Create a new portfolio
-      description: Create a new portfolio for the authenticated user
+      description: Create a new portfolio with template support
       tags:
         - Portfolios
       security:
@@ -334,26 +526,25 @@ paths:
               properties:
                 title:
                   type: string
-                  example: "My UI/UX Portfolio"
-                template:
+                  maxLength: 200
+                  example: "My Creative Portfolio"
+                description:
                   type: string
-                  example: "modern"
-                sections:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      type:
-                        type: string
-                        example: "about"
-                      content:
-                        type: object
-                        example:
-                          text: "About me..."
-                          image: "profile.jpg"
+                  maxLength: 1000
+                  example: "A showcase of my best work"
+                templateId:
+                  type: string
+                  enum: [echelon]
+                  example: "echelon"
+                content:
+                  type: object
+                  description: Portfolio content structure
+                styling:
+                  type: object
+                  description: Custom styling configuration
               required:
                 - title
-                - template
+                - templateId
       responses:
         '201':
           description: Portfolio created successfully
@@ -364,6 +555,7 @@ paths:
                 properties:
                   success:
                     type: boolean
+                    example: true
                   message:
                     type: string
                   data:
@@ -371,6 +563,12 @@ paths:
                     properties:
                       portfolio:
                         $ref: '#/components/schemas/Portfolio'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
           content:
@@ -378,14 +576,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /api/portfolios/me:
+  /api/portfolios/user/{userId}:
     get:
-      summary: Get current user's portfolios
-      description: Retrieve all portfolios for the authenticated user
+      summary: Get user's portfolios
+      description: Retrieve portfolios for a specific user with filtering options
       tags:
         - Portfolios
       security:
         - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          description: User ID
+        - in: query
+          name: published
+          schema:
+            type: string
+            enum: [all, true, false]
+          description: Filter by publication status
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [createdAt, updatedAt, title]
+            default: createdAt
+          description: Sort field
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort order
       responses:
         '200':
           description: Portfolios retrieved successfully
@@ -403,22 +628,98 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/Portfolio'
+                      statistics:
+                        type: object
+                        properties:
+                          total:
+                            type: number
+                          published:
+                            type: number
+                          unpublished:
+                            type: number
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
-  /api/portfolios/public:
+  
+  /api/portfolios/slug/{slug}/check:
     get:
-      summary: Get public portfolios
-      description: Retrieve all public portfolios
+      summary: Check slug availability
+      description: Verify if a slug is available for use
       tags:
         - Portfolios
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+          description: Slug to check
+        - in: query
+          name: excludeId
+          schema:
+            type: string
+          description: Portfolio ID to exclude from check
       responses:
         '200':
-          description: Public portfolios retrieved
+          description: Slug is available
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      available:
+                        type: boolean
+                      slug:
+                        type: string
+        '409':
+          description: Slug is already taken
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      available:
+                        type: boolean
+                      suggestions:
+                        type: array
+                        items:
+                          type: string
+  
+  /api/public/portfolio/{slug}:
+    get:
+      summary: Get public portfolio by slug
+      description: Retrieve a published portfolio without authentication
+      tags:
+        - Portfolios
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+          description: Portfolio slug
+      responses:
+        '200':
+          description: Portfolio retrieved successfully
           content:
             application/json:
               schema:
@@ -427,19 +728,22 @@ paths:
                   success:
                     type: boolean
                   data:
-                    type: object
-                    properties:
-                      portfolios:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/Portfolio'
+                    $ref: '#/components/schemas/Portfolio'
+        '404':
+          description: Portfolio not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/portfolios/{id}:
     get:
       summary: Get portfolio by ID
-      description: Retrieve a specific portfolio by its ID
+      description: Retrieve a specific portfolio with view tracking
       tags:
         - Portfolios
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -462,6 +766,12 @@ paths:
                     properties:
                       portfolio:
                         $ref: '#/components/schemas/Portfolio'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '404':
           description: Portfolio not found
           content:
@@ -471,7 +781,7 @@ paths:
     
     put:
       summary: Update portfolio
-      description: Update a portfolio (owner only)
+      description: Update portfolio content (owner only)
       tags:
         - Portfolios
       security:
@@ -492,12 +802,14 @@ paths:
               properties:
                 title:
                   type: string
-                template:
+                  maxLength: 200
+                description:
                   type: string
-                sections:
-                  type: array
-                  items:
-                    type: object
+                  maxLength: 1000
+                content:
+                  type: object
+                styling:
+                  type: object
                 published:
                   type: boolean
                 isPublic:
@@ -582,11 +894,133 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  
+  /api/portfolios/{id}/publish:
+    put:
+      summary: Publish portfolio
+      description: Publish a portfolio with slug validation
+      tags:
+        - Portfolios
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Portfolio ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                slug:
+                  type: string
+                  pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+                  example: "my-creative-portfolio"
+              required:
+                - slug
+      responses:
+        '200':
+          description: Portfolio published successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      portfolio:
+                        type: object
+                        properties:
+                          _id:
+                            type: string
+                          isPublished:
+                            type: boolean
+                          slug:
+                            type: string
+                          publishedAt:
+                            type: string
+                            format: date-time
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Slug already taken
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      suggestions:
+                        type: array
+                        items:
+                          type: string
+  
+  /api/portfolios/{id}/unpublish:
+    put:
+      summary: Unpublish portfolio
+      description: Unpublish a portfolio (keeps slug for republishing)
+      tags:
+        - Portfolios
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Portfolio ID
+      responses:
+        '200':
+          description: Portfolio unpublished successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      portfolio:
+                        type: object
+                        properties:
+                          _id:
+                            type: string
+                          isPublished:
+                            type: boolean
+                          unpublishedAt:
+                            type: string
+                            format: date-time
 
   /api/portfolios/slug/{slug}:
     get:
-      summary: Get portfolio by slug
-      description: Retrieve a portfolio by its SEO-friendly slug
+      summary: Get portfolio by slug (DEPRECATED)
+      description: Use /api/public/portfolio/{slug} instead
+      deprecated: true
       tags:
         - Portfolios
       parameters:
@@ -614,6 +1048,463 @@ paths:
                         $ref: '#/components/schemas/Portfolio'
         '404':
           description: Portfolio not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/case-studies:
+    post:
+      summary: Create a new case study
+      description: Create a case study linked to a portfolio project
+      tags:
+        - Case Studies
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                portfolioId:
+                  type: string
+                  description: Portfolio ID this case study belongs to
+                projectId:
+                  type: string
+                  description: Project ID from portfolio content
+                content:
+                  type: object
+                  description: Case study content structure
+                  properties:
+                    hero:
+                      type: object
+                    overview:
+                      type: object
+                    sections:
+                      type: array
+                      items:
+                        type: object
+              required:
+                - portfolioId
+                - projectId
+      responses:
+        '201':
+          description: Case study created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      caseStudy:
+                        $ref: '#/components/schemas/CaseStudy'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/case-studies/{id}:
+    get:
+      summary: Get case study by ID
+      description: Retrieve a specific case study
+      tags:
+        - Case Studies
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Case study ID
+      responses:
+        '200':
+          description: Case study retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      caseStudy:
+                        $ref: '#/components/schemas/CaseStudy'
+        '404':
+          description: Case study not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      summary: Update case study
+      description: Update case study content (owner only)
+      tags:
+        - Case Studies
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Case study ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: object
+                  description: Updated case study content
+      responses:
+        '200':
+          description: Case study updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      caseStudy:
+                        $ref: '#/components/schemas/CaseStudy'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      summary: Delete case study
+      description: Delete a case study (owner only)
+      tags:
+        - Case Studies
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Case study ID
+      responses:
+        '200':
+          description: Case study deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/upload/image:
+    post:
+      summary: Upload image to Cloudinary
+      description: Upload a single image with automatic optimization
+      tags:
+        - Image Upload
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Image file (JPG, JPEG, PNG, WebP)
+              required:
+                - image
+      responses:
+        '200':
+          description: Image uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      imageUrl:
+                        type: string
+                        description: Cloudinary URL
+                      publicId:
+                        type: string
+                        description: Cloudinary public ID
+        '400':
+          description: Invalid file or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      summary: Delete image from Cloudinary
+      description: Remove an image using its URL or public ID
+      tags:
+        - Image Upload
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                imageUrl:
+                  type: string
+                  description: Full Cloudinary image URL
+              required:
+                - imageUrl
+      responses:
+        '200':
+          description: Image deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/sites/publish:
+    post:
+      summary: Publish portfolio to Vercel
+      description: |
+        Generate HTML from portfolio data and deploy to Vercel with one click.
+        
+        **Complete Publishing Flow:**
+        1. Extract portfolio data (about, projects, gallery, contact)
+        2. Generate professional HTML files from user content
+        3. Create deployment files (index.html, case-study pages)
+        4. Upload to Vercel hosting
+        5. Return live deployment URL
+        
+        **File Naming:** Files are organized by designer name from portfolio.content.about.name
+        
+        **What Gets Generated:**
+        - index.html (main portfolio page)
+        - case-study-N.html (individual project pages)
+        - Responsive design for all devices
+        - SEO optimized with meta tags
+      tags:
+        - Site Publishing
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                portfolioId:
+                  type: string
+                  description: Portfolio ID to publish
+                  example: "507f1f77bcf86cd799439011"
+              required:
+                - portfolioId
+      responses:
+        '200':
+          description: Portfolio published successfully to Vercel
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Site published successfully"
+                  data:
+                    type: object
+                    properties:
+                      site:
+                        $ref: '#/components/schemas/Site'
+                      deploymentUrl:
+                        type: string
+                        description: Live Vercel URL
+                        example: "https://john-designer-xyz123.vercel.app"
+                      deploymentId:
+                        type: string
+                        description: Vercel deployment ID
+                      inspectorUrl:
+                        type: string
+                        description: Vercel deployment inspector URL
+                      filesGenerated:
+                        type: array
+                        items:
+                          type: string
+                        example: ["index.html", "case-study-1.html", "case-study-2.html"]
+        '400':
+          description: Portfolio not found or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Not the portfolio owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/sites/{subdomain}:
+    get:
+      summary: Get published site details
+      description: Retrieve information about a published site by subdomain
+      tags:
+        - Site Publishing
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: subdomain
+          required: true
+          schema:
+            type: string
+          description: Site subdomain (designer name)
+          example: "john-designer"
+      responses:
+        '200':
+          description: Site details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Site'
+        '404':
+          description: Site not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/sites/debug/generate:
+    post:
+      summary: Test HTML generation without deployment
+      description: |
+        Generate HTML files from portfolio data without deploying to Vercel.
+        Useful for testing and debugging the HTML generation process.
+      tags:
+        - Site Publishing
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                portfolioId:
+                  type: string
+                  description: Portfolio ID to generate HTML for
+                  example: "507f1f77bcf86cd799439011"
+              required:
+                - portfolioId
+      responses:
+        '200':
+          description: HTML generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      filesGenerated:
+                        type: array
+                        items:
+                          type: string
+                      outputPath:
+                        type: string
+                        description: Local path where files were saved
+                      totalSize:
+                        type: string
+                        description: Total size of generated files
+        '400':
+          description: Portfolio not found or validation error
           content:
             application/json:
               schema:
@@ -976,17 +1867,3 @@ paths:
                       library:
                         type: string
                         example: "@google/genai"
-
-tags:
-  - name: Health
-    description: Server health check endpoints
-  - name: Authentication
-    description: User authentication and profile management
-  - name: Portfolios
-    description: Portfolio CRUD operations and management
-  - name: Proposal Extraction
-    description: |
-      PDF proposal processing and data extraction using Google's Gemini AI.
-      Features dual implementation with @google/generative-ai and @google/genai libraries.
-      Supports Gemini 2.5 Pro, 1.5 Pro, and 1.5 Flash models with automatic fallback.
-      Authentication optional - works with or without JWT tokens.
