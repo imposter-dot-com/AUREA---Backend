@@ -164,8 +164,27 @@ export const debugGenerate = async (req, res) => {
     if (caseStudies && caseStudies.length > 0) {
       portfolioWithCaseStudies.caseStudies = {};
       caseStudies.forEach(cs => {
-        portfolioWithCaseStudies.caseStudies[cs.projectId] = cs.content;
+        portfolioWithCaseStudies.caseStudies[cs.projectId] = cs.toObject();
       });
+      
+      // Mark projects that have case studies
+      const caseStudyProjectIds = caseStudies.map(cs => String(cs.projectId));
+      
+      // Update projects in content.work.projects array
+      if (portfolioWithCaseStudies.content?.work?.projects) {
+        portfolioWithCaseStudies.content.work.projects = portfolioWithCaseStudies.content.work.projects.map(project => ({
+          ...project,
+          hasCaseStudy: caseStudyProjectIds.includes(String(project.id))
+        }));
+      }
+      
+      // Also update content.projects array if it exists
+      if (portfolioWithCaseStudies.content?.projects) {
+        portfolioWithCaseStudies.content.projects = portfolioWithCaseStudies.content.projects.map(project => ({
+          ...project,
+          hasCaseStudy: caseStudyProjectIds.includes(String(project.id))
+        }));
+      }
     }
 
     // Generate HTML content using templateConvert service (includes case studies)
@@ -279,15 +298,51 @@ export const publishSite = async (req, res) => {
     // Fetch case studies for this portfolio
     const caseStudies = await CaseStudy.find({ portfolioId: portfolioId });
     
+    console.log(`\n📑 === CASE STUDY DEBUG INFO (publishSite) ===`);
+    console.log(`Portfolio ID: ${portfolioId}`);
+    console.log(`Found ${caseStudies.length} case studies`);
+    
     // Prepare portfolio data with case studies
     const portfolioWithCaseStudies = portfolio.toObject();
     
     // Convert case studies array to object keyed by projectId
     if (caseStudies && caseStudies.length > 0) {
       portfolioWithCaseStudies.caseStudies = {};
-      caseStudies.forEach(cs => {
-        portfolioWithCaseStudies.caseStudies[cs.projectId] = cs.content;
+      
+      caseStudies.forEach((cs, index) => {
+        console.log(`\nCase Study ${index + 1}:`);
+        console.log(`  Project ID: ${cs.projectId}`);
+        console.log(`  Has content: ${!!cs.content}`);
+        console.log(`  Has hero: ${!!cs.content?.hero}`);
+        console.log(`  Hero title: ${cs.content?.hero?.title || 'MISSING'}`);
+        console.log(`  Has sections: ${!!cs.content?.sections}`);
+        console.log(`  Section count: ${cs.content?.sections?.length || 0}`);
+        console.log(`  Has overview: ${!!cs.content?.overview}`);
+        
+        portfolioWithCaseStudies.caseStudies[cs.projectId] = cs.toObject();
       });
+      
+      console.log(`\nCase Studies Object Keys: ${Object.keys(portfolioWithCaseStudies.caseStudies).join(', ')}`);
+      console.log(`=== END CASE STUDY DEBUG ===\n`);
+      
+      // Mark projects that have case studies
+      const caseStudyProjectIds = caseStudies.map(cs => String(cs.projectId));
+      
+      // Update projects in content.work.projects array
+      if (portfolioWithCaseStudies.content?.work?.projects) {
+        portfolioWithCaseStudies.content.work.projects = portfolioWithCaseStudies.content.work.projects.map(project => ({
+          ...project,
+          hasCaseStudy: caseStudyProjectIds.includes(String(project.id))
+        }));
+      }
+      
+      // Also update content.projects array if it exists
+      if (portfolioWithCaseStudies.content?.projects) {
+        portfolioWithCaseStudies.content.projects = portfolioWithCaseStudies.content.projects.map(project => ({
+          ...project,
+          hasCaseStudy: caseStudyProjectIds.includes(String(project.id))
+        }));
+      }
     }
 
     // Generate HTML content using templateConvert service (includes case studies)

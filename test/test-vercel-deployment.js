@@ -5,10 +5,12 @@
  * 1. User logs in to their account
  * 2. User views their draft portfolios
  * 3. User selects a portfolio to publish
- * 4. User clicks "Publish" button
- * 5. System generates HTML from user's portfolio data
- * 6. System automatically uploads and hosts to Vercel
- * 7. User receives live URL
+ * 4. System verifies portfolio has case studies
+ * 5. User clicks "Publish" button
+ * 6. System generates HTML from user's portfolio data + case studies
+ * 7. System automatically uploads and hosts to Vercel
+ * 8. User receives live URL
+ * 9. System verifies case study HTML was generated
  */
 
 import fetch from 'node-fetch';
@@ -19,57 +21,76 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-const BASE_URL = 'http://localhost:5000';
-const USER_EMAIL = 'user1@example.com';
-const USER_PASSWORD = 'password123';
+const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:5000';
+const USER_EMAIL = process.env.TEST_USER_EMAIL || 'user2@example.com';
+const USER_PASSWORD = process.env.TEST_USER_PASSWORD || '123456';
+
+// Color codes for better output
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m'
+};
+
+function colorize(text, color) {
+  return `${colors[color]}${text}${colors.reset}`;
+}
 
 /**
  * Check if server is ready
  */
-async function waitForServer(maxAttempts = 10) {
-  console.log('🔍 Checking server status...');
+// Helper function to wait for server to be ready
+async function waitForServer(maxAttempts = 10, delayMs = 1000) {
+  console.log(colorize('\n🔍 Checking if server is ready...', 'cyan'));
   
   for (let i = 0; i < maxAttempts; i++) {
     try {
-      const response = await fetch(`${BASE_URL}/health`, { timeout: 5000 });
+      const response = await fetch(`${BASE_URL}/api/health`);
       if (response.ok) {
-        console.log('✅ Server is ready!');
+        console.log(colorize('✓ Server is ready!', 'green'));
         return true;
       }
     } catch (error) {
-      console.log(`⏳ Attempt ${i + 1}/${maxAttempts}...`);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log(colorize(`  Attempt ${i + 1}/${maxAttempts}: Server not ready yet...`, 'yellow'));
     }
+    await new Promise(resolve => setTimeout(resolve, delayMs));
   }
   
-  throw new Error('Server not ready after maximum attempts');
+  throw new Error('Server failed to start within timeout period');
 }
 
 /**
  * Authenticate user and get auth token
  */
+// Step 1: Authenticate user and get token
 async function authenticateUser() {
-  console.log('\n🔐 AUTHENTICATING USER...');
+  console.log(colorize(`\n� STEP 1: Authenticating user (${USER_EMAIL})...`, 'bright'));
   
   const response = await fetch(`${BASE_URL}/api/auth/login`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       email: USER_EMAIL,
       password: USER_PASSWORD
     })
   });
 
-  const data = await response.json();
-  
-  if (!data.success) {
-    throw new Error(`Authentication failed: ${data.message}`);
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Authentication failed: ${error}`);
   }
 
-  console.log('✅ Login successful!');
-  return data.data?.token || data.token;
+  const data = await response.json();
+  console.log(colorize('✓ Authentication successful!', 'green'));
+  console.log(colorize(`  User ID: ${data.userId}`, 'cyan'));
+  console.log(colorize(`  Token: ${data.token.substring(0, 20)}...`, 'cyan'));
+  
+  return data.token;
 }
 
 /**

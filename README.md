@@ -1,11 +1,12 @@
 # 🌟 AUREA Backend API
 
-A comprehensive Node.js/Express backen## 🎯 **COMPLETE API SYSTEM: 17 Endpoints**
+## 🎯 **COMPLETE API SYSTEM: 25 Endpoints**
 
-A comprehensive portfolio management platform with complete CRUD operations, authentication, and media handling:
+A comprehensive portfolio management platform with complete CRUD operations, user management, authentication, and media handling:
 
 ### 🏗️ System Architecture
 **Authentication Layer**: JWT-based secure access control  
+**User Management System**: Complete profile and account management
 **Portfolio Management**: Complete lifecycle from creation to publishing  
 **Case Study System**: Structured project documentation  
 **Media Handling**: Professional image upload and management  
@@ -15,7 +16,8 @@ A comprehensive portfolio management platform with complete CRUD operations, aut
 ## ✨ Key Features
 
 - 🔐 **Complete Authentication System** - JWT-based user management with secure access control
-- 📁 **Advanced Portfolio Management** - Full CRUD operations with publishing, slug management, and view tracking
+- � **User Profile Management** - Full CRUD operations for user accounts with password management
+- �📁 **Advanced Portfolio Management** - Full CRUD operations with publishing, slug management, and view tracking
 - 📖 **Case Study System** - Structured case study creation linked to portfolio projects
 - 🖼️ **Professional Image Upload** - Cloudinary integration with structured file organization  
 - ⚡ **Performance Optimized** - Redis caching, rate limiting, and database indexing
@@ -62,7 +64,7 @@ npm run dev
 🚀 AUREA Backend Server running on port 5000
 📊 Environment: development
 ✅ MongoDB Connected: cluster-name.mongodb.net
-🎯 17 API Endpoints Active
+🎯 25 API Endpoints Active
 📚 API Documentation: http://localhost:5000/api-docs
 ```
 
@@ -115,12 +117,21 @@ curl http://localhost:5000/health
 # Navigate to: POST /api/portfolios
 ```
 
-## 📊 Complete API Endpoints (17 Total)
+## 📊 Complete API Endpoints (25 Total)
 
 ### 🔐 Authentication Endpoints (3)
-- `POST /api/auth/register` - User registration with validation
+- `POST /api/auth/signup` - User registration with validation
 - `POST /api/auth/login` - User authentication with JWT tokens  
 - `GET /api/auth/me` - Get current user profile (protected)
+
+### 👤 User Management Endpoints (7)
+- `GET /api/users/profile` - Get current user profile with statistics
+- `PUT /api/users/profile` - Update name, email, or password
+- `DELETE /api/users/profile` - Delete account with password confirmation
+- `GET /api/users` - Get all users with pagination (Admin)
+- `GET /api/users/:id` - Get user by ID with stats (Admin)
+- `PUT /api/users/:id` - Update any user (Admin)
+- `DELETE /api/users/:id` - Delete any user (Admin)
 
 ### 📁 Portfolio Management (8)
 - `POST /api/portfolios` - Create new portfolio with template support
@@ -138,9 +149,18 @@ curl http://localhost:5000/health
 - `PUT /api/case-studies/:id` - Update case study content
 - `DELETE /api/case-studies/:id` - Delete case study
 
+**✨ Smart Data Transformation**: Case studies automatically transform database content to HTML with intelligent fallbacks:
+- Real database content when available (hero, overview, sections)
+- Professional defaults when content is empty or using template placeholders
+- Fully responsive HTML generation with mobile-optimized layouts
+- Automatic project marking with `hasCaseStudy` flags for portfolio integration
+
 ### 🖼️ File Upload System (2)
 - `POST /api/upload/image` - Upload image to Cloudinary with validation
 - `DELETE /api/upload/image` - Delete image from Cloudinary
+
+### 🏥 System Health (1)
+- `GET /health` - Server status and database connectivity
 
 ## 🔗 Detailed API Documentation
 
@@ -153,7 +173,7 @@ Authorization: Bearer <your-jwt-token>
 #### Registration & Login Flow
 ```bash
 # 1. Register new user
-curl -X POST http://localhost:5000/api/auth/register \
+curl -X POST http://localhost:5000/api/auth/signup \
   -H "Content-Type: application/json" \
   -d '{"name":"John Doe","email":"john@example.com","password":"securepass123"}'
 
@@ -165,6 +185,86 @@ curl -X POST http://localhost:5000/api/auth/login \
 # 3. Access protected routes
 curl -X GET http://localhost:5000/api/auth/me \
   -H "Authorization: Bearer <jwt-token>"
+```
+
+### 👤 User Profile Management
+
+#### Get Current User Profile
+Retrieve authenticated user's profile with portfolio and case study statistics:
+```bash
+curl -X GET http://localhost:5000/api/users/profile \
+  -H "Authorization: Bearer <token>"
+
+# Response includes:
+{
+  "success": true,
+  "data": {
+    "_id": "user-id",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "createdAt": "2025-10-12T...",
+    "updatedAt": "2025-10-12T...",
+    "stats": {
+      "totalPortfolios": 5,
+      "publishedPortfolios": 3,
+      "draftPortfolios": 2,
+      "caseStudies": 8
+    }
+  }
+}
+```
+
+#### Update Profile
+Update name, email, or password for the authenticated user:
+```bash
+# Update name
+curl -X PUT http://localhost:5000/api/users/profile \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Updated"}'
+
+# Update email
+curl -X PUT http://localhost:5000/api/users/profile \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"john.updated@example.com"}'
+
+# Change password (requires current password)
+curl -X PUT http://localhost:5000/api/users/profile \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"currentPassword":"oldpass123","newPassword":"newpass123"}'
+```
+
+#### Delete Account
+Permanently delete user account and all associated data (portfolios, case studies):
+```bash
+curl -X DELETE http://localhost:5000/api/users/profile \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"password":"securepass123"}'
+```
+
+#### Admin User Management
+Admin-only endpoints for managing all users:
+```bash
+# Get all users with pagination and search
+curl -X GET "http://localhost:5000/api/users?page=1&limit=10&search=john" \
+  -H "Authorization: Bearer <admin-token>"
+
+# Get specific user by ID
+curl -X GET http://localhost:5000/api/users/:userId \
+  -H "Authorization: Bearer <admin-token>"
+
+# Update any user
+curl -X PUT http://localhost:5000/api/users/:userId \
+  -H "Authorization: Bearer <admin-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Updated Name","email":"newemail@example.com"}'
+
+# Delete any user
+curl -X DELETE http://localhost:5000/api/users/:userId \
+  -H "Authorization: Bearer <admin-token>"
 ```
 
 ### 📁 Portfolio Management System
@@ -191,7 +291,7 @@ curl -X PUT http://localhost:5000/api/portfolios/:id/publish \
 ```
 
 ### 📖 Case Study System
-Case studies are linked to specific projects within portfolios:
+Case studies are linked to specific projects within portfolios and feature intelligent data transformation:
 
 ```bash
 # Create case study
@@ -199,6 +299,35 @@ curl -X POST http://localhost:5000/api/case-studies \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{"portfolioId":"portfolio-id","projectId":"project-1","content":{...}}'
+```
+
+**Case Study Features:**
+- **Smart Data Transformation**: Automatically converts database content to HTML format
+- **Intelligent Fallbacks**: Uses real data when available, professional defaults when empty
+- **Responsive HTML**: Generated case study pages adapt to all screen sizes
+- **Portfolio Integration**: Projects with case studies are automatically flagged with `hasCaseStudy: true`
+- **Flexible Content Structure**: Supports hero sections, overview, multiple content sections, and additional context
+- **SEO-Friendly URLs**: Case study pages generated as `case-study-{projectId}.html`
+
+**Content Structure:**
+```javascript
+{
+  hero: { title, subtitle, coverImage, client, year, role, duration },
+  overview: { heading, description, challenge, solution, results },
+  sections: [
+    { 
+      id: "section-1",
+      type: "text|image|gallery",
+      heading: "Section Title",
+      content: "Section content...",
+      image: "image-url",
+      images: ["url1", "url2"],
+      layout: "default|full|side-by-side"
+    }
+  ],
+  additionalContext: { heading, content },
+  nextProject: { id, title, image }
+}
 ```
 
 ### 🖼️ Media Upload System
@@ -237,6 +366,7 @@ curl -X POST http://localhost:5000/api/upload/image \
 - **Database Optimization**: MongoDB with Mongoose ODM, strategic indexing, and aggregation
 - **Caching Layer**: Optional Redis integration with graceful degradation
 - **Error Recovery**: Comprehensive error handling with standardized JSON responses
+- **Smart HTML Generation**: Intelligent case study transformation with responsive templates and fallback logic
 
 ## 📁 Professional Project Structure
 
@@ -249,8 +379,10 @@ AUREA---Backend/
 │   │   └── swagger.js           # API documentation setup
 │   ├── controllers/
 │   │   ├── authController.js     # JWT authentication & user management
+│   │   ├── userController.js     # User profile CRUD operations
 │   │   ├── portfolioController.js # Portfolio CRUD with publishing system
 │   │   ├── caseStudyController.js # Case study management linked to portfolios
+│   │   ├── siteController.js     # Vercel deployment & HTML generation
 │   │   ├── uploadController.js   # Cloudinary image upload & deletion
 │   │   ├── proposalExtract.controller.js      # Legacy PDF processing
 │   │   └── proposalExtract.genai.controller.js # AI-powered PDF extraction
@@ -268,6 +400,7 @@ AUREA---Backend/
 │   │   └── CaseStudy.js        # Case study schema with structured content
 │   ├── routes/
 │   │   ├── authRoutes.js        # Authentication endpoints (3)
+│   │   ├── userRoutes.js        # User management endpoints (7)
 │   │   ├── portfolioRoutes.js   # Portfolio management endpoints (8)
 │   │   ├── caseStudyRoutes.js   # Case study endpoints (4)
 │   │   ├── uploadRoutes.js      # Image upload endpoints (2)
@@ -275,8 +408,17 @@ AUREA---Backend/
 │   └── utils/
 │       ├── cache.js            # Redis caching utilities with fallback
 │       └── slugGenerator.js    # Slug validation & generation utilities
+├── services/
+│   └── templateConvert.js      # 🎨 Smart HTML generation with responsive templates
+├── test/
+│   ├── test-user-profile-crud.js          # Comprehensive user CRUD test suite
+│   └── test-vercel-deployment-improved.js # Case study verification test suite
+├── generated-files/              # 📁 Generated portfolio HTML files
+│   └── {subdomain}/
+│       ├── index.html           # Main portfolio page
+│       └── case-study-*.html    # Individual case study pages
 ├── uploads/                     # Temporary file storage (auto-cleanup)
-├── swagger.yaml                 # 📖 Complete API documentation (17 endpoints)
+├── swagger.yaml                 # 📖 Complete API documentation (25 endpoints)
 ├── package.json                 # 📦 Production-optimized dependencies
 ├── server.js                    # 🚀 Application entry point with graceful shutdown
 ├── .env                         # Environment configuration
@@ -284,6 +426,28 @@ AUREA---Backend/
 ├── PORTFOLIO_CONTROLLER_REVIEW.md # 📋 Controller review & updates
 └── README.md                    # 📋 This comprehensive documentation
 ```
+
+### 🎨 Recent Updates (October 2025)
+
+**Case Study System Enhancements:**
+1. **Fixed Data Transformation** - Case studies now correctly display real database content instead of mock data
+   - `siteController.js`: Fixed to pass complete case study objects (`cs.toObject()`) instead of just content
+   - `templateConvert.js`: Added `caseStudies` data passthrough in `processPortfolioData()` function
+   
+2. **Smart Fallback Logic** - Intelligent content detection and fallback system
+   - Detects empty/default template values (e.g., "My First Project", "Add a description...")
+   - Uses real database content when available
+   - Falls back to professional defaults when content is missing
+   
+3. **Responsive HTML Generation** - Mobile-first case study pages
+   - Fully responsive layouts with media queries
+   - Touch-optimized navigation
+   - Adaptive typography and spacing
+
+4. **Comprehensive Testing** - Enhanced test suite for case study verification
+   - `test-vercel-deployment-improved.js`: Verifies case study HTML generation
+   - Validates real data appears in generated files
+   - Checks for proper fallback behavior
 
 ## � Optimized Dependencies
 
@@ -381,7 +545,34 @@ Complete portfolio management system for creative professionals:
 
 ### Frontend Integration Example
 ```javascript
-// React/Next.js Portfolio Management
+// React/Next.js User Profile Management
+const getUserProfile = async (token) => {
+  const response = await fetch('/api/users/profile', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  const result = await response.json();
+  return result.data; // User profile with stats
+};
+
+const updateUserProfile = async (token, updates) => {
+  const response = await fetch('/api/users/profile', {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(updates)
+  });
+  
+  const result = await response.json();
+  return result.data; // Updated user data
+};
+
+// Portfolio Management
 const createPortfolio = async (portfolioData) => {
   const response = await fetch('/api/portfolios', {
     method: 'POST',
@@ -417,6 +608,57 @@ const uploadPortfolioImage = async (imageFile) => {
   const result = await response.json();
   return result.data.imageUrl; // Cloudinary URL for use in portfolio
 };
+```
+
+## 🧪 Testing
+
+### User CRUD Test Suite
+A comprehensive test script is included to verify all user profile operations:
+
+```bash
+# Run the complete user CRUD test suite
+node test/test-user-profile-crud.js
+```
+
+**Test Coverage (9 Tests):**
+1. ✅ **User Login** - Authenticate with credentials
+2. ✅ **Get Profile** - Retrieve user profile with statistics
+3. ✅ **Update Name** - Change user's display name
+4. ✅ **Update Email** - Change user's email address
+5. ✅ **Change Password** - Update user password with validation
+6. ✅ **Login with New Credentials** - Verify updated credentials work
+7. ✅ **Revert Changes** - Restore original values (cleanup)
+8. ✅ **Delete Account** - Permanently delete user account
+9. ✅ **Re-create Account** - Create new account after deletion
+
+**Bonus Validation Tests:**
+- ❌ Invalid email format detection
+- ❌ Short password rejection
+- ❌ Password change without current password
+
+**Test Output Example:**
+```
+╔════════════════════════════════════════════════════════════╗
+║     USER PROFILE CRUD OPERATIONS TEST SUITE               ║
+║     Testing user: user2@example.com                       ║
+╚════════════════════════════════════════════════════════════╝
+
+✅ Server is running at http://localhost:5000
+✅ Login successful!
+✅ Profile retrieved successfully!
+✅ Name updated successfully!
+✅ Email updated successfully!
+✅ Password changed successfully!
+✅ Login with new credentials successful!
+✅ Changes reverted successfully!
+✅ Validation correctly rejected invalid email!
+✅ Validation correctly rejected short password!
+✅ Account deleted successfully!
+✅ Account re-created successfully!
+
+────────────────────────────────────────────────────────────
+Total: 9/9 tests passed
+🎉 All tests passed!
 ```
 
 ## 🐛 Troubleshooting

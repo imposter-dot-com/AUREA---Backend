@@ -2,20 +2,29 @@ openapi: 3.0.0
 info:
   title: AUREA Backend API
   description: |
-    Comprehensive Portfolio Management Platform API with 18 professional endpoints.
+    Comprehensive Portfolio Management Platform API with 25 professional endpoints.
     
     **Features:**
     - JWT Authentication System
+    - Complete User Profile Management
     - Complete Portfolio CRUD Operations
-    - One-Click Vercel Deployment
-    - Dynamic HTML Generation from User Data
-    - Case Study Management
+    - One-Click Vercel Deployment with Smart HTML Generation
+    - Dynamic Responsive HTML from User Data
+    - Case Study Management with Intelligent Transformation
     - Professional Image Upload (Cloudinary)
     - Publishing System with Slug Management
     - View Tracking & Analytics
     
-    **Total Endpoints: 18**
+    **Case Study Smart Transformation (October 2025):**
+    - Automatically detects real vs template/default content
+    - Uses database data when available, professional fallbacks when empty
+    - Generates fully responsive mobile-optimized HTML pages
+    - Auto-marks projects with hasCaseStudy flags for portfolio integration
+    - Comprehensive test suite for verification
+    
+    **Total Endpoints: 25**
     - Authentication: 3 endpoints
+    - User Management: 7 endpoints
     - Portfolio Management: 8 endpoints
     - Site Publishing & Deployment: 3 endpoints
     - Case Study Management: 4 endpoints
@@ -37,12 +46,21 @@ tags:
     description: Server health check endpoints
   - name: Authentication
     description: User registration and authentication (3 endpoints)
+  - name: User Management
+    description: User profile and account management (7 endpoints)
   - name: Portfolios
     description: Portfolio CRUD operations and publishing system (8 endpoints)
   - name: Site Publishing
     description: One-click portfolio publishing to Vercel with HTML generation (3 endpoints)
   - name: Case Studies
-    description: Case study management linked to portfolios (4 endpoints)
+    description: |
+      Case study management linked to portfolios with smart HTML transformation (4 endpoints).
+      
+      **Smart Features:**
+      - Intelligent data detection (real vs template/default values)
+      - Automatic fallbacks for empty content
+      - Responsive mobile-optimized HTML generation
+      - Projects automatically flagged with hasCaseStudy: true
   - name: Image Upload
     description: Upload and delete images via Cloudinary (2 endpoints)
   - name: Proposal Extraction
@@ -147,6 +165,21 @@ components:
     
     CaseStudy:
       type: object
+      description: |
+        Case study with structured content that transforms to responsive HTML.
+        
+        **Smart Transformation Features:**
+        - Detects real vs template/default data automatically
+        - Uses database content when available (title, description, sections)
+        - Falls back to professional defaults when fields are empty
+        - Generates mobile-optimized responsive HTML pages
+        - Projects with case studies get hasCaseStudy: true flag
+        
+        **Content Guidelines:**
+        - hero.title: Main project title (avoid "My First Project" for real content)
+        - overview.description: Project overview (avoid "Add a description...")
+        - sections: Array of content blocks with headings and content
+        - Empty/default values trigger intelligent fallbacks
       properties:
         _id:
           type: string
@@ -301,6 +334,41 @@ components:
             token:
               type: string
               description: JWT authentication token
+    
+    UserProfile:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique identifier
+        name:
+          type: string
+          description: User's full name
+        email:
+          type: string
+          format: email
+          description: User's email address
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        stats:
+          type: object
+          properties:
+            totalPortfolios:
+              type: integer
+              description: Total number of portfolios
+            publishedPortfolios:
+              type: integer
+              description: Number of published portfolios
+            draftPortfolios:
+              type: integer
+              description: Number of draft portfolios
+            caseStudies:
+              type: integer
+              description: Total number of case studies
     
     Error:
       type: object
@@ -502,6 +570,352 @@ paths:
                     properties:
                       user:
                         $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/users/profile:
+    get:
+      summary: Get current user profile
+      description: Get the authenticated user's profile with statistics
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      summary: Update user profile
+      description: Update name, email, or password for the authenticated user
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: New name (optional)
+                  example: "John Updated"
+                email:
+                  type: string
+                  format: email
+                  description: New email (optional)
+                  example: "john.updated@example.com"
+                currentPassword:
+                  type: string
+                  description: Current password (required for password change)
+                  example: "oldpassword123"
+                newPassword:
+                  type: string
+                  minLength: 6
+                  description: New password (optional, requires currentPassword)
+                  example: "newpassword123"
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Profile updated successfully"
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized or incorrect password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      summary: Delete user account
+      description: Permanently delete the authenticated user's account and all associated data
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  description: User's password for confirmation
+                  example: "password123"
+              required:
+                - password
+      responses:
+        '200':
+          description: Account deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Account deleted successfully"
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized or incorrect password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/users:
+    get:
+      summary: Get all users (Admin)
+      description: Get a paginated list of all users with search functionality (Admin only)
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+          description: Number of users per page
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search by name or email
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      users:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+                      pagination:
+                        type: object
+                        properties:
+                          currentPage:
+                            type: integer
+                          totalPages:
+                            type: integer
+                          totalUsers:
+                            type: integer
+                          hasNextPage:
+                            type: boolean
+                          hasPrevPage:
+                            type: boolean
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/users/{id}:
+    get:
+      summary: Get user by ID (Admin)
+      description: Get detailed information about a specific user (Admin only)
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      summary: Update user by ID (Admin)
+      description: Update any user's information (Admin only)
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "User updated successfully"
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      summary: Delete user by ID (Admin)
+      description: Delete any user account and all associated data (Admin only)
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "User deleted successfully"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
           content:
@@ -1056,7 +1470,28 @@ paths:
   /api/case-studies:
     post:
       summary: Create a new case study
-      description: Create a case study linked to a portfolio project
+      description: |
+        Create a case study linked to a portfolio project.
+        
+        **Smart HTML Transformation:**
+        When published, case studies are automatically transformed to responsive HTML:
+        - Real database content is used when available
+        - Professional defaults are used for empty/template values
+        - Fully responsive mobile-optimized layouts
+        - Projects are automatically marked with hasCaseStudy: true
+        
+        **Content Structure:**
+        - hero: Project title, subtitle, cover image, client info
+        - overview: Description, challenge, solution, results
+        - sections: Array of content blocks with headings, text, images
+        - additionalContext: Conclusion or additional information
+        - nextProject: Link to next case study (optional)
+        
+        **Best Practices:**
+        - Provide complete hero.title to avoid "Untitled Project" fallback
+        - Add overview.description for meaningful introductions
+        - Include sections with real content to showcase work properly
+        - Empty fields will use professional placeholder text
       tags:
         - Case Studies
       security:
@@ -1336,18 +1771,27 @@ paths:
         
         **Complete Publishing Flow:**
         1. Extract portfolio data (about, projects, gallery, contact)
-        2. Generate professional HTML files from user content
-        3. Create deployment files (index.html, case-study pages)
-        4. Upload to Vercel hosting
-        5. Return live deployment URL
+        2. Fetch case studies linked to portfolio projects
+        3. Generate professional HTML files with smart data transformation
+        4. Create deployment files (index.html, responsive case-study pages)
+        5. Upload to Vercel hosting
+        6. Return live deployment URL
         
-        **File Naming:** Files are organized by designer name from portfolio.content.about.name
+        **Smart Case Study Transformation:**
+        - Automatically detects real vs template/default data
+        - Uses database content when available (hero, overview, sections)
+        - Falls back to professional defaults when content is empty
+        - Generates fully responsive mobile-optimized HTML
+        - Marks projects with hasCaseStudy flags for portfolio integration
+        
+        **File Naming:** Files are organized by subdomain from portfolio
         
         **What Gets Generated:**
-        - index.html (main portfolio page)
-        - case-study-N.html (individual project pages)
-        - Responsive design for all devices
-        - SEO optimized with meta tags
+        - index.html (main portfolio page with VIEW CASE STUDY buttons)
+        - case-study-{projectId}.html (individual project pages)
+        - Fully responsive design for all devices (mobile, tablet, desktop)
+        - SEO optimized with meta tags and proper structure
+        - Professional fallbacks when case study content is incomplete
       tags:
         - Site Publishing
       security:
@@ -1384,21 +1828,57 @@ paths:
                     properties:
                       site:
                         $ref: '#/components/schemas/Site'
-                      deploymentUrl:
-                        type: string
-                        description: Live Vercel URL
-                        example: "https://john-designer-xyz123.vercel.app"
-                      deploymentId:
-                        type: string
-                        description: Vercel deployment ID
-                      inspectorUrl:
-                        type: string
-                        description: Vercel deployment inspector URL
-                      filesGenerated:
-                        type: array
-                        items:
-                          type: string
-                        example: ["index.html", "case-study-1.html", "case-study-2.html"]
+                      portfolio:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          title:
+                            type: string
+                          published:
+                            type: boolean
+                      deployment:
+                        type: object
+                        properties:
+                          timestamp:
+                            type: string
+                            format: date-time
+                          status:
+                            type: string
+                            example: "success"
+                          files:
+                            type: object
+                            properties:
+                              generated:
+                                type: integer
+                                description: Total number of files generated (index.html + case studies)
+                                example: 4
+                              totalSize:
+                                type: integer
+                                description: Total size of all generated files in bytes
+                                example: 152847
+                      vercel:
+                        type: object
+                        properties:
+                          url:
+                            type: string
+                            description: Live Vercel deployment URL
+                            example: "https://designer-name-xyz123.vercel.app"
+                          status:
+                            type: string
+                            description: Deployment status (BUILDING, READY, ERROR)
+                            example: "BUILDING"
+                      files:
+                        type: object
+                        properties:
+                          generated:
+                            type: integer
+                            description: Number of HTML files generated
+                            example: 4
+                          totalSize:
+                            type: integer
+                            description: Total file size in bytes
+                            example: 152847
         '400':
           description: Portfolio not found or validation error
           content:

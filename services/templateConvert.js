@@ -756,15 +756,108 @@ function createHTMLFromData(data) {
 }
 
 /**
+ * Transform database case study format to HTML template format
+ */
+function transformCaseStudyForHTML(caseStudy, portfolioData) {
+  console.log('🔍 transformCaseStudyForHTML input:', {
+    hasCaseStudy: !!caseStudy,
+    hasContent: !!caseStudy?.content,
+    hasHero: !!caseStudy?.content?.hero,
+    heroTitle: caseStudy?.content?.hero?.title,
+    hasSections: !!caseStudy?.content?.sections,
+    sectionCount: caseStudy?.content?.sections?.length || 0,
+    caseStudyKeys: Object.keys(caseStudy || {})
+  });
+  
+  // Check if it's already in template format (has category, intro, etc.)
+  if (caseStudy?.category && caseStudy?.intro && caseStudy?.sections?.length > 0) {
+    console.log('✓ Already in template format');
+    return caseStudy;
+  }
+  
+  // Transform database format to template format
+  const hero = caseStudy?.content?.hero || caseStudy?.hero || {};
+  const overview = caseStudy?.content?.overview || caseStudy?.overview || {};
+  const sections = caseStudy?.content?.sections || caseStudy?.sections || [];
+  const additionalContext = caseStudy?.content?.additionalContext || caseStudy?.additionalContext || {};
+  
+  // Check if we have meaningful content
+  const hasRealTitle = hero.title && hero.title.trim() && hero.title !== 'My First Project';
+  const hasRealDescription = overview.description && overview.description.trim() && overview.description !== 'Add a description of your project here...';
+  const hasRealSections = sections.length > 0 && sections.some(s => s.content && s.content.trim());
+  
+  console.log('🔄 Transforming case study:', {
+    heroTitle: hero.title,
+    hasRealTitle,
+    hasRealDescription,
+    hasRealSections,
+    overviewDesc: overview.description?.substring(0, 50),
+    sectionCount: sections.length
+  });
+  
+  // If no real content, return minimal fallback
+  if (!hasRealTitle && !hasRealDescription && !hasRealSections) {
+    console.log('⚠️  No real content found, using minimal fallback');
+    const authorName = portfolioData?.about?.name || portfolioData?.content?.about?.name || 'DESIGNER';
+    return {
+      category: `PROJECT — ${new Date().getFullYear()}`,
+      title: 'PROJECT\nCASE STUDY',
+      intro: 'This project case study is currently being developed. Check back soon for updates.',
+      heroImage: '',
+      heroCaption: 'Project Details',
+      authorName,
+      sections: [],
+      conclusion: {
+        title: 'THANK YOU',
+        content: 'Thank you for your interest in this project.'
+      }
+    };
+  }
+  
+  // Transform with real data
+  const authorName = portfolioData?.about?.name || portfolioData?.content?.about?.name || 'DESIGNER';
+  
+  return {
+    category: `${hero.client || hero.subtitle || 'PROJECT'} — ${hero.year || new Date().getFullYear()}`,
+    title: hero.title || 'Untitled Project',
+    intro: overview.description || overview.challenge || 'Project case study.',
+    heroImage: hero.coverImage || '',
+    heroCaption: hero.client ? `${hero.client} ${hero.year || ''}`.trim() : 'Project Details',
+    authorName,
+    sections: sections.map((section, index) => ({
+      number: String(index + 1).padStart(2, '0'),
+      title: section.heading || `Section ${index + 1}`,
+      subsections: [{
+        title: section.heading || `Section ${index + 1}`,
+        content: section.content || '',
+        image: section.image || (section.images && section.images[0]) || '',
+        imageCaption: section.heading || '',
+        imageLarge: section.layout === 'full',
+        dark: false,
+        highlighted: section.type === 'text',
+        images: section.images || []
+      }]
+    })),
+    conclusion: {
+      title: additionalContext.heading || overview.heading || 'CONCLUSION',
+      content: additionalContext.content || overview.results || 'Thank you for viewing this case study.'
+    }
+  };
+}
+
+/**
  * Generate Case Study Page HTML
  */
 function generateCaseStudyHTML(projectId, caseStudy, data) {
+  // Transform to template format
+  const templateData = transformCaseStudyForHTML(caseStudy, data);
+  
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${caseStudy.title.replace(/\n/g, ' ')} - Case Study</title>
+  <title>${templateData.title.replace(/\n/g, ' ')} - Case Study</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -816,61 +909,65 @@ function generateCaseStudyHTML(projectId, caseStudy, data) {
     <section style="max-width: 1400px; margin: 0 auto; padding: 0 60px; margin-bottom: 180px;">
       <!-- Category -->
       <div style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #FF0000; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 40px;">
-        ${caseStudy.category}
+        ${templateData.category}
       </div>
 
       <!-- Main Title -->
       <h1 style="font-family: 'Neue Haas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: clamp(60px, 10vw, 140px); font-weight: 900; line-height: 0.9; text-transform: uppercase; letter-spacing: -0.03em; margin: 0; margin-bottom: 60px; white-space: pre-line;">
-        ${caseStudy.title}
+        ${templateData.title}
       </h1>
 
       <!-- Intro Text -->
       <div style="max-width: 900px; font-size: 24px; line-height: 1.6; margin-bottom: 80px;">
-        ${caseStudy.intro}
+        ${templateData.intro}
       </div>
 
       <!-- Hero Image -->
-      <div style="width: 100%; aspect-ratio: 16/9; background-color: #F5F5F5; margin-bottom: 40px; overflow: hidden;">
-        <img src="${caseStudy.heroImage}" alt="Case Study Hero" style="width: 100%; height: 100%; object-fit: cover;">
-      </div>
+      ${templateData.heroImage ? `
+        <div style="width: 100%; aspect-ratio: 16/9; background-color: #F5F5F5; margin-bottom: 40px; overflow: hidden;">
+          <img src="${templateData.heroImage}" alt="Case Study Hero" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
 
-      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #666666; text-align: center; text-transform: uppercase; letter-spacing: 0.1em;">
-        ${caseStudy.heroCaption}
-      </div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #666666; text-align: center; text-transform: uppercase; letter-spacing: 0.1em;">
+          ${templateData.heroCaption}
+        </div>
+      ` : ''}
     </section>
 
     <!-- Introduction -->
-    <section style="max-width: 900px; margin: 0 auto; padding: 0 60px; margin-bottom: 160px;">
-      <p style="font-size: 20px; line-height: 1.8; margin-bottom: 30px;">
-        The reasons why I am doing this is mostly because I get asked a lot by clients 
-        and other designers — how do I go around my process of creating logos, and of course 
-        because I want to share some of my knowledge.
-      </p>
-      
-      <p style="font-size: 20px; line-height: 1.8; margin-bottom: 30px;">
-        There are ${caseStudy.sections.length} major steps I take when designing a logo:
-      </p>
+    ${templateData.sections && templateData.sections.length > 0 ? `
+      <section style="max-width: 900px; margin: 0 auto; padding: 0 60px; margin-bottom: 160px;">
+        <p style="font-size: 20px; line-height: 1.8; margin-bottom: 30px;">
+          ${templateData.intro}
+        </p>
+        
+        ${templateData.sections.length > 1 ? `
+          <p style="font-size: 20px; line-height: 1.8; margin-bottom: 30px;">
+            This case study consists of ${templateData.sections.length} major sections:
+          </p>
 
-      <!-- Steps Grid -->
-      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; margin-top: 60px;">
-        ${caseStudy.sections.map((section, i) => `
-          <div style="border: 2px solid #000000; padding: 40px; background-color: ${i === 0 ? '#FF0000' : 'transparent'}; color: ${i === 0 ? '#FFFFFF' : '#000000'};">
-            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 48px; font-weight: 900; margin-bottom: 20px;">
-              ${section.number}
-            </div>
-            <div style="font-family: 'Neue Haas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 24px; font-weight: 900; text-transform: uppercase; margin-bottom: 12px;">
-              ${section.title}
-            </div>
-            <div style="font-size: 16px; opacity: 0.8;">
-              ${section.subsections[0]?.title || section.title}
-            </div>
+          <!-- Steps Grid -->
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; margin-top: 60px;">
+            ${templateData.sections.map((section, i) => `
+              <div style="border: 2px solid #000000; padding: 40px; background-color: ${i === 0 ? '#FF0000' : 'transparent'}; color: ${i === 0 ? '#FFFFFF' : '#000000'};">
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 48px; font-weight: 900; margin-bottom: 20px;">
+                  ${section.number}
+                </div>
+                <div style="font-family: 'Neue Haas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 24px; font-weight: 900; text-transform: uppercase; margin-bottom: 12px;">
+                  ${section.title}
+                </div>
+                <div style="font-size: 16px; opacity: 0.8;">
+                  ${section.subsections[0]?.title || section.title}
+                </div>
+              </div>
+            `).join('')}
           </div>
-        `).join('')}
-      </div>
-    </section>
+        ` : ''}
+      </section>
+    ` : ''}
 
     <!-- Main Sections -->
-    ${caseStudy.sections.map(section => `
+    ${templateData.sections && templateData.sections.length > 0 ? templateData.sections.map(section => `
       <section style="max-width: 1400px; margin: 0 auto; padding: 0 60px; margin-bottom: 160px;">
         <!-- Section Header -->
         <div style="display: flex; align-items: center; gap: 40px; margin-bottom: 80px;">
@@ -1026,19 +1123,21 @@ function generateCaseStudyHTML(projectId, caseStudy, data) {
           }
         }).join('')}
       </section>
-    `).join('')}
+    `).join('') : ''}
 
     <!-- Conclusion -->
-    <section style="max-width: 900px; margin: 0 auto; padding: 0 60px; margin-bottom: 80px;">
-      <div style="background-color: #FF0000; color: #FFFFFF; padding: 80px 60px; text-align: center;">
-        <h2 style="font-family: 'Neue Haas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 48px; font-weight: 900; text-transform: uppercase; margin-bottom: 40px; line-height: 1.1;">
-          ${caseStudy.conclusion.title}
-        </h2>
-        <p style="font-size: 20px; line-height: 1.8;">
-          ${caseStudy.conclusion.content}
-        </p>
-      </div>
-    </section>
+    ${templateData.conclusion ? `
+      <section style="max-width: 900px; margin: 0 auto; padding: 0 60px; margin-bottom: 80px;">
+        <div style="background-color: #FF0000; color: #FFFFFF; padding: 80px 60px; text-align: center;">
+          <h2 style="font-family: 'Neue Haas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 48px; font-weight: 900; text-transform: uppercase; margin-bottom: 40px; line-height: 1.1;">
+            ${templateData.conclusion.title}
+          </h2>
+          <p style="font-size: 20px; line-height: 1.8;">
+            ${templateData.conclusion.content}
+          </p>
+        </div>
+      </section>
+    ` : ''}
 
     <!-- Author -->
     <section style="max-width: 900px; margin: 0 auto; padding: 0 60px; text-align: center;">
@@ -1046,7 +1145,7 @@ function generateCaseStudyHTML(projectId, caseStudy, data) {
         Thank you for reading
       </div>
       <div style="font-family: 'Neue Haas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 36px; font-weight: 900;">
-        ${caseStudy.authorName}
+        ${templateData.authorName}
       </div>
     </section>
   </main>
@@ -1054,7 +1153,7 @@ function generateCaseStudyHTML(projectId, caseStudy, data) {
   <!-- Footer -->
   <footer style="background-color: #000000; color: #FFFFFF; padding: 40px 60px; text-align: center; border-top: 3px solid #FF0000;">
     <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.15em;">
-      Case Study — ${caseStudy.title.replace(/\n/g, ' ')} © 2025
+      Case Study — ${templateData.title.replace(/\n/g, ' ')} © ${new Date().getFullYear()}
     </div>
   </footer>
 </body>
@@ -1229,32 +1328,9 @@ export function generateAllPortfolioFiles(portfolioData) {
       });
     }
     
-    // If no case studies were generated, create mock/default case studies
-    if (caseStudiesGenerated === 0 && processedData.work?.projects?.length > 0) {
-      console.log('📝 No case studies found - generating mock case study for demonstration');
-      
-      // Use the mock case study from EXAMPLE_DATA
-      const mockCaseStudy = EXAMPLE_DATA.caseStudies[1];
-      
-      // Add hasCaseStudy flag to first project so button appears
-      if (processedData.work.projects[0]) {
-        processedData.work.projects[0].hasCaseStudy = true;
-        processedData.work.projects[0].id = processedData.work.projects[0].id || 'demo';
-        
-        // Re-generate the main HTML with updated project data
-        const htmlContent = createHTMLFromData(processedData);
-        const fullHTML = HTML_TEMPLATE(processedData).replace('{CONTENT}', htmlContent);
-        files['index.html'] = fullHTML;
-        
-        console.log('✅ Updated first project to link to mock case study');
-      }
-      
-      // Generate mock case study HTML with matching project ID
-      const mockProjectId = processedData.work.projects[0]?.id || 'demo';
-      const mockCaseStudyHTML = generateCaseStudyHTML(mockProjectId, mockCaseStudy, processedData);
-      files[`case-study-${mockProjectId}.html`] = mockCaseStudyHTML;
-      
-      console.log(`✅ Generated mock case study: case-study-${mockProjectId}.html`);
+    // Log if no case studies were generated
+    if (caseStudiesGenerated === 0) {
+      console.log('ℹ️  No case studies found in database - only real case studies will be exported');
     }
     
     return files;
@@ -1301,6 +1377,7 @@ function processPortfolioData(inputData) {
           hasCaseStudy: project.hasCaseStudy || false
         }))
       },
+      caseStudies: data.caseStudies || {},
       gallery: sections.gallery || { heading: 'VISUAL STUDIES', images: [] },
       contact: sections.contact || {},
       styling: data.styling
@@ -1316,6 +1393,7 @@ function processPortfolioData(inputData) {
         heading: data.content.work?.heading || "My Work",
         projects: data.content.work?.projects || []
       },
+      caseStudies: data.caseStudies || {},
       gallery: data.content.gallery || { heading: 'VISUAL STUDIES', images: [] },
       contact: data.content.contact || {},
       styling: data.styling || {}
@@ -1336,6 +1414,7 @@ function processPortfolioData(inputData) {
       heading: "My Work",
       projects: []
     },
+    caseStudies: data.caseStudies || {},
     gallery: { heading: 'VISUAL STUDIES', images: [] },
     contact: {},
     styling: data.styling || {}

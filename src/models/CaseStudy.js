@@ -205,12 +205,16 @@ caseStudySchema.pre('save', async function(next) {
         return next(new Error('Portfolio not found'));
       }
       
-      // Check if projectId exists in portfolio content
-      const projects = portfolio.content?.work?.projects || [];
-      const projectExists = projects.some(project => project.id === this.projectId);
+      // Check if projectId exists in portfolio (check both work.projects and projects arrays)
+      const workProjects = portfolio.content?.work?.projects || [];
+      const contentProjects = portfolio.content?.projects || [];
+      const allProjects = [...workProjects, ...contentProjects];
+      
+      // Use loose comparison to handle both string and number IDs
+      const projectExists = allProjects.some(project => project.id == this.projectId);
       
       if (!projectExists) {
-        return next(new Error('Project ID not found in portfolio'));
+        return next(new Error(`Project ID "${this.projectId}" not found in portfolio. Available: ${allProjects.map(p => p.id).join(', ')}`));
       }
     } catch (error) {
       return next(error);

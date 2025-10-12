@@ -6,9 +6,6 @@ import mongoose from 'mongoose';
 // @route   POST /api/case-studies
 // @access  Private (portfolio owner only)
 export const createCaseStudy = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const { portfolioId, projectId, content } = req.body;
 
@@ -30,14 +27,18 @@ export const createCaseStudy = async (req, res) => {
       });
     }
 
-    // Check if project exists in portfolio
-    const projects = portfolio.content?.work?.projects || [];
-    const projectExists = projects.some(project => project.id === projectId);
+    // Check if project exists in portfolio (check both work.projects and projects arrays)
+    const workProjects = portfolio.content?.work?.projects || [];
+    const contentProjects = portfolio.content?.projects || [];
+    const allProjects = [...workProjects, ...contentProjects];
+    
+    // Use loose comparison to handle both string and number IDs
+    const projectExists = allProjects.some(project => project.id == projectId);
     
     if (!projectExists) {
       return res.status(400).json({
         success: false,
-        error: 'Project ID not found in portfolio',
+        error: `Project ID "${projectId}" not found in portfolio. Available projects: ${allProjects.map(p => p.id).join(', ')}`,
         code: 'INVALID_INPUT'
       });
     }
@@ -66,16 +67,8 @@ export const createCaseStudy = async (req, res) => {
       }
     });
 
-    await caseStudy.save({ session });
-
-    // Add case study to portfolio's caseStudies array
-    await Portfolio.findByIdAndUpdate(
-      portfolioId,
-      { $addToSet: { caseStudies: caseStudy._id } },
-      { session }
-    );
-
-    await session.commitTransaction();
+    // Save case study - the post-save hook will add it to portfolio
+    await caseStudy.save();
 
     res.status(201).json({
       success: true,
@@ -84,11 +77,8 @@ export const createCaseStudy = async (req, res) => {
     });
 
   } catch (error) {
-    await session.abortTransaction();
     console.error('Create case study error:', error);
     throw error;
-  } finally {
-    session.endSession();
   }
 };
 
