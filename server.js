@@ -18,6 +18,7 @@ import caseStudyRoutes from './src/routes/caseStudyRoutes.js';
 import uploadRoutes from './src/routes/uploadRoutes.js';
 import proposalExtractRoutes from './src/routes/proposalExtract.routes.js';
 import siteRoutes from './src/routes/siteRoutes.js';
+import userRoutes from './src/routes/userRoutes.js';
 
 dotenv.config();
 
@@ -116,6 +117,7 @@ app.use('/api/case-studies', caseStudyRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/proposals', proposalExtractRoutes);
 app.use('/api/sites', siteRoutes);
+app.use('/api/users', userRoutes);
 
 // Setup Swagger documentation
 setupSwagger(app);
@@ -133,6 +135,7 @@ app.get('/', (req, res) => {
       upload: '/api/upload',
       proposals: '/api/proposals',
       sites: '/api/sites',
+      users: '/api/users',
       health: '/health',
       docs: '/api-docs'
     }

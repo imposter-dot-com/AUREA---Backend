@@ -85,6 +85,7 @@ const strictLimiter = createRateLimiter(
 );
 
 export {
+  createRateLimiter,
   slugCheckLimiter,
   publishLimiter,
   portfolioCrudLimiter,

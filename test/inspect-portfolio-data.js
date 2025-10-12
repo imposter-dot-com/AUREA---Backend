@@ -3,8 +3,8 @@ import fetch from 'node-fetch';
 
 const BASE_URL = 'http://localhost:5000';
 const USER_CREDENTIALS = {
-  email: 'user1@example.com',
-  password: 'password123'
+  email: 'user2@example.com',
+  password: '123456'
 };
 
 async function authenticateUser() {
@@ -37,7 +37,7 @@ async function inspectPortfolioData() {
 
     // Get all portfolios
     console.log('\n📁 Fetching all portfolios...');
-    const portfoliosResponse = await fetch(`${BASE_URL}/api/portfolios/me`, {
+    const portfoliosResponse = await fetch(`${BASE_URL}/api/portfolios/user/me`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${authToken}`,
@@ -48,10 +48,10 @@ async function inspectPortfolioData() {
     const portfoliosData = await portfoliosResponse.json();
 
     if (!portfoliosData.success) {
-      throw new Error(`Failed to get portfolios: ${portfoliosData.message}`);
+      throw new Error(`Failed to get portfolios: ${portfoliosData.message || 'Unknown error'}`);
     }
 
-    const portfolios = portfoliosData.data.portfolios || [];
+    const portfolios = portfoliosData.data?.portfolios || [];
     console.log(`\n📊 Found ${portfolios.length} portfolios:`);
     
     // List all portfolios with basic info
@@ -68,56 +68,76 @@ async function inspectPortfolioData() {
     const targetPortfolio = portfolios[0];
 
     if (targetPortfolio) {
-      console.log(`\n🎯 INSPECTING FIRST PORTFOLIO: "${targetPortfolio.title}"`);
-      console.log('=' * 60);
+      console.log(`\n🎯 FETCHING FULL PORTFOLIO DATA: "${targetPortfolio.title}"`);
+      
+      // Fetch complete portfolio data with content and styling
+      const fullPortfolioResponse = await fetch(`${BASE_URL}/api/portfolios/${targetPortfolio._id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const fullPortfolioData = await fullPortfolioResponse.json();
+      
+      if (!fullPortfolioData.success) {
+        console.error('❌ Failed to fetch full portfolio:', fullPortfolioData.message);
+        return;
+      }
+
+      const portfolio = fullPortfolioData.data;
+      
+      console.log('='.repeat(60));
       
       // Display detailed structure
       console.log('\n📋 PORTFOLIO STRUCTURE:');
       console.log('Basic Info:');
-      console.log(`  Title: ${targetPortfolio.title}`);
-      console.log(`  Description: ${targetPortfolio.description || 'N/A'}`);
-      console.log(`  Template: ${targetPortfolio.templateId || targetPortfolio.template || 'default'}`);
-      console.log(`  Published: ${targetPortfolio.published}`);
-      console.log(`  URL: ${targetPortfolio.url || 'Not published'}`);
-      console.log(`  Created: ${targetPortfolio.createdAt || 'N/A'}`);
-      console.log(`  Updated: ${targetPortfolio.updatedAt || 'N/A'}`);
+      console.log(`  Title: ${portfolio.title}`);
+      console.log(`  Description: ${portfolio.description || 'N/A'}`);
+      console.log(`  Template: ${portfolio.templateId || 'default'}`);
+      console.log(`  Published: ${portfolio.isPublished}`);
+      console.log(`  Slug: ${portfolio.slug || 'Not published'}`);
+      console.log(`  View Count: ${portfolio.viewCount || 0}`);
+      console.log(`  Created: ${portfolio.createdAt || 'N/A'}`);
+      console.log(`  Updated: ${portfolio.updatedAt || 'N/A'}`);
 
       // Check for different data formats
       console.log('\n🔍 DATA FORMAT ANALYSIS:');
       
-      if (targetPortfolio.personalInfo) {
+      if (portfolio.personalInfo) {
         console.log('✅ NEW FORMAT: Has personalInfo object');
-        console.log('Personal Info:', JSON.stringify(targetPortfolio.personalInfo, null, 2));
+        console.log('Personal Info:', JSON.stringify(portfolio.personalInfo, null, 2));
       } else {
         console.log('❌ NEW FORMAT: No personalInfo found');
       }
 
-      if (targetPortfolio.content) {
-        console.log('✅ NEW FORMAT: Has content object');
-        console.log('Content keys:', Object.keys(targetPortfolio.content));
-        console.log('Content:', JSON.stringify(targetPortfolio.content, null, 2));
+      if (portfolio.content) {
+        console.log('✅ HAS CONTENT: Has content object');
+        console.log('Content keys:', Object.keys(portfolio.content));
+        console.log('Content:', JSON.stringify(portfolio.content, null, 2));
       } else {
-        console.log('❌ NEW FORMAT: No content object found');
+        console.log('❌ NO CONTENT: No content object found');
       }
 
-      if (targetPortfolio.sections) {
+      if (portfolio.sections) {
         console.log('✅ LEGACY FORMAT: Has sections array');
-        console.log(`Sections count: ${targetPortfolio.sections.length}`);
-        targetPortfolio.sections.forEach((section, idx) => {
+        console.log(`Sections count: ${portfolio.sections.length}`);
+        portfolio.sections.forEach((section, idx) => {
           console.log(`  ${idx + 1}. ${section.type}: ${section.visible !== false ? 'Visible' : 'Hidden'}`);
         });
       } else {
         console.log('❌ LEGACY FORMAT: No sections array found');
       }
 
-      if (targetPortfolio.styling) {
+      if (portfolio.styling) {
         console.log('✅ Has styling configuration');
-        console.log('Styling keys:', Object.keys(targetPortfolio.styling));
-        if (targetPortfolio.styling.colors) {
-          console.log('Colors:', targetPortfolio.styling.colors);
+        console.log('Styling keys:', Object.keys(portfolio.styling));
+        if (portfolio.styling.colors) {
+          console.log('Colors:', portfolio.styling.colors);
         }
-        if (targetPortfolio.styling.fonts) {
-          console.log('Fonts:', targetPortfolio.styling.fonts);
+        if (portfolio.styling.fonts) {
+          console.log('Fonts:', portfolio.styling.fonts);
         }
       } else {
         console.log('❌ No styling configuration found');
@@ -125,8 +145,8 @@ async function inspectPortfolioData() {
 
       // Full JSON dump for detailed inspection
       console.log('\n📄 COMPLETE PORTFOLIO DATA:');
-      console.log('=' * 60);
-      console.log(JSON.stringify(targetPortfolio, null, 2));
+      console.log('='.repeat(60));
+      console.log(JSON.stringify(portfolio, null, 2));
 
     } else {
       console.log('\n❌ No portfolios found!');
@@ -167,7 +187,7 @@ async function waitForServer() {
 // Main execution
 (async () => {
   console.log('🔍 PORTFOLIO DATA INSPECTION');
-  console.log('=' * 50);
+  console.log('='.repeat(50));
   
   const serverReady = await waitForServer();
   if (serverReady) {

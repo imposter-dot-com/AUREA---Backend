@@ -268,6 +268,83 @@ const validatePortfolioQuery = [
   handleValidationErrors
 ];
 
+// User validation rules
+const validateUserProfileUpdate = [
+  body('name')
+    .optional()
+    .notEmpty()
+    .withMessage('Name cannot be empty')
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Name must be between 1 and 50 characters')
+    .trim(),
+  
+  body('email')
+    .optional()
+    .isEmail()
+    .withMessage('Please provide a valid email')
+    .normalizeEmail(),
+  
+  body('currentPassword')
+    .optional()
+    .isLength({ min: 6 })
+    .withMessage('Current password must be at least 6 characters'),
+  
+  body('newPassword')
+    .optional()
+    .isLength({ min: 6 })
+    .withMessage('New password must be at least 6 characters'),
+  
+  handleValidationErrors
+];
+
+const validateUserUpdate = [
+  body('name')
+    .optional()
+    .notEmpty()
+    .withMessage('Name cannot be empty')
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Name must be between 1 and 50 characters')
+    .trim(),
+  
+  body('email')
+    .optional()
+    .isEmail()
+    .withMessage('Please provide a valid email')
+    .normalizeEmail(),
+  
+  handleValidationErrors
+];
+
+const validateUserDelete = [
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required to delete account')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters'),
+  
+  handleValidationErrors
+];
+
+const validateUserQuery = [
+  query('page')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Page must be a positive integer'),
+  
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage('Limit must be between 1 and 100'),
+  
+  query('search')
+    .optional()
+    .isLength({ max: 100 })
+    .withMessage('Search query cannot be more than 100 characters')
+    .trim(),
+  
+  handleValidationErrors
+];
+
 export {
   validatePortfolioCreation,
   validatePortfolioUpdate,
@@ -277,6 +354,10 @@ export {
   validateCaseStudyUpdate,
   validateObjectId,
   validatePortfolioQuery,
+  validateUserProfileUpdate,
+  validateUserUpdate,
+  validateUserDelete,
+  validateUserQuery,
   handleValidationErrors,
   reservedSlugs,
   slugRegex
