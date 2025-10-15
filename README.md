@@ -1,6 +1,6 @@
 # 🌟 AUREA Backend API
 
-## 🎯 **COMPLETE API SYSTEM: 25 Endpoints**
+## 🎯 **COMPLETE API SYSTEM: 27 Endpoints**
 
 A comprehensive portfolio management platform with complete CRUD operations, user management, authentication, and media handling:
 
@@ -9,25 +9,21 @@ A comprehensive portfolio management platform with complete CRUD operations, use
 **User Management System**: Complete profile and account management
 **Portfolio Management**: Complete lifecycle from creation to publishing  
 **Case Study System**: Structured project documentation  
+**Site Publishing**: Dual-mode deployment (Vercel + Local subdomain)  
 **Media Handling**: Professional image upload and management  
-
-### 📊 Core Data Models AUREA Portfolio Builder platform featuring **17 professional API endpoints**, MongoDB Atlas integration, Redis caching, Cloudinary image handling, and complete portfolio management system.
 
 ## ✨ Key Features
 
 - 🔐 **Complete Authentication System** - JWT-based user management with secure access control
-- � **User Profile Management** - Full CRUD operations for user accounts with password management
-- �📁 **Advanced Portfolio Management** - Full CRUD operations with publishing, slug management, and view tracking
+- 👤 **User Profile Management** - Full CRUD operations for user accounts with password management
+- 📁 **Advanced Portfolio Management** - Full CRUD operations with publishing, slug management, and view tracking
+- 🌐 **Gmail-Style Custom Subdomains** ⭐ - Choose your own subdomain like Gmail (e.g., `aurea.tool/my-awesome-portfolio`)
 - 📖 **Case Study System** - Structured case study creation linked to portfolio projects
 - 🖼️ **Professional Image Upload** - Cloudinary integration with structured file organization  
 - ⚡ **Performance Optimized** - Redis caching, rate limiting, and database indexing
 - 🛡️ **Enterprise Security** - Helmet, CORS, validation, and ownership middleware
 - 📊 **Interactive Documentation** - Complete Swagger UI with live testing
-- 🚀 **Production Ready** - Error handling, logging, and graceful degradationckend API
-
-A modern Node.js/Express backend for the AUREA Portfolio Builder platform featuring **AI-powered PDF extraction** for pricing calculator tools, MongoDB Atlas integration, Cloudinary image handling, and comprehensive API documentation.
-
-## ✨ Key Features
+- 🚀 **Production Ready** - Error handling, logging, and graceful degradation
 
 - 🤖 **Two-Step AI PDF Processing** - Advanced document analysis with Gemini AI
 - 📊 **Pricing Calculator Integration** - Extract pricing-relevant data from client briefs  
@@ -117,7 +113,7 @@ curl http://localhost:5000/health
 # Navigate to: POST /api/portfolios
 ```
 
-## 📊 Complete API Endpoints (25 Total)
+## 📊 Complete API Endpoints (27 Total)
 
 ### 🔐 Authentication Endpoints (3)
 - `POST /api/auth/signup` - User registration with validation
@@ -154,6 +150,20 @@ curl http://localhost:5000/health
 - Professional defaults when content is empty or using template placeholders
 - Fully responsive HTML generation with mobile-optimized layouts
 - Automatic project marking with `hasCaseStudy` flags for portfolio integration
+
+### 🌐 Site Publishing System (3)
+- `POST /api/sites/publish` - Deploy portfolio to Vercel with custom domain
+- `POST /api/sites/sub-publish` - **NEW: Publish to local subdomain (Gmail-style)** ⭐
+- `GET /api/sites/:subdomain` - Get published site details by subdomain
+
+**🎯 Gmail-Style Custom Subdomain Feature**: 
+- Choose your own subdomain like Gmail (e.g., `my-awesome-portfolio`)
+- URL Pattern: `aurea.tool/{your-subdomain}`
+- Auto-generated if not specified (e.g., `jane-designer-1760525444554`)
+- Format: 3-30 lowercase letters, numbers, and hyphens
+- Ownership protection: Cannot take another user's subdomain
+- Update anytime: Change your subdomain and old folder auto-deletes
+- Local file storage: `generated-files/{subdomain}/`
 
 ### 🖼️ File Upload System (2)
 - `POST /api/upload/image` - Upload image to Cloudinary with validation
@@ -330,6 +340,174 @@ curl -X POST http://localhost:5000/api/case-studies \
 }
 ```
 
+### 🌐 Site Publishing System - Custom Subdomain Feature ⭐
+
+**Gmail-Style Subdomain Selection** - Choose your own portfolio subdomain just like Gmail!
+
+#### 🎯 Quick Start
+```bash
+# Publish with custom subdomain
+curl -X POST http://localhost:5000/api/sites/sub-publish \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "portfolioId": "your-portfolio-id",
+    "customSubdomain": "my-awesome-portfolio"
+  }'
+
+# Response
+{
+  "success": true,
+  "message": "Portfolio published successfully to local subdomain",
+  "data": {
+    "site": {
+      "subdomain": "my-awesome-portfolio",
+      "url": "aurea.tool/my-awesome-portfolio",
+      "localUrl": "http://localhost:5000/api/sites/my-awesome-portfolio"
+    },
+    "portfolio": {
+      "slug": "my-awesome-portfolio",
+      "publishedUrl": "aurea.tool/my-awesome-portfolio"
+    }
+  }
+}
+```
+
+#### ✨ Key Features
+- **Custom Selection**: Choose your own subdomain (3-30 characters)
+- **Auto-Generation**: Omit `customSubdomain` for auto-generated name
+- **Format Validation**: Only lowercase letters, numbers, and hyphens
+- **Ownership Protection**: Cannot take another user's subdomain
+- **Update Anytime**: Change your subdomain whenever you want
+- **Auto Cleanup**: Old folder deleted when subdomain changes
+- **Conflict Detection**: 409 error if subdomain is already taken
+
+#### 📋 Subdomain Rules
+```javascript
+// Valid Examples
+"my-portfolio"          // ✅ Perfect
+"john-designer"         // ✅ Great
+"awesome-work-2024"     // ✅ Nice
+"jane123"               // ✅ OK
+
+// Invalid Examples
+"My-Portfolio"          // ❌ Uppercase not allowed
+"my_portfolio"          // ❌ Underscores not allowed
+"ab"                    // ❌ Too short (min 3 chars)
+"my-portfolio-name..."  // ❌ Too long (max 30 chars)
+"-my-portfolio"         // ❌ Cannot start with hyphen
+"my-portfolio-"         // ❌ Cannot end with hyphen
+```
+
+#### 🔄 Update Your Subdomain
+```bash
+# Update to a new subdomain
+curl -X POST http://localhost:5000/api/sites/sub-publish \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "portfolioId": "your-portfolio-id",
+    "customSubdomain": "new-subdomain-name"
+  }'
+
+# What happens:
+# 1. Validates new subdomain is available
+# 2. Deletes old folder (generated-files/old-subdomain/)
+# 3. Creates new folder (generated-files/new-subdomain-name/)
+# 4. Updates portfolio.slug and portfolio.publishedUrl
+# 5. Updates site record with new subdomain
+```
+
+#### ⚠️ Conflict Handling
+```bash
+# Try to use a taken subdomain
+# Response: 409 Conflict
+{
+  "success": false,
+  "message": "Subdomain is already taken by another user",
+  "subdomain": "john-designer",
+  "available": false
+}
+```
+
+#### 🚀 Auto-Generated Subdomain
+```bash
+# Publish without customSubdomain parameter
+curl -X POST http://localhost:5000/api/sites/sub-publish \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "portfolioId": "your-portfolio-id"
+  }'
+
+# Response includes auto-generated subdomain
+{
+  "data": {
+    "site": {
+      "subdomain": "jane-designer-1760525444554",  // Auto-generated
+      "url": "aurea.tool/jane-designer-1760525444554"
+    }
+  }
+}
+```
+
+#### 📁 File Structure
+```
+generated-files/
+├── my-awesome-portfolio/
+│   ├── index.html                    # Main portfolio page
+│   ├── case-study-project1.html      # Case study pages
+│   └── case-study-project2.html
+└── jane-designer-1760525444554/
+    └── index.html
+```
+
+#### 🔍 Check Published Site
+```bash
+# Get site details by subdomain
+curl -X GET http://localhost:5000/api/sites/my-awesome-portfolio \
+  -H "Authorization: Bearer <token>"
+```
+
+#### 💡 Frontend Integration Example
+```javascript
+// React/Next.js: Publish with custom subdomain
+const publishPortfolio = async (portfolioId, customSubdomain) => {
+  const response = await fetch('/api/sites/sub-publish', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      portfolioId,
+      customSubdomain  // Optional
+    })
+  });
+  
+  const result = await response.json();
+  
+  if (response.status === 409) {
+    // Subdomain taken - ask user to choose another
+    alert(result.message);
+    return null;
+  }
+  
+  return result.data;
+};
+
+// Check subdomain availability before publishing
+const checkSubdomainAvailability = async (subdomain) => {
+  const response = await fetch(`/api/sites/check/${subdomain}`, {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  
+  const result = await response.json();
+  return result.available;
+};
+```
+
 ### 🖼️ Media Upload System
 Upload images with automatic Cloudinary optimization:
 
@@ -411,23 +589,50 @@ AUREA---Backend/
 ├── services/
 │   └── templateConvert.js      # 🎨 Smart HTML generation with responsive templates
 ├── test/
-│   ├── test-user-profile-crud.js          # Comprehensive user CRUD test suite
-│   └── test-vercel-deployment-improved.js # Case study verification test suite
+│   ├── test-user-profile-crud.js            # Comprehensive user CRUD test suite
+│   ├── test-custom-subdomain.js             # ⭐ Custom subdomain feature test (7 tests)
+│   ├── test-vercel-deployment-improved.js   # Case study verification test suite
+│   ├── test-publish-flow.js                 # Publishing workflow tests
+│   └── test-sub-publish.js                  # Local subdomain publishing tests
 ├── generated-files/              # 📁 Generated portfolio HTML files
 │   └── {subdomain}/
 │       ├── index.html           # Main portfolio page
 │       └── case-study-*.html    # Individual case study pages
 ├── uploads/                     # Temporary file storage (auto-cleanup)
-├── swagger.yaml                 # 📖 Complete API documentation (25 endpoints)
+├── swagger.yaml                 # 📖 Complete API documentation (27 endpoints)
 ├── package.json                 # 📦 Production-optimized dependencies
 ├── server.js                    # 🚀 Application entry point with graceful shutdown
 ├── .env                         # Environment configuration
+├── CUSTOM_SUBDOMAIN_FEATURE.md  # 📋 Custom subdomain feature documentation ⭐
+├── SUB_PUBLISH_FEATURE_SUMMARY.md # 📋 Sub-publish feature summary
+├── SWAGGER_MIGRATION_SUMMARY.md # 📋 Swagger migration documentation
 ├── IMPLEMENTATION_SUMMARY.md    # 📋 Complete implementation details
 ├── PORTFOLIO_CONTROLLER_REVIEW.md # 📋 Controller review & updates
 └── README.md                    # 📋 This comprehensive documentation
 ```
 
 ### 🎨 Recent Updates (October 2025)
+
+**Gmail-Style Custom Subdomain Feature (Latest):** ⭐
+1. **Custom Subdomain Selection** - Choose your own portfolio subdomain
+   - Format validation: 3-30 lowercase letters, numbers, and hyphens
+   - Ownership protection: Cannot take another user's subdomain
+   - Auto-generation fallback with timestamp for uniqueness
+   
+2. **Automatic Folder Management** - Smart cleanup when subdomain changes
+   - Old folder automatically deleted when user updates subdomain
+   - New folder created with updated subdomain name
+   - Portfolio and Site records updated atomically
+   
+3. **Conflict Detection** - Robust availability checking
+   - 409 Conflict response when subdomain is taken by another user
+   - Portfolio-level ownership checking (not just user-level)
+   - Allows users to update their own portfolio's subdomain
+   
+4. **Comprehensive Testing** - 100% test coverage with 7 test cases
+   - `test-custom-subdomain.js`: Auto-generation, custom selection, conflicts, updates
+   - Unique timestamp-based test names for reliability
+   - Folder cleanup verification with dynamic imports
 
 **Case Study System Enhancements:**
 1. **Fixed Data Transformation** - Case studies now correctly display real database content instead of mock data
@@ -536,9 +741,13 @@ Perfect for agencies and freelancers who need to:
 Complete portfolio management system for creative professionals:
 - **User Registration & JWT Authentication**
 - **Portfolio Creation with Template System (Echelon)**  
+- **Gmail-Style Custom Subdomains** - Choose your own unique portfolio URL ⭐
+- **Dual Publishing Modes** - Vercel deployment OR local subdomain hosting
 - **Case Study Management with Rich Content Structure**
 - **Professional Image Upload via Cloudinary**
 - **Publishing System with Custom Slugs**
+- **Automatic Folder Management** - Old folders auto-delete when subdomain changes
+- **Ownership Protection** - Cannot take another user's subdomain
 - **View Tracking & Analytics**
 - **Public Portfolio Sharing**
 - **SEO-Friendly URLs**
@@ -773,11 +982,54 @@ Monitor these endpoints in production:
 ## 📞 Support & Documentation
 
 - **API Documentation**: http://localhost:5000/api-docs  
+- **Custom Subdomain Guide**: See `CUSTOM_SUBDOMAIN_FEATURE.md` for complete details ⭐
+- **Sub-Publish Summary**: See `SUB_PUBLISH_FEATURE_SUMMARY.md` for feature overview
+- **Swagger Migration**: See `SWAGGER_MIGRATION_SUMMARY.md` for API documentation changes
 - **Implementation Summary**: See `IMPLEMENTATION_SUMMARY.md` for complete details
 - **Controller Review**: See `PORTFOLIO_CONTROLLER_REVIEW.md` for endpoint specifications
 - **Issues**: Create GitHub issue with detailed description
 
 ---
 
+## 🎯 Quick Reference - Custom Subdomain Feature
+
+### ✅ Valid Subdomain Examples
+```bash
+my-portfolio          # ✅ Perfect
+john-designer         # ✅ Great
+awesome-work-2024     # ✅ Nice
+portfolio123          # ✅ OK
+```
+
+### ❌ Invalid Subdomain Examples
+```bash
+My-Portfolio          # ❌ Uppercase not allowed
+my_portfolio          # ❌ Underscores not allowed
+ab                    # ❌ Too short (min 3)
+this-is-a-very-long-subdomain-name  # ❌ Too long (max 30)
+-my-portfolio         # ❌ Cannot start with hyphen
+my-portfolio-         # ❌ Cannot end with hyphen
+```
+
+### 🚀 Quick Commands
+```bash
+# Run custom subdomain tests
+node test/test-custom-subdomain.js
+
+# Start development server
+npm run dev
+
+# Access API documentation
+open http://localhost:5000/api-docs
+
+# Test subdomain publishing
+curl -X POST http://localhost:5000/api/sites/sub-publish \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"portfolioId":"xxx","customSubdomain":"my-portfolio"}'
+```
+
+---
+
 **🎉 AUREA Backend - Professional Portfolio Management API**  
-**Version**: 1.0.0 | **Status**: Production Ready | **Last Updated**: October 8, 2025
+**Version**: 1.0.0 | **Status**: Production Ready | **Last Updated**: October 15, 2025

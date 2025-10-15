@@ -6,6 +6,7 @@ import { auth } from '../middleware/auth.js';
 import {
   debugGenerate,
   publishSite,
+  subPublish,
   getSiteStatus,
   getSiteConfig,
   updateSiteConfig,
@@ -16,9 +17,7 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// @route   GET /api/sites/:subdomain
-// @desc    Serve published portfolio site
-// @access  Public
+// GET /api/sites/:subdomain - Serve published portfolio site
 router.get('/:subdomain', (req, res) => {
   try {
     const { subdomain } = req.params;
@@ -40,34 +39,25 @@ router.get('/:subdomain', (req, res) => {
   }
 });
 
-// @route   POST /api/sites/debug-generate
-// @desc    Generate HTML/CSS files for debugging
-// @access  Private
+// POST /api/sites/debug-generate - Generate HTML/CSS files for debugging
 router.post('/debug-generate', auth, debugGenerate);
 
-// @route   POST /api/sites/publish
-// @desc    Publish portfolio to hosting platform
-// @access  Private
+// POST /api/sites/publish - Publish portfolio to Vercel
 router.post('/publish', auth, publishSite);
 
-// @route   GET /api/sites/status
-// @desc    Get site deployment status
-// @access  Public
+// POST /api/sites/sub-publish - Publish portfolio to local subdomain (aurea.tool/$user)
+router.post('/sub-publish', auth, subPublish);
+
+// GET /api/sites/status - Get site deployment status
 router.get('/status', getSiteStatus);
 
-// @route   GET /api/sites/config
-// @desc    Get site configuration
-// @access  Public
+// GET /api/sites/config - Get site configuration
 router.get('/config', getSiteConfig);
 
-// @route   PUT /api/sites/config
-// @desc    Update site configuration
-// @access  Private
+// PUT /api/sites/config - Update site configuration
 router.put('/config', auth, updateSiteConfig);
 
-// @route   POST /api/sites/analytics/view
-// @desc    Record site view for analytics
-// @access  Public
+// POST /api/sites/analytics/view - Record site view for analytics
 router.post('/analytics/view', recordSiteView);
 
 export default router;

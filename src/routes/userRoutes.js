@@ -6,7 +6,11 @@ import {
   updateUserProfile,
   updateUser,
   deleteUserProfile,
-  deleteUser
+  deleteUser,
+  checkPremiumStatus,
+  getUserPremiumStatus,
+  setPremiumStatus,
+  removePremiumStatus
 } from '../controllers/userController.js';
 import { auth } from '../middleware/auth.js';
 import {
@@ -28,18 +32,8 @@ const userDeleteLimiter = createRateLimiter(3, 60); // 3 requests per hour
 // CURRENT USER ROUTES (Self-service)
 // ============================================
 
-/**
- * @route   GET /api/users/profile
- * @desc    Get current user profile with statistics
- * @access  Private
- */
 router.get('/profile', auth, getCurrentUser);
 
-/**
- * @route   PUT /api/users/profile
- * @desc    Update current user profile (name, email, password)
- * @access  Private
- */
 router.put(
   '/profile',
   auth,
@@ -48,11 +42,6 @@ router.put(
   updateUserProfile
 );
 
-/**
- * @route   DELETE /api/users/profile
- * @desc    Delete current user account (requires password confirmation)
- * @access  Private
- */
 router.delete(
   '/profile',
   auth,
@@ -62,14 +51,15 @@ router.delete(
 );
 
 // ============================================
+// PREMIUM STATUS ROUTES (Current User)
+// ============================================
+
+router.get('/premium/status', auth, checkPremiumStatus);
+
+// ============================================
 // ADMIN ROUTES (User Management)
 // ============================================
 
-/**
- * @route   GET /api/users
- * @desc    Get all users with pagination and search
- * @access  Private (Admin - can add role check later)
- */
 router.get(
   '/',
   auth,
@@ -77,11 +67,6 @@ router.get(
   getAllUsers
 );
 
-/**
- * @route   GET /api/users/:id
- * @desc    Get single user by ID with statistics
- * @access  Private (Admin - can add role check later)
- */
 router.get(
   '/:id',
   auth,
@@ -89,11 +74,6 @@ router.get(
   getUserById
 );
 
-/**
- * @route   PUT /api/users/:id
- * @desc    Update user by ID (admin functionality)
- * @access  Private (Admin - can add role check later)
- */
 router.put(
   '/:id',
   auth,
@@ -103,17 +83,38 @@ router.put(
   updateUser
 );
 
-/**
- * @route   DELETE /api/users/:id
- * @desc    Delete user by ID (admin functionality)
- * @access  Private (Admin - can add role check later)
- */
 router.delete(
   '/:id',
   auth,
   userDeleteLimiter,
   validateObjectId('id'),
   deleteUser
+);
+
+// ============================================
+// PREMIUM MANAGEMENT ROUTES (Admin)
+// ============================================
+
+router.get(
+  '/:id/premium',
+  auth,
+  validateObjectId('id'),
+  getUserPremiumStatus
+);
+
+router.put(
+  '/:id/premium',
+  auth,
+  userCrudLimiter,
+  validateObjectId('id'),
+  setPremiumStatus
+);
+
+router.delete(
+  '/:id/premium',
+  auth,
+  validateObjectId('id'),
+  removePremiumStatus
 );
 
 export default router;

@@ -56,6 +56,11 @@ const portfolioSchema = new mongoose.Schema({
     maxlength: [50, 'Slug cannot be more than 50 characters'],
     match: [/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug can only contain lowercase letters, numbers, and hyphens (no consecutive hyphens)']
   },
+  publishedUrl: {
+    type: String,
+    trim: true,
+    default: null
+  },
   viewCount: {
     type: Number,
     default: 0

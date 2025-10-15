@@ -778,3 +778,316 @@ export const recordSiteView = async (req, res) => {
     });
   }
 };
+
+// @desc    Publish portfolio to local subdomain (aurea.tool/$user)
+// @access  Private
+export const subPublish = async (req, res) => {
+  try {
+    const { portfolioId, customSubdomain } = req.body;
+    const actualUserId = req.user._id;
+
+    // Validate required parameters
+    if (!portfolioId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Portfolio ID is required'
+      });
+    }
+
+    // Find and validate portfolio
+    const portfolio = await Portfolio.findOne({ 
+      _id: portfolioId, 
+      userId: actualUserId 
+    });
+
+    if (!portfolio) {
+      return res.status(404).json({
+        success: false,
+        message: 'Portfolio not found or access denied'
+      });
+    }
+
+    // Determine subdomain to use
+    let subdomain;
+    let isCustomSubdomain = false;
+
+    // Priority 1: User provided custom subdomain (new or update)
+    if (customSubdomain) {
+      // Validate custom subdomain format
+      const subdomainRegex = /^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$/;
+      if (!subdomainRegex.test(customSubdomain)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid subdomain format. Use 3-30 lowercase letters, numbers, and hyphens only.',
+          example: 'john-designer'
+        });
+      }
+
+      // Check if custom subdomain is available
+      const existingSite = await Site.findOne({ subdomain: customSubdomain });
+      
+      if (existingSite) {
+        // Check if it belongs to the current user's THIS portfolio
+        const isSamePortfolio = existingSite.portfolioId.toString() === portfolioId.toString();
+        const isSameUser = existingSite.userId.toString() === actualUserId.toString();
+        
+        if (!isSameUser) {
+          // Different user owns this subdomain
+          return res.status(409).json({
+            success: false,
+            message: 'Subdomain is already taken by another user',
+            subdomain: customSubdomain,
+            available: false
+          });
+        }
+        
+        if (isSameUser && !isSamePortfolio) {
+          // Same user but different portfolio owns this subdomain
+          return res.status(409).json({
+            success: false,
+            message: 'This subdomain is used by your another portfolio',
+            subdomain: customSubdomain,
+            available: false
+          });
+        }
+        
+        // If it's the same portfolio, allow update (changing subdomain)
+        console.log(`User is updating their portfolio subdomain: ${customSubdomain}`);
+      }
+
+      subdomain = customSubdomain;
+      isCustomSubdomain = true;
+      console.log(`Using custom subdomain: ${subdomain}`);
+    }
+    // Priority 2: Reuse existing slug if portfolio was published before
+    else if (portfolio.slug && portfolio.isPublished) {
+      subdomain = portfolio.slug;
+      console.log(`Reusing existing subdomain: ${subdomain}`);
+    }
+    // Priority 3: Auto-generate from portfolio designer name
+    else {
+      subdomain = generateSubdomainFromPortfolio(portfolio, req.user);
+      
+      // Check if auto-generated subdomain is taken
+      const existingSite = await Site.findOne({ 
+        subdomain,
+        userId: { $ne: actualUserId }
+      });
+
+      if (existingSite) {
+        // If subdomain is taken by another user, add timestamp
+        const uniqueSubdomain = `${subdomain}-${Date.now()}`;
+        console.log(`Subdomain ${subdomain} taken, using ${uniqueSubdomain}`);
+        subdomain = uniqueSubdomain;
+      }
+    }
+
+    logDeploymentActivity('Sub-publication started', { 
+      portfolioId, 
+      subdomain, 
+      userId: actualUserId,
+      isCustom: isCustomSubdomain
+    });
+
+    // Fetch case studies for this portfolio
+    const caseStudies = await CaseStudy.find({ portfolioId: portfolioId });
+    
+    console.log(`\n📑 === CASE STUDY DEBUG INFO (subPublish) ===`);
+    console.log(`Portfolio ID: ${portfolioId}`);
+    console.log(`Found ${caseStudies.length} case studies`);
+    
+    // Prepare portfolio data with case studies
+    const portfolioWithCaseStudies = portfolio.toObject();
+    
+    // Convert case studies array to object keyed by projectId
+    if (caseStudies && caseStudies.length > 0) {
+      portfolioWithCaseStudies.caseStudies = {};
+      
+      caseStudies.forEach((cs, index) => {
+        console.log(`\nCase Study ${index + 1}:`);
+        console.log(`  Project ID: ${cs.projectId}`);
+        console.log(`  Has content: ${!!cs.content}`);
+        
+        portfolioWithCaseStudies.caseStudies[cs.projectId] = cs.toObject();
+      });
+      
+      console.log(`\nCase Studies Object Keys: ${Object.keys(portfolioWithCaseStudies.caseStudies).join(', ')}`);
+      console.log(`=== END CASE STUDY DEBUG ===\n`);
+      
+      // Mark projects that have case studies
+      const caseStudyProjectIds = caseStudies.map(cs => String(cs.projectId));
+      
+      // Update projects in content.work.projects array
+      if (portfolioWithCaseStudies.content?.work?.projects) {
+        portfolioWithCaseStudies.content.work.projects = portfolioWithCaseStudies.content.work.projects.map(project => ({
+          ...project,
+          hasCaseStudy: caseStudyProjectIds.includes(String(project.id))
+        }));
+      }
+      
+      // Also update content.projects array if it exists
+      if (portfolioWithCaseStudies.content?.projects) {
+        portfolioWithCaseStudies.content.projects = portfolioWithCaseStudies.content.projects.map(project => ({
+          ...project,
+          hasCaseStudy: caseStudyProjectIds.includes(String(project.id))
+        }));
+      }
+    }
+
+    // Generate HTML content using templateConvert service (includes case studies)
+    const allFiles = generateAllPortfolioFiles(portfolioWithCaseStudies);
+    const htmlContent = allFiles['index.html'];
+
+    // Create site configuration
+    const siteConfig = {
+      subdomain,
+      title: portfolio.title,
+      owner: actualUserId,
+      template: portfolio.template,
+      portfolioData: portfolio.toObject()
+    };
+
+    // Validate deployment
+    const validation = validateDeployment(siteConfig, htmlContent, '');
+
+    if (!validation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Deployment validation failed',
+        data: {
+          issues: validation.issues,
+          recommendations: validation.recommendations
+        }
+      });
+    }
+
+    // Use all generated files (index.html + case studies)
+    const deploymentFiles = allFiles;
+
+    // Check if subdomain changed (need to clean up old folder)
+    const oldSubdomain = portfolio.slug;
+    const subdomainChanged = oldSubdomain && oldSubdomain !== subdomain;
+
+    // If subdomain changed, delete old folder
+    if (subdomainChanged) {
+      const oldSubdomainDir = path.join(process.cwd(), 'generated-files', oldSubdomain);
+      try {
+        if (fs.existsSync(oldSubdomainDir)) {
+          fs.rmSync(oldSubdomainDir, { recursive: true, force: true });
+          console.log(`🗑️  Removed old subdomain folder: ${oldSubdomain}`);
+        }
+      } catch (error) {
+        console.warn(`Warning: Could not remove old subdomain folder: ${error.message}`);
+      }
+    }
+
+    // Save files to generated-files directory (in subdomain-specific folder)
+    const subdomainDir = path.join(process.cwd(), 'generated-files', subdomain);
+    const saveResult = await saveDeploymentFiles(deploymentFiles, subdomainDir);
+
+    if (!saveResult.success) {
+      throw new Error(`Failed to save deployment files: ${saveResult.error}`);
+    }
+
+    if (subdomainChanged) {
+      console.log(`✅ Successfully moved portfolio to new subdomain: ${oldSubdomain} → ${subdomain}`);
+    } else {
+      console.log('✅ Successfully updated portfolio files!');
+    }
+    console.log(`📁 Location: ${subdomainDir}`);
+
+    // Create or update site record in database with local URL
+    const siteData = {
+      userId: actualUserId,
+      portfolioId: portfolio._id,
+      subdomain,
+      title: portfolio.title,
+      description: portfolio.description || '',
+      template: portfolio.template || 'default',
+      published: true,
+      deploymentStatus: 'success',
+      lastDeployedAt: new Date(),
+      files: Object.keys(deploymentFiles)
+    };
+
+    // Find existing site for this user's portfolio
+    let site = await Site.findOne({ 
+      portfolioId: portfolio._id,
+      userId: actualUserId
+    });
+
+    if (site) {
+      // Update existing site
+      Object.assign(site, siteData);
+      await site.save();
+      console.log('Updated existing site record');
+    } else {
+      // Create new site
+      site = new Site(siteData);
+      await site.save();
+      console.log('Created new site record');
+    }
+
+    // Update portfolio published status
+    portfolio.isPublished = true;
+    portfolio.slug = subdomain;
+    portfolio.publishedUrl = `aurea.tool/${subdomain}`;
+    await portfolio.save();
+
+    // Generate summary
+    const summary = generateDeploymentSummary(
+      site,
+      deploymentFiles,
+      validation,
+      { localPath: subdomainDir }
+    );
+
+    logDeploymentActivity('Sub-publication completed successfully', {
+      portfolioId,
+      subdomain,
+      filesCount: Object.keys(deploymentFiles).length,
+      localPath: subdomainDir
+    }, 'success');
+
+    res.json({
+      success: true,
+      message: 'Portfolio published successfully to local subdomain',
+      data: {
+        site: {
+          id: site._id,
+          subdomain: site.subdomain,
+          url: `aurea.tool/${subdomain}`,
+          localUrl: `http://localhost:5000/api/sites/${subdomain}`,
+          published: site.published,
+          deploymentStatus: site.deploymentStatus,
+          lastDeployedAt: site.lastDeployedAt
+        },
+        portfolio: {
+          id: portfolio._id,
+          title: portfolio.title,
+          slug: portfolio.slug,
+          publishedUrl: portfolio.publishedUrl
+        },
+        deployment: {
+          filesGenerated: Object.keys(deploymentFiles),
+          localPath: subdomainDir,
+          validation: {
+            score: validation.score,
+            isValid: validation.isValid
+          }
+        },
+        summary
+      }
+    });
+
+  } catch (error) {
+    logDeploymentActivity('Sub-publication failed', { error: error.message }, 'error');
+    console.error('Sub-publish site error:', error);
+    
+    res.status(500).json({
+      success: false,
+      message: 'Failed to publish portfolio',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
