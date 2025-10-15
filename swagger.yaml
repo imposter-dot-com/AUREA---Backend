@@ -87,6 +87,25 @@ components:
           type: string
           format: email
           description: User's email address
+        isPremium:
+          type: boolean
+          default: false
+          description: Premium subscription status
+        premiumType:
+          type: string
+          enum: [none, monthly, yearly, lifetime]
+          default: none
+          description: Type of premium subscription
+        premiumStartDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: When premium subscription started
+        premiumEndDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: When premium subscription ends (null for lifetime)
         createdAt:
           type: string
           format: date-time
@@ -923,6 +942,277 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/users/premium/status:
+    get:
+      summary: Check current user premium status
+      description: Get premium subscription status for the authenticated user
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Premium status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      isPremium:
+                        type: boolean
+                        example: true
+                        description: Whether user has active premium subscription
+                      premiumType:
+                        type: string
+                        enum: [none, monthly, yearly, lifetime]
+                        example: "monthly"
+                        description: Type of premium subscription
+                      premiumStartDate:
+                        type: string
+                        format: date-time
+                        nullable: true
+                        description: When premium subscription started
+                      premiumEndDate:
+                        type: string
+                        format: date-time
+                        nullable: true
+                        description: When premium subscription ends (null for lifetime)
+                      daysRemaining:
+                        type: number
+                        example: 25
+                        description: Days remaining in subscription (0 for lifetime)
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/users/{id}/premium:
+    get:
+      summary: Get user premium status (Admin)
+      description: Get premium subscription status for any user (Admin only)
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID
+      responses:
+        '200':
+          description: Premium status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                        example: "60d5f484f1d2c8b1f8e4e1a1"
+                      name:
+                        type: string
+                        example: "John Doe"
+                      email:
+                        type: string
+                        example: "john@example.com"
+                      isPremium:
+                        type: boolean
+                        example: true
+                      premiumType:
+                        type: string
+                        enum: [none, monthly, yearly, lifetime]
+                        example: "monthly"
+                      premiumStartDate:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      premiumEndDate:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      daysRemaining:
+                        type: number
+                        example: 25
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      summary: Set premium status for a user (Admin/Testing)
+      description: |
+        Set or update premium subscription status for any user. 
+        This is used for testing purposes or admin management before payment integration.
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - premiumType
+              properties:
+                premiumType:
+                  type: string
+                  enum: [monthly, yearly, lifetime]
+                  example: "monthly"
+                  description: Type of premium subscription to set
+                duration:
+                  type: number
+                  example: 30
+                  description: |
+                    Duration in days (optional). 
+                    Defaults: 30 for monthly, 365 for yearly. 
+                    Ignored for lifetime.
+      responses:
+        '200':
+          description: Premium status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Premium status updated successfully"
+                  data:
+                    type: object
+                    properties:
+                      isPremium:
+                        type: boolean
+                        example: true
+                      premiumType:
+                        type: string
+                        example: "monthly"
+                      premiumStartDate:
+                        type: string
+                        format: date-time
+                      premiumEndDate:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      daysRemaining:
+                        type: number
+                        example: 30
+        '400':
+          description: Invalid premium type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      summary: Remove premium status from a user (Admin)
+      description: Remove premium subscription status from any user (Admin only)
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID
+      responses:
+        '200':
+          description: Premium status removed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Premium status removed successfully"
+                  data:
+                    type: object
+                    properties:
+                      isPremium:
+                        type: boolean
+                        example: false
+                      premiumType:
+                        type: string
+                        example: "none"
+                      premiumStartDate:
+                        type: string
+                        nullable: true
+                        example: null
+                      premiumEndDate:
+                        type: string
+                        nullable: true
+                        example: null
+                      daysRemaining:
+                        type: number
+                        example: 0
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /api/portfolios:
     post:
       summary: Create a new portfolio
@@ -983,6 +1273,68 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/portfolios/user/me:
+    get:
+      summary: Get current user's portfolios
+      description: Retrieve all portfolios belonging to the authenticated user with filtering and sorting options
+      tags:
+        - Portfolios
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: published
+          schema:
+            type: string
+            enum: [all, true, false]
+          description: Filter by publication status
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [createdAt, updatedAt, title]
+            default: createdAt
+          description: Sort field
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort order
+      responses:
+        '200':
+          description: Portfolios retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      portfolios:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Portfolio'
+                      statistics:
+                        type: object
+                        properties:
+                          total:
+                            type: number
+                          published:
+                            type: number
+                          unpublished:
+                            type: number
         '401':
           description: Unauthorized
           content:
@@ -1670,6 +2022,90 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/case-studies/portfolio/{portfolioId}/project/{projectId}:
+    get:
+      summary: Get case study by portfolio and project ID
+      description: Retrieve a case study for a specific portfolio project
+      tags:
+        - Case Studies
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: portfolioId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Portfolio ID
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Project ID within the portfolio
+      responses:
+        '200':
+          description: Case study retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/CaseStudy'
+        '404':
+          description: Case study not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/case-studies/public/{portfolioSlug}/{projectId}:
+    get:
+      summary: Get public case study
+      description: Retrieve a case study by portfolio slug and project ID (public access)
+      tags:
+        - Case Studies
+      parameters:
+        - name: portfolioSlug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Portfolio slug/subdomain
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Project ID
+      responses:
+        '200':
+          description: Case study retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/CaseStudy'
+        '404':
+          description: Case study not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /api/upload/image:
     post:
       summary: Upload image to Cloudinary
@@ -1758,6 +2194,206 @@ paths:
                     type: string
         '400':
           description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/upload/single:
+    post:
+      summary: Upload a single image to Cloudinary
+      description: Upload a single image file with automatic optimization and folder organization
+      tags:
+        - Image Upload
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Image file (jpeg, png, gif, webp, max 25MB)
+                portfolioId:
+                  type: string
+                  description: Optional portfolio ID to organize uploads
+                  example: "60d21b4967d0d8992e610c85"
+      responses:
+        '200':
+          description: Image uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Image uploaded successfully"
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        example: "https://res.cloudinary.com/demo/image/upload/v1234567890/aurea/user123/portfolio456/1234567890-image.jpg"
+                      publicId:
+                        type: string
+                        example: "aurea/user123/portfolio456/1234567890-image"
+                      width:
+                        type: number
+                        example: 1920
+                      height:
+                        type: number
+                        example: 1080
+                      format:
+                        type: string
+                        example: "jpg"
+                      size:
+                        type: number
+                        example: 2048000
+        '400':
+          description: Bad request - No image file provided or invalid file type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Payload too large - File exceeds 25MB limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/upload/multiple:
+    post:
+      summary: Upload multiple images to Cloudinary
+      description: Upload multiple image files at once (max 6 files, 25MB each)
+      tags:
+        - Image Upload
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - images
+              properties:
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Array of image files (max 6 files, 25MB each, jpeg/png/gif/webp)
+                portfolioId:
+                  type: string
+                  description: Optional portfolio ID to organize uploads
+                  example: "60d21b4967d0d8992e610c85"
+      responses:
+        '200':
+          description: All images uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "3 of 3 images uploaded successfully"
+                  data:
+                    type: object
+                    properties:
+                      images:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            url:
+                              type: string
+                            publicId:
+                              type: string
+                            width:
+                              type: number
+                            height:
+                              type: number
+                            format:
+                              type: string
+                            size:
+                              type: number
+                      failed:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            filename:
+                              type: string
+                            error:
+                              type: string
+        '207':
+          description: Partial success - Some images uploaded, some failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      images:
+                        type: array
+                        description: Successfully uploaded images
+                      failed:
+                        type: array
+                        description: Failed uploads with error details
+        '400':
+          description: Bad request - No files provided or too many files
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Payload too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
           content:
             application/json:
               schema:
@@ -1897,6 +2533,235 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /api/sites/sub-publish:
+    post:
+      summary: Publish portfolio to local subdomain (aurea.tool/$user)
+      description: |
+        Generate HTML from portfolio data and save to local subdomain structure without deploying to Vercel.
+        
+        **Publishing Flow:**
+        1. Extract portfolio data (about, projects, gallery, contact)
+        2. Fetch case studies linked to portfolio projects
+        3. Generate professional HTML files with smart data transformation
+        4. Create deployment files (index.html, responsive case-study pages)
+        5. Save files to local generated-files directory
+        6. Create/update Site record with subdomain reference
+        7. Return local access URL (aurea.tool/{subdomain})
+        
+        **Subdomain Structure:**
+        - URL Pattern: `aurea.tool/{user-subdomain}`
+        - **Custom Subdomain:** You can provide your own subdomain (Gmail-style)
+          * Format: 3-30 lowercase letters, numbers, and hyphens only
+          * Must start and end with alphanumeric character
+          * Examples: `john-designer`, `my-portfolio`, `awesome-work`
+        - **Auto-Generated:** If not provided, generates from designer name + timestamp
+          * Example: `jane-designer-1760525444554`
+        - Files saved to: `generated-files/{subdomain}/`
+        - Each user can have their own unique subdomain
+        - **Updating Subdomain:** You can update your subdomain anytime
+          * Must be available (not taken by another user)
+          * Old folder is automatically deleted
+          * New folder is created with updated subdomain
+          * Portfolio's publishedUrl is updated
+        
+        **Smart Case Study Transformation:**
+        - Automatically detects real vs template/default data
+        - Uses database content when available (hero, overview, sections)
+        - Falls back to professional defaults when content is empty
+        - Generates fully responsive mobile-optimized HTML
+        - Marks projects with hasCaseStudy flags for portfolio integration
+        
+        **What Gets Generated:**
+        - index.html (main portfolio page with VIEW CASE STUDY buttons)
+        - case-study-{projectId}.html (individual project pages)
+        - Fully responsive design for all devices (mobile, tablet, desktop)
+        - SEO optimized with meta tags and proper structure
+        - Professional fallbacks when case study content is incomplete
+      tags:
+        - Site Publishing
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                portfolioId:
+                  type: string
+                  description: Portfolio ID to publish
+                  example: "507f1f77bcf86cd799439011"
+                customSubdomain:
+                  type: string
+                  description: |
+                    **Optional:** Custom subdomain for your portfolio (Gmail-style).
+                    - If provided, must be unique (not taken by another user)
+                    - Format: 3-30 lowercase letters, numbers, and hyphens
+                    - Must start and end with alphanumeric character (not hyphen)
+                    - You can update your own portfolio's subdomain anytime
+                    - If not provided, auto-generates from designer name + timestamp
+                    - **Validation:** Checks ownership - you cannot take another user's subdomain
+                  example: "my-awesome-portfolio"
+                  pattern: "^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$"
+                  minLength: 3
+                  maxLength: 30
+              required:
+                - portfolioId
+      responses:
+        '200':
+          description: Portfolio published successfully to local subdomain
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Portfolio published successfully to local subdomain"
+                  data:
+                    type: object
+                    properties:
+                      site:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: "507f1f77bcf86cd799439011"
+                          subdomain:
+                            type: string
+                            description: The subdomain assigned to this portfolio (auto-generated or custom)
+                            example: "my-awesome-portfolio"
+                          url:
+                            type: string
+                            description: Public URL pattern for accessing the portfolio
+                            example: "aurea.tool/my-awesome-portfolio"
+                          localUrl:
+                            type: string
+                            description: Local server access URL for development/testing
+                            example: "http://localhost:5000/api/sites/my-awesome-portfolio"
+                          published:
+                            type: boolean
+                            example: true
+                          deploymentStatus:
+                            type: string
+                            example: "success"
+                          lastDeployedAt:
+                            type: string
+                            format: date-time
+                      portfolio:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          title:
+                            type: string
+                          slug:
+                            type: string
+                            description: Saved slug referencing the user's subdomain (same as subdomain)
+                            example: "my-awesome-portfolio"
+                          publishedUrl:
+                            type: string
+                            description: Full published URL (same as url field in site object)
+                            example: "aurea.tool/my-awesome-portfolio"
+                      deployment:
+                        type: object
+                        properties:
+                          filesGenerated:
+                            type: array
+                            items:
+                              type: string
+                            description: List of generated HTML files
+                            example: ["index.html", "case-study-1.html", "case-study-2.html"]
+                          localPath:
+                            type: string
+                            description: Local file system path where files are saved
+                            example: "/path/to/generated-files/my-awesome-portfolio"
+                          validation:
+                            type: object
+                            properties:
+                              score:
+                                type: number
+                                example: 95
+                              isValid:
+                                type: boolean
+                                example: true
+                      summary:
+                        type: object
+                        description: Deployment summary with statistics and metadata
+                      notes:
+                        type: object
+                        description: Additional information about the deployment
+                        properties:
+                          folderCleanup:
+                            type: string
+                            description: Information about old folder cleanup if subdomain was updated
+                            example: "Old folder 'old-subdomain' was deleted, new folder 'my-awesome-portfolio' created"
+        '400':
+          description: Portfolio not found or invalid subdomain format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Not the portfolio owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: |
+            Conflict - Custom subdomain is already taken by another user or portfolio.
+            
+            **Conflict Scenarios:**
+            1. Subdomain is taken by a different user
+            2. Subdomain is taken by your own different portfolio
+            
+            **Note:** You CAN update your own portfolio's subdomain (no conflict).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Subdomain is already taken by another user"
+                  subdomain:
+                    type: string
+                    description: The subdomain that was attempted
+                    example: "my-awesome-portfolio"
+                  available:
+                    type: boolean
+                    description: Always false in conflict responses
+                    example: false
+              examples:
+                takenByAnotherUser:
+                  summary: Subdomain taken by another user
+                  value:
+                    success: false
+                    message: "Subdomain is already taken by another user"
+                    subdomain: "john-designer"
+                    available: false
+                takenByOwnPortfolio:
+                  summary: Subdomain taken by your different portfolio
+                  value:
+                    success: false
+                    message: "Subdomain is already taken by another portfolio you own"
+                    subdomain: "my-awesome-portfolio"
+                    available: false
 
   /api/sites/{subdomain}:
     get:

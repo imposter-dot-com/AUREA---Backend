@@ -380,3 +380,182 @@ export const deleteUser = async (req, res) => {
     });
   }
 };
+
+// ============================================
+// PREMIUM STATUS ENDPOINTS
+// ============================================
+
+/**
+ * @desc    Check if current user is premium
+ * @route   GET /api/users/premium/status
+ * @access  Private
+ */
+export const checkPremiumStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    const premiumInfo = user.getPremiumInfo();
+
+    res.json({
+      success: true,
+      data: premiumInfo
+    });
+  } catch (error) {
+    console.error('Check premium status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error checking premium status',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * @desc    Get premium status for a specific user (Admin)
+ * @route   GET /api/users/:id/premium
+ * @access  Private (Admin)
+ */
+export const getUserPremiumStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    const premiumInfo = user.getPremiumInfo();
+
+    res.json({
+      success: true,
+      data: {
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        ...premiumInfo
+      }
+    });
+  } catch (error) {
+    console.error('Get user premium status error:', error);
+
+    if (error.kind === 'ObjectId') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user ID format'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching premium status',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * @desc    Set premium status for a user (Admin/Testing)
+ * @route   PUT /api/users/:id/premium
+ * @access  Private (Admin)
+ */
+export const setPremiumStatus = async (req, res) => {
+  try {
+    const { premiumType, duration } = req.body;
+
+    // Validate premium type
+    if (!['monthly', 'yearly', 'lifetime'].includes(premiumType)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid premium type. Must be: monthly, yearly, or lifetime'
+      });
+    }
+
+    // Update user premium status
+    const user = await User.setPremiumStatus(req.params.id, premiumType, duration);
+
+    res.json({
+      success: true,
+      message: 'Premium status updated successfully',
+      data: user.getPremiumInfo()
+    });
+  } catch (error) {
+    console.error('Set premium status error:', error);
+
+    if (error.message === 'User not found') {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (error.kind === 'ObjectId') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user ID format'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error setting premium status',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * @desc    Remove premium status for a user (Admin)
+ * @route   DELETE /api/users/:id/premium
+ * @access  Private (Admin)
+ */
+export const removePremiumStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Reset premium fields
+    user.isPremium = false;
+    user.premiumType = 'none';
+    user.premiumStartDate = null;
+    user.premiumEndDate = null;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Premium status removed successfully',
+      data: user.getPremiumInfo()
+    });
+  } catch (error) {
+    console.error('Remove premium status error:', error);
+
+    if (error.kind === 'ObjectId') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user ID format'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error removing premium status',
+      error: error.message
+    });
+  }
+};
+
