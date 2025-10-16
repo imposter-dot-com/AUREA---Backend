@@ -28,10 +28,11 @@ export const uploadSingleImage = async (req, res) => {
           resource_type: 'image',
           public_id: publicId,
           folder: 'aurea',
+          format: 'webp',
           transformation: [
-            { quality: 'auto', fetch_format: 'auto' },
+            { quality: 'auto', fetch_format: 'webp' },
             { width: 2000, height: 2000, crop: 'limit' }
-          ]
+          ],
         },
         (error, result) => {
           if (error) reject(error);
@@ -111,8 +112,9 @@ export const uploadMultipleImages = async (req, res) => {
             resource_type: 'image',
             public_id: publicId,
             folder: 'aurea',
+            format: 'webp',
             transformation: [
-              { quality: 'auto', fetch_format: 'auto' },
+              { quality: 'auto', fetch_format: 'webp' },
               { width: 2000, height: 2000, crop: 'limit' }
             ]
           },
