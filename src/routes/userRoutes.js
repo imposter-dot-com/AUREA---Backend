@@ -4,6 +4,8 @@ import {
   getUserById,
   getCurrentUser,
   updateUserProfile,
+  patchUserProfile,
+  uploadAvatar as uploadAvatarController,
   updateUser,
   deleteUserProfile,
   deleteUser,
@@ -21,11 +23,13 @@ import {
   validateUserQuery
 } from '../middleware/validation.js';
 import { createRateLimiter } from '../middleware/rateLimiter.js';
+import { uploadSingle, uploadAvatar, handleMulterError } from '../middleware/upload.js';
 
 const router = express.Router();
 
 // Rate limiters
 const userCrudLimiter = createRateLimiter(30, 15); // 30 requests per 15 minutes
+const avatarUploadLimiter = createRateLimiter(5, 60); // 5 requests per hour
 const userDeleteLimiter = createRateLimiter(3, 60); // 3 requests per hour
 
 // ============================================
@@ -40,6 +44,24 @@ router.put(
   userCrudLimiter,
   validateUserProfileUpdate,
   updateUserProfile
+);
+
+// Modern frontend endpoint - PATCH for profile updates
+router.patch(
+  '/profile',
+  auth,
+  userCrudLimiter,
+  patchUserProfile
+);
+
+// Avatar upload endpoint
+router.post(
+  '/avatar',
+  auth,
+  avatarUploadLimiter,
+  uploadAvatar,
+  handleMulterError,
+  uploadAvatarController
 );
 
 router.delete(

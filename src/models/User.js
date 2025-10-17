@@ -2,6 +2,27 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 
 const userSchema = new mongoose.Schema({
+  // User profile fields
+  username: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+    lowercase: true,
+    minlength: [3, 'Username must be at least 3 characters'],
+    maxlength: [30, 'Username cannot be more than 30 characters'],
+    match: [/^[a-z0-9_]+$/, 'Username can only contain lowercase letters, numbers, and underscores']
+  },
+  firstName: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'First name cannot be more than 50 characters']
+  },
+  lastName: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Last name cannot be more than 50 characters']
+  },
   name: {
     type: String,
     required: [true, 'Name is required'],
@@ -24,6 +45,23 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Password is required'],
     minlength: [6, 'Password must be at least 6 characters']
   },
+  avatar: {
+    type: String,
+    default: null
+  },
+  avatarPublicId: {
+    type: String,
+    default: null
+  },
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  },
   // Premium subscription fields
   isPremium: {
     type: Boolean,
@@ -41,6 +79,27 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['none', 'monthly', 'yearly', 'lifetime'],
     default: 'none'
+  },
+  subscription: {
+    plan: {
+      type: String,
+      enum: ['free', 'pro', 'enterprise'],
+      default: 'free'
+    },
+    expiresAt: {
+      type: Date,
+      default: null
+    }
+  },
+  storage: {
+    used: {
+      type: Number,
+      default: 0
+    },
+    limit: {
+      type: Number,
+      default: 10737418240 // 10GB in bytes
+    }
   }
 }, {
   timestamps: true,
@@ -79,11 +138,19 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 // Instance method to generate auth token payload
 userSchema.methods.toAuthJSON = function() {
   return {
+    id: this._id,
     _id: this._id,
+    username: this.username,
+    firstName: this.firstName,
+    lastName: this.lastName,
     name: this.name,
     email: this.email,
+    avatar: this.avatar,
+    emailVerified: this.emailVerified,
+    role: this.role,
     isPremium: this.checkPremiumStatus(),
-    premiumType: this.premiumType
+    premiumType: this.premiumType,
+    createdAt: this.createdAt
   };
 };
 

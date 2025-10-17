@@ -8,7 +8,12 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "echo 'Running production build checks...' && npm audit --audit-level high && echo 'Build completed successfully - Ready for production deployment'",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "audit": "npm audit --audit-level moderate",
+    "audit:fix": "npm audit fix",
+    "test": "node test/test-frontend-integration.js",
+    "test:integration": "node test/test-frontend-integration.js",
+    "test:user": "node test/test-user-info.js",
+    "admin:upgrade-premium": "node scripts/upgrade-user-to-premium.js"
   },
   "keywords": [
     "portfolio",
@@ -31,11 +36,13 @@
     "express": "^5.1.0",
     "express-rate-limit": "^7.4.0",
     "express-validator": "^7.2.0",
+    "form-data": "^4.0.4",
     "helmet": "^8.0.0",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.1",
     "multer": "^2.0.2",
+    "node-fetch": "^3.3.2",
     "pdf-text-extract": "^1.5.0",
     "redis": "^4.7.0",
     "swagger-jsdoc": "^6.2.8",

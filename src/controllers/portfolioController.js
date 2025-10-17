@@ -211,12 +211,12 @@ export const deletePortfolio = async (req, res) => {
 // @access  Private
 export const getUserPortfolios = async (req, res) => {
   try {
-    const { published = 'all', sort = 'createdAt', order = 'desc' } = req.query;
+    const { published, limit = 50, offset = 0, sort = 'createdAt', order = 'desc' } = req.query;
     
     // Build filter
     const filter = { userId: req.user._id };
     
-    if (published !== 'all') {
+    if (published !== undefined) {
       filter.isPublished = published === 'true';
     }
 
@@ -228,13 +228,9 @@ export const getUserPortfolios = async (req, res) => {
     const portfolios = await Portfolio.find(filter)
       .select('-content -styling')
       .sort(sortObj)
+      .limit(parseInt(limit))
+      .skip(parseInt(offset))
       .populate('caseStudies', 'projectId');
-
-    // Add virtual caseStudiesCount field
-    const portfoliosWithCount = portfolios.map(portfolio => ({
-      ...portfolio.toObject(),
-      caseStudiesCount: portfolio.caseStudies.length
-    }));
 
     // Get statistics
     const totalStats = await Portfolio.aggregate([
@@ -259,13 +255,28 @@ export const getUserPortfolios = async (req, res) => {
 
     const stats = totalStats[0] || { total: 0, published: 0, unpublished: 0 };
 
+    // Format data for frontend compatibility
+    const formattedPortfolios = portfolios.map(portfolio => ({
+      id: portfolio._id,
+      title: portfolio.title,
+      description: portfolio.description,
+      published: portfolio.isPublished,
+      createdAt: portfolio.createdAt,
+      updatedAt: portfolio.updatedAt,
+      exportCount: portfolio.exportCount || 0,
+      showcased: portfolio.showcased || false,
+      caseStudiesCount: portfolio.caseStudies.length
+    }));
+
     res.json({
       success: true,
-      data: {
-        portfolios: portfoliosWithCount,
+      data: formattedPortfolios,
+      meta: {
         total: stats.total,
         published: stats.published,
-        unpublished: stats.unpublished
+        unpublished: stats.unpublished,
+        limit: parseInt(limit),
+        offset: parseInt(offset)
       }
     });
 
@@ -511,6 +522,49 @@ export const getPublicPortfolio = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error retrieving portfolio',
+      code: 'SERVER_ERROR'
+    });
+  }
+};
+
+// @desc    Get portfolio statistics
+// @route   GET /api/portfolios/stats
+// @access  Private
+export const getPortfolioStats = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Get counts
+    const totalPortfolios = await Portfolio.countDocuments({ userId });
+    const publishedPortfolios = await Portfolio.countDocuments({ 
+      userId, 
+      isPublished: true 
+    });
+
+    // Get total exports (sum of all exportCount)
+    const exportResult = await Portfolio.aggregate([
+      { $match: { userId } },
+      { $group: { _id: null, totalExports: { $sum: '$exportCount' } } }
+    ]);
+    const totalExports = exportResult.length > 0 ? exportResult[0].totalExports : 0;
+
+    res.json({
+      success: true,
+      data: {
+        totalPortfolios,
+        publishedPortfolios,
+        unpublishedPortfolios: totalPortfolios - publishedPortfolios,
+        totalExports,
+        storageUsed: req.user.storage?.used || 0,
+        storageLimit: req.user.storage?.limit || 10737418240
+      }
+    });
+
+  } catch (error) {
+    console.error('Get portfolio stats error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error retrieving statistics',
       code: 'SERVER_ERROR'
     });
   }

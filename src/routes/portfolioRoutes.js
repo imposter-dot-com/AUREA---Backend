@@ -22,6 +22,7 @@ import {
   updatePortfolio,
   deletePortfolio,
   getUserPortfolios,
+  getPortfolioStats,
   checkSlug,
   publishPortfolio,
   unpublishPortfolio,
@@ -35,6 +36,12 @@ router.post('/',
   portfolioCrudLimiter, 
   validatePortfolioCreation, 
   createPortfolio
+);
+
+// Stats endpoint - should come before /user/me to avoid conflicts
+router.get('/stats', 
+  auth, 
+  getPortfolioStats
 );
 
 router.get('/user/me', 
