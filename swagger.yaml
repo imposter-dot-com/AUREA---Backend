@@ -22,13 +22,14 @@ info:
     - Auto-marks projects with hasCaseStudy flags for portfolio integration
     - Comprehensive test suite for verification
     
-    **Total Endpoints: 25**
+    **Total Endpoints: 32**
     - Authentication: 3 endpoints
     - User Management: 7 endpoints
     - Portfolio Management: 8 endpoints
     - Site Publishing & Deployment: 3 endpoints
     - Case Study Management: 4 endpoints
     - Image Upload: 2 endpoints
+    - PDF Export: 5 endpoints
   version: 1.0.0
   contact:
     name: AUREA Development Team
@@ -63,6 +64,17 @@ tags:
       - Projects automatically flagged with hasCaseStudy: true
   - name: Image Upload
     description: Upload and delete images via Cloudinary (2 endpoints)
+  - name: PDF Export
+    description: |
+      Export portfolios and case studies to PDF format using Puppeteer (5 endpoints).
+
+      **Features:**
+      - Export portfolio as PDF with preserved styling from templateConvert.js
+      - Export complete portfolio with all case studies in single PDF
+      - Download PDFs with customizable formats (A4, A3, Letter, Legal)
+      - Support for landscape/portrait orientation
+      - Public access for published portfolios
+      - PDF generation preserves exact design from HTML templates
   - name: Proposal Extraction
     description: Legacy AI-powered PDF extraction (optional feature)
 
@@ -2850,6 +2862,434 @@ paths:
                         description: Total size of generated files
         '400':
           description: Portfolio not found or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/pdf/portfolio/{portfolioId}:
+    get:
+      summary: Export portfolio as PDF
+      description: |
+        Export a portfolio as PDF document with inline viewing.
+
+        **Features:**
+        - Preserves exact styling from templateConvert.js
+        - Supports custom page formats and orientations
+        - Optional authentication for public portfolios
+        - Can export main portfolio or specific case studies
+
+        **Access Control:**
+        - Owner: Full access with optional save to filesystem
+        - Public: Access only if portfolio is published
+      tags:
+        - PDF Export
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - in: path
+          name: portfolioId
+          required: true
+          schema:
+            type: string
+          description: Portfolio ID to export
+          example: "507f1f77bcf86cd799439011"
+        - in: query
+          name: pageType
+          schema:
+            type: string
+            default: portfolio
+          description: |
+            Type of content to export:
+            - 'portfolio': Main portfolio page only (default)
+            - 'all': All pages including case studies
+            - 'case-study-{id}': Specific case study by project ID
+          example: "portfolio"
+        - in: query
+          name: save
+          schema:
+            type: string
+            enum: [true, false]
+            default: false
+          description: Save to filesystem (owner only, for debugging)
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [A4, A3, Letter, Legal]
+            default: A4
+          description: PDF page format
+        - in: query
+          name: landscape
+          schema:
+            type: string
+            enum: [true, false]
+            default: false
+          description: Use landscape orientation
+      responses:
+        '200':
+          description: PDF generated successfully
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/pdf
+            Content-Disposition:
+              schema:
+                type: string
+                example: inline; filename="portfolio-export.pdf"
+            Content-Length:
+              schema:
+                type: integer
+                example: 524288
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Access denied - Portfolio not published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Portfolio not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: PDF generation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/pdf/portfolio/{portfolioId}/complete:
+    get:
+      summary: Export complete portfolio with case studies
+      description: |
+        Export portfolio and all associated case studies as a single combined PDF.
+
+        **Features:**
+        - Combines main portfolio and all case studies
+        - Maintains proper page ordering and navigation
+        - Preserves all styling and formatting
+        - Ideal for complete portfolio documentation
+      tags:
+        - PDF Export
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - in: path
+          name: portfolioId
+          required: true
+          schema:
+            type: string
+          description: Portfolio ID to export
+          example: "507f1f77bcf86cd799439011"
+        - in: query
+          name: save
+          schema:
+            type: string
+            enum: [true, false]
+            default: false
+          description: Save to filesystem (owner only)
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [A4, A3, Letter, Legal]
+            default: A4
+          description: PDF page format
+        - in: query
+          name: landscape
+          schema:
+            type: string
+            enum: [true, false]
+            default: false
+          description: Use landscape orientation
+      responses:
+        '200':
+          description: Complete PDF generated successfully
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/pdf
+            Content-Disposition:
+              schema:
+                type: string
+                example: inline; filename="portfolio-complete.pdf"
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Portfolio not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: PDF generation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/pdf/portfolio/{portfolioId}/download:
+    get:
+      summary: Download portfolio PDF
+      description: |
+        Download portfolio as PDF file (forces download dialog).
+
+        **Features:**
+        - Forces browser download instead of inline viewing
+        - Same export options as inline endpoint
+        - Useful for saving PDFs directly to user's device
+      tags:
+        - PDF Export
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - in: path
+          name: portfolioId
+          required: true
+          schema:
+            type: string
+          description: Portfolio ID to download
+          example: "507f1f77bcf86cd799439011"
+        - in: query
+          name: pageType
+          schema:
+            type: string
+            default: portfolio
+          description: Type of content to export
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [A4, A3, Letter, Legal]
+            default: A4
+          description: PDF page format
+        - in: query
+          name: landscape
+          schema:
+            type: string
+            enum: [true, false]
+            default: false
+          description: Use landscape orientation
+      responses:
+        '200':
+          description: PDF ready for download
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/pdf
+            Content-Disposition:
+              schema:
+                type: string
+                example: attachment; filename="portfolio-export.pdf"
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Portfolio not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/pdf/portfolio/{portfolioId}/info:
+    get:
+      summary: Get PDF export information
+      description: |
+        Get information about available PDF export options for a portfolio.
+
+        **Information Provided:**
+        - Portfolio details (title, project count, case study count)
+        - Estimated file sizes for different export types
+        - Available export formats and options
+        - List of exportable page types
+      tags:
+        - PDF Export
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - in: path
+          name: portfolioId
+          required: true
+          schema:
+            type: string
+          description: Portfolio ID
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        '200':
+          description: PDF export information retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "PDF export information retrieved"
+                  data:
+                    type: object
+                    properties:
+                      portfolio:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          title:
+                            type: string
+                          isPublished:
+                            type: boolean
+                          projectCount:
+                            type: integer
+                            example: 5
+                          caseStudyCount:
+                            type: integer
+                            example: 3
+                      exportInfo:
+                        type: object
+                        properties:
+                          estimatedSize:
+                            type: object
+                            properties:
+                              mainPortfolio:
+                                type: string
+                                example: "~732KB"
+                              caseStudies:
+                                type: string
+                                example: "~586KB"
+                              total:
+                                type: string
+                                example: "~1318KB"
+                          availableExports:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                type:
+                                  type: string
+                                description:
+                                  type: string
+                                endpoint:
+                                  type: string
+                          options:
+                            type: object
+                            properties:
+                              formats:
+                                type: array
+                                items:
+                                  type: string
+                                example: ["A4", "A3", "Letter", "Legal"]
+                              orientations:
+                                type: array
+                                items:
+                                  type: string
+                                example: ["portrait", "landscape"]
+                              pageTypes:
+                                type: array
+                                items:
+                                  type: string
+                                example: ["portfolio", "all", "case-study-1"]
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Portfolio not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/pdf/cleanup:
+    post:
+      summary: Clean up old PDF files
+      description: |
+        Maintenance endpoint to clean up old generated PDF files from the filesystem.
+
+        **Admin Only:** Requires admin role for access.
+
+        **Features:**
+        - Removes PDF files older than specified days
+        - Default retention: 7 days
+        - Helps manage disk space usage
+      tags:
+        - PDF Export
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                maxAgeInDays:
+                  type: integer
+                  default: 7
+                  description: Maximum age of files to keep (in days)
+                  example: 7
+      responses:
+        '200':
+          description: Cleanup completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "PDF cleanup completed. Removed files older than 7 days."
+        '403':
+          description: Access denied - Admin only
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Cleanup failed
           content:
             application/json:
               schema:

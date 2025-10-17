@@ -49,6 +49,7 @@ const swaggerOptions = {
     join(__dirname, '../routes/caseStudyRoutes.js'),
     join(__dirname, '../routes/uploadRoutes.js'),
     join(__dirname, '../routes/proposalExtract.routes.js'),
+    join(__dirname, '../routes/pdfRoutes.js'),
     join(__dirname, '../controllers/*.js'),
     join(__dirname, '../../swagger.yaml'),
   ],

@@ -113,7 +113,7 @@ curl http://localhost:5000/health
 # Navigate to: POST /api/portfolios
 ```
 
-## 📊 Complete API Endpoints (27 Total)
+## 📊 Complete API Endpoints (32 Total)
 
 ### 🔐 Authentication Endpoints (3)
 - `POST /api/auth/signup` - User registration with validation
@@ -168,6 +168,13 @@ curl http://localhost:5000/health
 ### 🖼️ File Upload System (2)
 - `POST /api/upload/image` - Upload image to Cloudinary with validation
 - `DELETE /api/upload/image` - Delete image from Cloudinary
+
+### 📄 PDF Export System (5) **NEW**
+- `GET /api/pdf/portfolio/:portfolioId` - Export portfolio as PDF (inline view)
+- `GET /api/pdf/portfolio/:portfolioId/complete` - Export complete portfolio with all case studies
+- `GET /api/pdf/portfolio/:portfolioId/download` - Download portfolio PDF (force download)
+- `GET /api/pdf/portfolio/:portfolioId/info` - Get PDF export information and options
+- `POST /api/pdf/cleanup` - Clean up old generated PDFs (Admin only)
 
 ### 🏥 System Health (1)
 - `GET /health` - Server status and database connectivity
@@ -507,6 +514,56 @@ const checkSubdomainAvailability = async (subdomain) => {
   return result.available;
 };
 ```
+
+### 📄 PDF Export System **NEW**
+Export portfolios as high-quality PDF documents with Puppeteer:
+
+```bash
+# Export portfolio as PDF (view inline)
+curl -X GET http://localhost:5000/api/pdf/portfolio/:portfolioId \
+  -H "Authorization: Bearer <token>" \
+  --output portfolio.pdf
+
+# Export complete portfolio with case studies
+curl -X GET http://localhost:5000/api/pdf/portfolio/:portfolioId/complete \
+  -H "Authorization: Bearer <token>" \
+  --output portfolio-complete.pdf
+
+# Get PDF export information
+curl -X GET http://localhost:5000/api/pdf/portfolio/:portfolioId/info \
+  -H "Authorization: Bearer <token>"
+
+# Response includes:
+{
+  "success": true,
+  "data": {
+    "portfolio": {
+      "projectCount": 5,
+      "caseStudyCount": 3
+    },
+    "exportInfo": {
+      "estimatedSize": {
+        "mainPortfolio": "~586KB",
+        "caseStudies": "~600KB",
+        "total": "~1186KB"
+      },
+      "options": {
+        "formats": ["A4", "A3", "Letter", "Legal"],
+        "orientations": ["portrait", "landscape"],
+        "pageTypes": ["portfolio", "all", "case-study-1", "case-study-2"]
+      }
+    }
+  }
+}
+```
+
+**PDF Features:**
+- **High Quality Output**: Uses Puppeteer for pixel-perfect PDF generation
+- **Maintains Design**: Preserves exact HTML/CSS styling from templateConvert.js
+- **Multiple Formats**: Support for A4, A3, Letter, Legal paper sizes
+- **Flexible Access**: Public portfolios can be exported without authentication
+- **Batch Export**: Generate combined PDF with portfolio and all case studies
+- **Smart Loading**: Waits for fonts and images before generating PDF
 
 ### 🖼️ Media Upload System
 Upload images with automatic Cloudinary optimization:
