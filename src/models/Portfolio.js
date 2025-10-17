@@ -38,6 +38,10 @@ const portfolioSchema = new mongoose.Schema({
     default: false,
     index: true
   },
+  showcased: {
+    type: Boolean,
+    default: false
+  },
   publishedAt: {
     type: Date,
     default: null
@@ -61,6 +65,15 @@ const portfolioSchema = new mongoose.Schema({
     trim: true,
     default: null
   },
+  customDomain: {
+    type: String,
+    trim: true,
+    default: null
+  },
+  exportCount: {
+    type: Number,
+    default: 0
+  },
   viewCount: {
     type: Number,
     default: 0
@@ -68,6 +81,20 @@ const portfolioSchema = new mongoose.Schema({
   lastViewedAt: {
     type: Date,
     default: null
+  },
+  metadata: {
+    theme: {
+      type: String,
+      default: 'default'
+    },
+    colors: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
+    layout: {
+      type: String,
+      default: 'default'
+    }
   },
   caseStudies: [{
     type: mongoose.Schema.Types.ObjectId,

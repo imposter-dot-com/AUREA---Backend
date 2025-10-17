@@ -31,6 +31,16 @@ const upload = multer({
 // Middleware for single file upload
 const uploadSingle = upload.single('image');
 
+// Middleware for avatar upload (stricter limits)
+const uploadAvatar = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit for avatars
+    files: 1
+  }
+}).single('avatar');
+
 // Middleware for multiple file upload
 const uploadMultiple = upload.array('images', 6); // Max 6 files
 
@@ -74,6 +84,7 @@ const handleMulterError = (error, req, res, next) => {
 export {
   upload,
   uploadSingle,
+  uploadAvatar,
   uploadMultiple,
   handleMulterError
 };
