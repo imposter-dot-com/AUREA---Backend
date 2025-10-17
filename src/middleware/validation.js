@@ -51,14 +51,19 @@ const validatePortfolioCreation = [
   
   body('templateId')
     .optional()
-    .isIn(['echelon'])
-    .withMessage('Template ID must be "echelon"'),
+    .custom(isValidObjectId)
+    .withMessage('Invalid template ID format'),
   
   body('content')
     .optional()
     .isObject()
     .withMessage('Content must be an object'),
-  
+
+  body('customData')
+    .optional()
+    .isObject()
+    .withMessage('Custom data must be an object'),
+
   body('styling')
     .optional()
     .isObject()
@@ -82,14 +87,19 @@ const validatePortfolioUpdate = [
   
   body('templateId')
     .optional()
-    .isIn(['echelon'])
-    .withMessage('Template ID must be "echelon"'),
+    .custom(isValidObjectId)
+    .withMessage('Invalid template ID format'),
   
   body('content')
     .optional()
     .isObject()
     .withMessage('Content must be an object'),
-  
+
+  body('customData')
+    .optional()
+    .isObject()
+    .withMessage('Custom data must be an object'),
+
   body('styling')
     .optional()
     .isObject()

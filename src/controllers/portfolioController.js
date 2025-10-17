@@ -1,30 +1,61 @@
 import Portfolio from '../models/Portfolio.js';
 import CaseStudy from '../models/CaseStudy.js';
-import { 
-  generateUniqueSlug, 
-  checkSlugAvailability, 
+import Template from '../models/Template.js';
+import {
+  generateUniqueSlug,
+  checkSlugAvailability,
   validateSlugFormat,
-  generateSlugSuggestions 
+  generateSlugSuggestions
 } from '../utils/slugGenerator.js';
+import {
+  validateAgainstTemplate,
+  mergeWithTemplateDefaults
+} from '../utils/templateValidator.js';
 
 // @desc    Create a new portfolio
 // @route   POST /api/portfolios
 // @access  Private
 export const createPortfolio = async (req, res) => {
   try {
-    const { title, description, templateId, content, styling } = req.body;
+    const { title, description, template, templateId, customData, content, styling, sections } = req.body;
+
+    // Handle both template (string) and templateId (legacy ObjectId) for backwards compatibility
+    let selectedTemplate = template || 'echelon'; // Default to 'echelon' if not provided
+
+    // If legacy templateId is provided but no template string, try to use it
+    if (templateId && !template) {
+      // For backwards compatibility, we'll just use a default template name
+      selectedTemplate = 'echelon';
+      console.log('Legacy templateId provided, using default template: echelon');
+    }
 
     // Create portfolio with user ID
     const portfolioData = {
       userId: req.user._id,
       title,
       description: description || '',
-      templateId: templateId || 'echelon',
+      template: selectedTemplate,
+      templateVersion: '1.0.0', // Default version
       content: content || {},
+      sections: sections || [],
+      customData: customData || {},
       styling: styling || {}
     };
 
+    // If templateId was provided (legacy), include it for backwards compatibility
+    if (templateId) {
+      portfolioData.templateId = templateId;
+    }
+
+    console.log('Creating portfolio with data:', {
+      ...portfolioData,
+      content: '[content object]', // Don't log full content
+      sections: `[${portfolioData.sections.length} sections]`
+    });
+
     const portfolio = await Portfolio.create(portfolioData);
+
+    console.log('Portfolio created successfully:', portfolio._id);
 
     res.status(201).json({
       success: true,
@@ -36,7 +67,7 @@ export const createPortfolio = async (req, res) => {
 
   } catch (error) {
     console.error('Create portfolio error:', error);
-    
+
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(err => err.message);
       return res.status(400).json({
@@ -92,7 +123,10 @@ export const getPortfolioById = async (req, res) => {
     res.json({
       success: true,
       data: {
-        portfolio
+        portfolio: {
+          ...portfolio.toObject(),
+          template: portfolio.template || 'echelon' // Ensure template is included
+        }
       }
     });
 
@@ -112,33 +146,66 @@ export const getPortfolioById = async (req, res) => {
 export const updatePortfolio = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, templateId, content, styling } = req.body;
+    const { title, description, template, templateId, customData, content, styling, sections } = req.body;
 
-    // Build update object with only provided fields
-    const updateData = {};
-    if (title !== undefined) updateData.title = title;
-    if (description !== undefined) updateData.description = description;
-    if (templateId !== undefined) updateData.templateId = templateId;
-    if (content !== undefined) updateData.content = content;
-    if (styling !== undefined) updateData.styling = styling;
-
-    const portfolio = await Portfolio.findByIdAndUpdate(
+    console.log('Update portfolio request:', {
       id,
-      updateData,
-      { 
-        new: true, 
-        runValidators: true,
-        populate: 'caseStudies'
-      }
-    );
+      bodyKeys: Object.keys(req.body),
+      hasSections: !!sections,
+      sectionsLength: sections ? sections.length : 0
+    });
 
-    if (!portfolio) {
+    // Get current portfolio
+    const currentPortfolio = await Portfolio.findById(id);
+    if (!currentPortfolio) {
       return res.status(404).json({
         success: false,
         message: 'Portfolio not found',
         code: 'NOT_FOUND'
       });
     }
+
+    // Build update object with only provided fields
+    const updateData = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (styling !== undefined) updateData.styling = styling;
+    if (sections !== undefined) updateData.sections = sections;
+    if (content !== undefined) updateData.content = content;
+    if (customData !== undefined) updateData.customData = customData;
+
+    // Handle template (string) update
+    if (template !== undefined) {
+      updateData.template = template;
+      updateData.templateVersion = '1.0.0'; // Default version for string templates
+    }
+
+    // Handle legacy templateId for backwards compatibility
+    if (templateId !== undefined) {
+      updateData.templateId = templateId;
+      // If no template string provided, default to echelon
+      if (!template) {
+        updateData.template = 'echelon';
+      }
+    }
+
+    console.log('Updating portfolio with data:', {
+      ...updateData,
+      content: updateData.content ? '[content object]' : undefined,
+      sections: updateData.sections ? `[${updateData.sections.length} sections]` : undefined
+    });
+
+    const portfolio = await Portfolio.findByIdAndUpdate(
+      id,
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+        populate: 'caseStudies'
+      }
+    );
+
+    console.log('Portfolio updated successfully:', portfolio._id);
 
     res.json({
       success: true,
@@ -150,7 +217,7 @@ export const updatePortfolio = async (req, res) => {
 
   } catch (error) {
     console.error('Update portfolio error:', error);
-    
+
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(err => err.message);
       return res.status(400).json({
@@ -255,17 +322,24 @@ export const getUserPortfolios = async (req, res) => {
 
     const stats = totalStats[0] || { total: 0, published: 0, unpublished: 0 };
 
-    // Format data for frontend compatibility
+    // Format data for frontend compatibility - include all fields the frontend needs
     const formattedPortfolios = portfolios.map(portfolio => ({
-      id: portfolio._id,
+      _id: portfolio._id, // Frontend expects _id not id
+      id: portfolio._id, // Keep both for compatibility
       title: portfolio.title,
       description: portfolio.description,
-      published: portfolio.isPublished,
+      template: portfolio.template || 'echelon', // Include template
+      templateId: portfolio.templateId, // Include for backwards compatibility
+      isPublished: portfolio.isPublished, // Frontend expects isPublished not published
+      published: portfolio.isPublished, // Keep both for compatibility
       createdAt: portfolio.createdAt,
       updatedAt: portfolio.updatedAt,
       exportCount: portfolio.exportCount || 0,
       showcased: portfolio.showcased || false,
-      caseStudiesCount: portfolio.caseStudies.length
+      slug: portfolio.slug,
+      publishedAt: portfolio.publishedAt,
+      caseStudiesCount: portfolio.caseStudies.length,
+      caseStudies: portfolio.caseStudies // Include case studies array
     }));
 
     res.json({

@@ -3,8 +3,8 @@ import fetch from 'node-fetch';
 
 const BASE_URL = 'http://localhost:5000';
 const USER_CREDENTIALS = {
-  email: 'user2@example.com',
-  password: '123456'
+  email: 'test@gmail.com',
+  password: 'testtest'
 };
 
 async function authenticateUser() {
@@ -51,17 +51,18 @@ async function inspectPortfolioData() {
       throw new Error(`Failed to get portfolios: ${portfoliosData.message || 'Unknown error'}`);
     }
 
-    const portfolios = portfoliosData.data?.portfolios || [];
+    // FIX: portfolios are directly in data array, not data.portfolios
+    const portfolios = portfoliosData.data || [];
     console.log(`\n📊 Found ${portfolios.length} portfolios:`);
     
     // List all portfolios with basic info
     portfolios.forEach((portfolio, index) => {
       console.log(`\n${index + 1}. "${portfolio.title || 'Untitled'}"`);
-      console.log(`   📄 ID: ${portfolio._id}`);
+      console.log(`   📄 ID: ${portfolio.id}`);
       console.log(`   📊 Published: ${portfolio.published ? 'Yes' : 'No'}`);
-      console.log(`   🎨 Template: ${portfolio.templateId || portfolio.template || 'default'}`);
-      console.log(`   📝 Has sections: ${portfolio.sections?.length || 0}`);
-      console.log(`   🔗 URL: ${portfolio.url || 'Not published'}`);
+      console.log(`   🎨 Template: ${portfolio.templateId || 'echelon'}`);
+      console.log(`   📅 Created: ${portfolio.createdAt}`);
+      console.log(`   🔄 Updated: ${portfolio.updatedAt}`);
     });
 
     // Get the first portfolio for inspection
@@ -71,7 +72,7 @@ async function inspectPortfolioData() {
       console.log(`\n🎯 FETCHING FULL PORTFOLIO DATA: "${targetPortfolio.title}"`);
       
       // Fetch complete portfolio data with content and styling
-      const fullPortfolioResponse = await fetch(`${BASE_URL}/api/portfolios/${targetPortfolio._id}`, {
+      const fullPortfolioResponse = await fetch(`${BASE_URL}/api/portfolios/${targetPortfolio.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authToken}`,

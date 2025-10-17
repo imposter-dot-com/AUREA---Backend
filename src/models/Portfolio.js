@@ -19,15 +19,31 @@ const portfolioSchema = new mongoose.Schema({
     maxlength: [1000, 'Description cannot be more than 1000 characters'],
     default: ''
   },
+  template: {
+    type: String,
+    required: [true, 'Template is required'],
+    trim: true,
+    default: 'echelon'
+  },
   templateId: {
     type: String,
-    required: [true, 'Template ID is required'],
-    enum: ['echelon'],
-    default: 'echelon'
+    trim: true
+  },
+  templateVersion: {
+    type: String,
+    default: '1.0.0'
+  },
+  customData: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
   },
   content: {
     type: mongoose.Schema.Types.Mixed,
     default: {}
+  },
+  sections: {
+    type: [mongoose.Schema.Types.Mixed],
+    default: []
   },
   styling: {
     type: mongoose.Schema.Types.Mixed,

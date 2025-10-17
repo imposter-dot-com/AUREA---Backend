@@ -10,6 +10,7 @@ import { generalApiLimiter } from './src/middleware/rateLimiter.js';
 import { initCloudinary } from './src/config/cloudinary.js';
 import { initRedis } from './src/utils/cache.js';
 import { setupSwagger } from './src/config/swagger.js';
+import Template from './src/models/Template.js';
 
 // Route imports
 import authRoutes from './src/routes/authRoutes.js';
@@ -20,6 +21,7 @@ import proposalExtractRoutes from './src/routes/proposalExtract.routes.js';
 import siteRoutes from './src/routes/siteRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
 import pdfRoutes from './src/routes/pdfRoutes.js';
+import templateRoutes from './src/routes/templateRoutes.js';
 
 dotenv.config();
 
@@ -31,6 +33,30 @@ const app = express();
 
 // Connect to database
 connectDB();
+
+// Initialize templates on startup
+async function initializeTemplates() {
+  try {
+    const templateCount = await Template.countDocuments();
+
+    if (templateCount === 0) {
+      console.log('📝 No templates found. Running template seeder...');
+      const seedTemplates = (await import('./seeds/templateSeeds.js')).default;
+      await seedTemplates();
+      console.log('✅ Templates initialized successfully');
+    } else {
+      console.log(`✅ Found ${templateCount} existing templates`);
+    }
+  } catch (error) {
+    console.error('❌ Error initializing templates:', error);
+    // Don't crash the server if templates can't be initialized
+  }
+}
+
+// Run initialization after database connection
+setTimeout(() => {
+  initializeTemplates();
+}, 2000);
 
 // Security and performance middleware
 app.use(helmet({
@@ -115,6 +141,7 @@ app.get('/robots.txt', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/portfolios', portfolioRoutes);
 app.use('/api/case-studies', caseStudyRoutes);
+app.use('/api/templates', templateRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/proposals', proposalExtractRoutes);
 app.use('/api/sites', siteRoutes);
@@ -134,6 +161,7 @@ app.get('/', (req, res) => {
       auth: '/api/auth',
       portfolios: '/api/portfolios',
       caseStudies: '/api/case-studies',
+      templates: '/api/templates',
       upload: '/api/upload',
       proposals: '/api/proposals',
       sites: '/api/sites',

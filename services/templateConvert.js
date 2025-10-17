@@ -848,7 +848,9 @@ function transformCaseStudyForHTML(caseStudy, portfolioData) {
 /**
  * Generate Case Study Page HTML
  */
-function generateCaseStudyHTML(projectId, caseStudy, data) {
+function generateCaseStudyHTML(projectId, caseStudy, data, options = {}) {
+  const { forPDF = false } = options;
+
   // Transform to template format
   const templateData = transformCaseStudyForHTML(caseStudy, data);
   
@@ -892,19 +894,21 @@ function generateCaseStudyHTML(projectId, caseStudy, data) {
   </style>
 </head>
 <body>
+  ${!forPDF ? `
   <!-- Fixed Header -->
   <header style="position: fixed; top: 0; left: 0; right: 0; background-color: #000000; color: #FFFFFF; padding: 24px 60px; z-index: 1000; border-bottom: 3px solid #FF0000; display: flex; justify-content: space-between; align-items: center;">
     <a href="index.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #FFFFFF; background-color: transparent; border: 2px solid #FFFFFF; padding: 12px 24px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.3s ease; text-decoration: none; display: inline-block;" onmouseover="this.style.backgroundColor='#FFFFFF'; this.style.color='#000000';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#FFFFFF';">
       ← BACK
     </a>
-    
+
     <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #FF0000; text-transform: uppercase; letter-spacing: 0.15em;">
       VIEW CASE STUDY
     </div>
   </header>
+  ` : ''}
 
   <!-- Main Content -->
-  <main style="padding-top: 120px; padding-bottom: 120px;">
+  <main style="padding-top: ${forPDF ? '60px' : '120px'}; padding-bottom: 120px;">
     <!-- Hero Section -->
     <section style="max-width: 1400px; margin: 0 auto; padding: 0 60px; margin-bottom: 180px;">
       <!-- Category -->
@@ -1293,35 +1297,38 @@ export function generatePortfolioHTML(portfolioData) {
  * Generate all HTML files for portfolio including case studies
  * Returns object with index.html and all case study HTML files
  */
-export function generateAllPortfolioFiles(portfolioData) {
+export function generateAllPortfolioFiles(portfolioData, options = {}) {
   try {
+    // Options for PDF generation
+    const { forPDF = false } = options;
+
     // Process portfolio data to match expected format
     const processedData = processPortfolioData(portfolioData);
-    
+
     const files = {};
-    
+
     // Generate main portfolio page
     const htmlContent = createHTMLFromData(processedData);
     const fullHTML = HTML_TEMPLATE(processedData).replace('{CONTENT}', htmlContent);
     files['index.html'] = fullHTML;
-    
+
     let caseStudiesGenerated = 0;
-    
+
     // Generate case study pages if they exist
     if (processedData.caseStudies && typeof processedData.caseStudies === 'object') {
       for (const [projectId, caseStudy] of Object.entries(processedData.caseStudies)) {
-        const caseStudyHTML = generateCaseStudyHTML(projectId, caseStudy, processedData);
+        const caseStudyHTML = generateCaseStudyHTML(projectId, caseStudy, processedData, { forPDF });
         files[`case-study-${projectId}.html`] = caseStudyHTML;
         caseStudiesGenerated++;
       }
     }
-    
+
     // Also check if work projects have case studies
     if (processedData.work?.projects) {
       processedData.work.projects.forEach((project, index) => {
         if (project.hasCaseStudy && project.caseStudy) {
           const projectId = project.id || index;
-          const caseStudyHTML = generateCaseStudyHTML(projectId, project.caseStudy, processedData);
+          const caseStudyHTML = generateCaseStudyHTML(projectId, project.caseStudy, processedData, { forPDF });
           files[`case-study-${projectId}.html`] = caseStudyHTML;
           caseStudiesGenerated++;
         }

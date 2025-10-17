@@ -273,8 +273,8 @@ export const generatePortfolioPDF = async (portfolioId, userId, pageType = 'port
     // Prepare portfolio data
     const portfolioData = await preparePortfolioData(portfolioId, userId);
 
-    // Generate HTML files
-    const allFiles = generateAllPortfolioFiles(portfolioData);
+    // Generate HTML files with PDF option to exclude navigation
+    const allFiles = generateAllPortfolioFiles(portfolioData, { forPDF: true });
 
     let htmlContent;
     let filename;
@@ -329,8 +329,8 @@ export const generateCombinedPDF = async (portfolioId, userId, options = {}) => 
     // Prepare portfolio data
     const portfolioData = await preparePortfolioData(portfolioId, userId);
 
-    // Generate HTML files
-    const allFiles = generateAllPortfolioFiles(portfolioData);
+    // Generate HTML files with PDF option to exclude navigation
+    const allFiles = generateAllPortfolioFiles(portfolioData, { forPDF: true });
 
     // Combine all HTML content with page breaks
     let combinedHTML = '';
