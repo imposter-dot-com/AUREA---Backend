@@ -21,7 +21,7 @@ import { optionalAuth } from '../middleware/auth.js';
 export const exportPortfolioPDF = async (req, res) => {
   try {
     const { portfolioId } = req.params;
-    const { pageType = 'portfolio', save = 'false' } = req.query;
+    const { pageType = 'portfolio', save = 'false', templateId } = req.query;
 
     // Validate portfolio ID
     if (!portfolioId) {
@@ -52,9 +52,9 @@ export const exportPortfolioPDF = async (req, res) => {
       });
     }
 
-    console.log(`📄 Generating PDF for portfolio: ${portfolio.title}`);
+    console.log(`📄 Generating PDF for portfolio: ${portfolio.title} with template: ${templateId || portfolio.templateId || 'default'}`);
 
-    // Generate PDF
+    // Generate PDF with template support
     const pdfResult = await generatePortfolioPDF(
       portfolioId,
       portfolio.userId,
@@ -63,7 +63,8 @@ export const exportPortfolioPDF = async (req, res) => {
         // Custom PDF options can be passed here
         format: req.query.format || 'A4',
         landscape: req.query.landscape === 'true'
-      }
+      },
+      templateId // Pass template ID (optional - will use portfolio's templateId if not provided)
     );
 
     // Save to file system if requested (for debugging or caching)
@@ -106,7 +107,7 @@ export const exportPortfolioPDF = async (req, res) => {
 export const exportCompletePDF = async (req, res) => {
   try {
     const { portfolioId } = req.params;
-    const { save = 'false' } = req.query;
+    const { save = 'false', templateId } = req.query;
 
     // Validate portfolio ID
     if (!portfolioId) {
@@ -137,16 +138,17 @@ export const exportCompletePDF = async (req, res) => {
       });
     }
 
-    console.log(`📄 Generating complete PDF for portfolio: ${portfolio.title}`);
+    console.log(`📄 Generating complete PDF for portfolio: ${portfolio.title} with template: ${templateId || portfolio.templateId || 'default'}`);
 
-    // Generate combined PDF
+    // Generate combined PDF with template support
     const pdfResult = await generateCombinedPDF(
       portfolioId,
       portfolio.userId,
       {
         format: req.query.format || 'A4',
         landscape: req.query.landscape === 'true'
-      }
+      },
+      templateId // Pass template ID (optional)
     );
 
     // Save to file system if requested
@@ -189,7 +191,7 @@ export const exportCompletePDF = async (req, res) => {
 export const downloadPortfolioPDF = async (req, res) => {
   try {
     const { portfolioId } = req.params;
-    const { pageType = 'portfolio' } = req.query;
+    const { pageType = 'portfolio', templateId } = req.query;
 
     // Validate portfolio ID
     if (!portfolioId) {
@@ -220,9 +222,9 @@ export const downloadPortfolioPDF = async (req, res) => {
       });
     }
 
-    console.log(`⬇️ Downloading PDF for portfolio: ${portfolio.title}`);
+    console.log(`⬇️ Downloading PDF for portfolio: ${portfolio.title} with template: ${templateId || portfolio.templateId || 'default'}`);
 
-    // Generate PDF
+    // Generate PDF with template support
     const pdfResult = await generatePortfolioPDF(
       portfolioId,
       portfolio.userId,
@@ -230,7 +232,8 @@ export const downloadPortfolioPDF = async (req, res) => {
       {
         format: req.query.format || 'A4',
         landscape: req.query.landscape === 'true'
-      }
+      },
+      templateId // Pass template ID (optional)
     );
 
     // Set response headers for download

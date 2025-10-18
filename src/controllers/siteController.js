@@ -9,8 +9,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Import HTML generation service
+// Import HTML generation services
 import { generatePortfolioHTML, generateAllPortfolioFiles } from '../../services/templateConvert.js';
+import { getTemplateHTML } from '../services/templateEngine.js';
 
 // Import subdomain validation utility
 import { validateSubdomain, isReservedSubdomain, generateSubdomainSuggestions } from '../utils/subdomainValidator.js';
@@ -973,9 +974,70 @@ export const subPublish = async (req, res) => {
       }
     }
 
-    // Generate HTML content using templateConvert service (includes case studies)
-    const allFiles = generateAllPortfolioFiles(portfolioWithCaseStudies);
-    const htmlContent = allFiles['index.html'];
+    // Generate HTML content using template engine for portfolio (template-specific design)
+    console.log('📄 Generating HTML files for portfolio and case studies...');
+
+    // Always use template engine for template-specific design (Echelon, Serene, etc.)
+    const templateType = portfolio.templateId || portfolio.template || 'echolon';
+    console.log(`📋 Template type: ${templateType}`);
+    console.log(`🎨 Using template engine for template-specific generation`);
+
+    let portfolioHTML;
+    let allFiles;
+
+    // Debug: Log portfolio structure before generation
+    console.log('\n📊 Portfolio Structure Debug:');
+    console.log('  Has content:', !!portfolioWithCaseStudies.content);
+    console.log('  Has content.work:', !!portfolioWithCaseStudies.content?.work);
+    console.log('  Has content.work.projects:', !!portfolioWithCaseStudies.content?.work?.projects);
+    console.log('  Projects count:', portfolioWithCaseStudies.content?.work?.projects?.length || 0);
+    console.log('  Has caseStudies:', !!portfolioWithCaseStudies.caseStudies);
+    console.log('  Case studies count:', Object.keys(portfolioWithCaseStudies.caseStudies || {}).length);
+
+    if (portfolioWithCaseStudies.content?.work?.projects) {
+      console.log('\n  Projects with hasCaseStudy flag:');
+      portfolioWithCaseStudies.content.work.projects.forEach((p, i) => {
+        console.log(`    Project ${i + 1}: id=${p.id}, hasCaseStudy=${p.hasCaseStudy}`);
+      });
+    }
+
+    try {
+      console.log(`🎨 Using template engine for ${templateType} template...`);
+
+      // Use template engine to get template-specific HTML (Echelon, Serene, etc.)
+      portfolioHTML = await getTemplateHTML(
+        portfolioWithCaseStudies,
+        templateType,
+        { forPDF: false } // Web viewing, not PDF
+      );
+
+      // Generate case study pages using templateConvert.js (uniform design)
+      const caseStudyFiles = generateAllPortfolioFiles(portfolioWithCaseStudies);
+      allFiles = caseStudyFiles; // Start with all files
+
+      // Replace index.html with template-specific version
+      allFiles['index.html'] = portfolioHTML;
+
+      console.log('✅ Template-specific HTML generated successfully');
+      console.log('  Portfolio HTML: Template-specific design');
+      console.log('  Case studies:', Object.keys(allFiles).filter(k => k.startsWith('case-study-')).length);
+    } catch (templateError) {
+      console.warn('⚠️ Template engine failed, using fallback:', templateError.message);
+      console.error('Full error:', templateError);
+      // Fallback to templateConvert.js if template engine fails
+      allFiles = generateAllPortfolioFiles(portfolioWithCaseStudies);
+      portfolioHTML = allFiles['index.html'];
+    }
+
+    // Combine: template-specific portfolio + uniform case studies
+    const deploymentFiles = {
+      'index.html': portfolioHTML, // Main page
+      ...Object.fromEntries(
+        Object.entries(allFiles).filter(([key]) => key.startsWith('case-study-'))
+      ) // Case study pages
+    };
+
+    const htmlContent = portfolioHTML;
 
     // Create site configuration
     const siteConfig = {
@@ -1000,8 +1062,7 @@ export const subPublish = async (req, res) => {
       });
     }
 
-    // Use all generated files (index.html + case studies)
-    const deploymentFiles = allFiles;
+    // deploymentFiles already defined above with template-specific HTML
 
     // Check if subdomain changed (need to clean up old folder)
     const oldSubdomain = portfolio.slug;
@@ -1117,6 +1178,7 @@ export const subPublish = async (req, res) => {
           subdomain: site.subdomain,
           url: `aurea.tool/${subdomain}`,
           localUrl: `http://localhost:5000/api/sites/${subdomain}`,
+          htmlFile: `${subdomainDir}/index.html`, // Direct path to HTML file
           published: site.published,
           deploymentStatus: site.deploymentStatus,
           lastDeployedAt: site.lastDeployedAt
@@ -1125,11 +1187,13 @@ export const subPublish = async (req, res) => {
           id: portfolio._id,
           title: portfolio.title,
           slug: portfolio.slug,
+          template: portfolio.templateId || portfolio.template || 'default',
           publishedUrl: portfolio.publishedUrl
         },
         deployment: {
           filesGenerated: Object.keys(deploymentFiles),
           localPath: subdomainDir,
+          template: portfolio.templateId || portfolio.template || 'default',
           validation: {
             score: validation.score,
             isValid: validation.isValid

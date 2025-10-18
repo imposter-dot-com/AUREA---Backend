@@ -3,6 +3,9 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import connectDB from './src/config/database.js';
 import { errorHandler, notFound } from './src/middleware/errorHandler.js';
 import { requestLogger } from './src/middleware/requestLogger.js';
@@ -11,6 +14,7 @@ import { initCloudinary } from './src/config/cloudinary.js';
 import { initRedis } from './src/utils/cache.js';
 import { setupSwagger } from './src/config/swagger.js';
 import Template from './src/models/Template.js';
+import Site from './src/models/Site.js';
 
 // Route imports
 import authRoutes from './src/routes/authRoutes.js';
@@ -168,9 +172,317 @@ app.get('/', (req, res) => {
       users: '/api/users',
       pdf: '/api/pdf',
       health: '/health',
-      docs: '/api-docs'
+      docs: '/api-docs',
+      'portfolio-html': '/:subdomain/html',
+      'case-study-html': '/:subdomain/case-study-:projectId.html'
     }
   });
+});
+
+// Portfolio HTML serving routes - MUST come after API routes
+// This serves the static HTML files generated during publish
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve case study HTML files
+app.get('/:subdomain/case-study-:projectId.html', async (req, res) => {
+  try {
+    const { subdomain, projectId } = req.params;
+
+    // Check if site is active in database
+    const site = await Site.findBySubdomain(subdomain, false);
+
+    if (!site) {
+      return res.status(404).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Portfolio Not Found - AUREA</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                text-align: center;
+                padding: 50px;
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0;
+              }
+              .container {
+                background: white;
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                max-width: 500px;
+              }
+              h1 { color: #2d3748; margin-bottom: 10px; }
+              p { color: #718096; line-height: 1.6; }
+              a { color: #fb8500; text-decoration: none; font-weight: 600; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>📁 Portfolio Not Found</h1>
+              <p>The portfolio you're looking for doesn't exist or has been unpublished.</p>
+              <p><a href="/">← Back to AUREA</a></p>
+            </div>
+          </body>
+        </html>
+      `);
+    }
+
+    // Serve the case study HTML file
+    const caseStudyPath = path.join(__dirname, 'generated-files', subdomain, `case-study-${projectId}.html`);
+
+    if (fs.existsSync(caseStudyPath)) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.sendFile(caseStudyPath);
+    } else {
+      res.status(404).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Case Study Not Found - AUREA</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                text-align: center;
+                padding: 50px;
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0;
+              }
+              .container {
+                background: white;
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                max-width: 500px;
+              }
+              h1 { color: #2d3748; margin-bottom: 10px; }
+              p { color: #718096; line-height: 1.6; }
+              a { color: #fb8500; text-decoration: none; font-weight: 600; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>📄 Case Study Not Found</h1>
+              <p>The case study file is missing. Please try republishing your portfolio.</p>
+              <p><a href="/${subdomain}/html">← Back to Portfolio</a></p>
+            </div>
+          </body>
+        </html>
+      `);
+    }
+  } catch (error) {
+    console.error('Error serving case study HTML:', error);
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Error - AUREA</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+              text-align: center;
+              padding: 50px;
+              background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0;
+            }
+            .container {
+              background: white;
+              padding: 40px;
+              border-radius: 12px;
+              box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+              max-width: 500px;
+            }
+            h1 { color: #2d3748; margin-bottom: 10px; }
+            p { color: #718096; line-height: 1.6; }
+            a { color: #fb8500; text-decoration: none; font-weight: 600; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>❌ Error Loading Case Study</h1>
+            <p>An error occurred while loading the case study. Please try again later.</p>
+            <p><a href="/">← Back to AUREA</a></p>
+          </div>
+        </body>
+      </html>
+    `);
+  }
+});
+
+// Serve main portfolio HTML
+app.get('/:subdomain/html', async (req, res) => {
+  try {
+    const { subdomain } = req.params;
+
+    // Check if site is active in database
+    const site = await Site.findBySubdomain(subdomain, false); // false = only active sites
+
+    if (!site) {
+      return res.status(404).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Portfolio Not Found - AUREA</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                text-align: center;
+                padding: 50px;
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0;
+              }
+              .container {
+                background: white;
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                max-width: 500px;
+              }
+              h1 { color: #2d3748; margin-bottom: 10px; }
+              p { color: #718096; line-height: 1.6; }
+              a {
+                color: #fb8500;
+                text-decoration: none;
+                font-weight: 600;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>📁 Portfolio Not Found</h1>
+              <p>The portfolio you're looking for doesn't exist or has been unpublished.</p>
+              <p><a href="/">← Back to AUREA</a></p>
+            </div>
+          </body>
+        </html>
+      `);
+    }
+
+    // Serve the static HTML file
+    const sitePath = path.join(__dirname, 'generated-files', subdomain, 'index.html');
+
+    if (fs.existsSync(sitePath)) {
+      // Set proper headers for HTML
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.sendFile(sitePath);
+    } else {
+      res.status(404).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Files Not Found - AUREA</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                text-align: center;
+                padding: 50px;
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0;
+              }
+              .container {
+                background: white;
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                max-width: 500px;
+              }
+              h1 { color: #2d3748; margin-bottom: 10px; }
+              p { color: #718096; line-height: 1.6; }
+              a {
+                color: #fb8500;
+                text-decoration: none;
+                font-weight: 600;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>⚠️ Portfolio Files Not Found</h1>
+              <p>The HTML files for this portfolio are missing. Please try republishing your portfolio.</p>
+              <p><a href="/">← Back to AUREA</a></p>
+            </div>
+          </body>
+        </html>
+      `);
+    }
+  } catch (error) {
+    console.error('Error serving HTML:', error);
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Error - AUREA</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+              text-align: center;
+              padding: 50px;
+              background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0;
+            }
+            .container {
+              background: white;
+              padding: 40px;
+              border-radius: 12px;
+              box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+              max-width: 500px;
+            }
+            h1 { color: #2d3748; margin-bottom: 10px; }
+            p { color: #718096; line-height: 1.6; }
+            a {
+              color: #fb8500;
+              text-decoration: none;
+              font-weight: 600;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>❌ Error Loading Portfolio</h1>
+            <p>An error occurred while loading the portfolio. Please try again later.</p>
+            <p><a href="/">← Back to AUREA</a></p>
+          </div>
+        </body>
+      </html>
+    `);
+  }
 });
 
 // Error handling middleware

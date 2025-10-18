@@ -3,10 +3,13 @@
  *
  * This service generates PDF files from portfolio HTML templates
  * using Puppeteer to ensure the exported PDF looks identical to the HTML design
+ *
+ * UPDATED: Now supports template-specific PDF generation using templateEngine
  */
 
 import puppeteer from 'puppeteer';
 import { generateAllPortfolioFiles } from './templateConvert.js';
+import { getTemplateHTML, getCaseStudyHTML } from '../src/services/templateEngine.js';
 import Portfolio from '../src/models/Portfolio.js';
 import CaseStudy from '../src/models/CaseStudy.js';
 import path from 'path';
@@ -264,35 +267,60 @@ const generatePDFFromHTML = async (htmlContent, options = {}) => {
  * @param {String} userId - User ID
  * @param {String} pageType - Type of page ('portfolio' or specific case study ID)
  * @param {Object} options - PDF generation options
+ * @param {String} templateId - Optional template ID to override portfolio default
  * @returns {Promise<Buffer>} PDF buffer
  */
-export const generatePortfolioPDF = async (portfolioId, userId, pageType = 'portfolio', options = {}) => {
+export const generatePortfolioPDF = async (portfolioId, userId, pageType = 'portfolio', options = {}, templateId = null) => {
   try {
-    console.log(`🚀 Starting PDF generation for portfolio: ${portfolioId}, page: ${pageType}`);
+    console.log(`🚀 Starting PDF generation for portfolio: ${portfolioId}, page: ${pageType}, template: ${templateId || 'default'}`);
 
     // Prepare portfolio data
     const portfolioData = await preparePortfolioData(portfolioId, userId);
-
-    // Generate HTML files with PDF option to exclude navigation
-    const allFiles = generateAllPortfolioFiles(portfolioData, { forPDF: true });
 
     let htmlContent;
     let filename;
 
     if (pageType === 'portfolio' || pageType === 'all') {
-      // Main portfolio page
-      htmlContent = allFiles['index.html'];
-      filename = `${portfolioData.title || 'portfolio'}.pdf`;
-    } else if (pageType.startsWith('case-study-')) {
-      // Specific case study page
-      const caseStudyFile = `${pageType}.html`;
-      htmlContent = allFiles[caseStudyFile];
+      // Main portfolio page - USE TEMPLATE ENGINE for template-specific HTML
+      console.log('📄 Generating template-specific portfolio HTML...');
 
-      if (!htmlContent) {
-        throw new Error(`Case study ${pageType} not found`);
+      try {
+        // Try to use template engine (fetches from frontend)
+        htmlContent = await getTemplateHTML(portfolioData, templateId, { forPDF: true });
+        console.log('✅ Template HTML generated successfully');
+      } catch (templateError) {
+        console.warn('⚠️ Template engine failed, using fallback:', templateError.message);
+        // Fallback to traditional method
+        const allFiles = generateAllPortfolioFiles(portfolioData, { forPDF: true });
+        htmlContent = allFiles['index.html'];
+      }
+
+      filename = `${portfolioData.title || 'portfolio'}.pdf`;
+
+    } else if (pageType.startsWith('case-study-')) {
+      // Case study page - USE UNIFORM DESIGN (templateConvert.js)
+      console.log('📄 Generating case study HTML (uniform design)...');
+
+      const projectId = pageType.replace('case-study-', '');
+
+      try {
+        // Use templateEngine's case study method (uses templateConvert.js internally)
+        htmlContent = getCaseStudyHTML(portfolioData, projectId, { forPDF: true });
+        console.log('✅ Case study HTML generated successfully');
+      } catch (caseStudyError) {
+        console.warn('⚠️ Case study generation failed:', caseStudyError.message);
+        // Fallback to direct templateConvert call
+        const allFiles = generateAllPortfolioFiles(portfolioData, { forPDF: true });
+        const caseStudyFile = `${pageType}.html`;
+        htmlContent = allFiles[caseStudyFile];
+
+        if (!htmlContent) {
+          throw new Error(`Case study ${pageType} not found`);
+        }
       }
 
       filename = `${pageType}.pdf`;
+
     } else {
       throw new Error('Invalid page type specified');
     }
@@ -317,31 +345,42 @@ export const generatePortfolioPDF = async (portfolioId, userId, pageType = 'port
  * @param {String} portfolioId - Portfolio ID
  * @param {String} userId - User ID
  * @param {Object} options - PDF generation options
+ * @param {String} templateId - Optional template ID to override portfolio default
  * @returns {Promise<Buffer>} Combined PDF buffer
  */
-export const generateCombinedPDF = async (portfolioId, userId, options = {}) => {
+export const generateCombinedPDF = async (portfolioId, userId, options = {}, templateId = null) => {
   let browser = null;
   let page = null;
 
   try {
-    console.log(`🚀 Starting combined PDF generation for portfolio: ${portfolioId}`);
+    console.log(`🚀 Starting combined PDF generation for portfolio: ${portfolioId}, template: ${templateId || 'default'}`);
 
     // Prepare portfolio data
     const portfolioData = await preparePortfolioData(portfolioId, userId);
 
-    // Generate HTML files with PDF option to exclude navigation
-    const allFiles = generateAllPortfolioFiles(portfolioData, { forPDF: true });
-
-    // Combine all HTML content with page breaks
-    let combinedHTML = '';
     const htmlParts = [];
 
-    // Add main portfolio page
-    if (allFiles['index.html']) {
-      htmlParts.push(allFiles['index.html']);
+    // Add main portfolio page - USE TEMPLATE ENGINE for template-specific HTML
+    console.log('📄 Generating template-specific portfolio HTML...');
+    try {
+      const portfolioHTML = await getTemplateHTML(portfolioData, templateId, { forPDF: true });
+      htmlParts.push(portfolioHTML);
+      console.log('✅ Portfolio HTML generated with template engine');
+    } catch (templateError) {
+      console.warn('⚠️ Template engine failed, using fallback:', templateError.message);
+      // Fallback to traditional method
+      const allFiles = generateAllPortfolioFiles(portfolioData, { forPDF: true });
+      if (allFiles['index.html']) {
+        htmlParts.push(allFiles['index.html']);
+      }
     }
 
-    // Add all case study pages
+    // Add all case study pages - USE UNIFORM DESIGN (templateConvert.js)
+    console.log('📄 Generating case study pages (uniform design)...');
+
+    // Generate all case study HTML files
+    const allFiles = generateAllPortfolioFiles(portfolioData, { forPDF: true });
+
     Object.keys(allFiles).forEach(filename => {
       if (filename.startsWith('case-study-') && filename.endsWith('.html')) {
         // Add page break before each case study
@@ -355,6 +394,7 @@ export const generateCombinedPDF = async (portfolioId, userId, options = {}) => 
     });
 
     // Combine all HTML parts
+    let combinedHTML = '';
     if (htmlParts.length > 0) {
       // Use the first HTML as base and inject other content
       combinedHTML = htmlParts[0];

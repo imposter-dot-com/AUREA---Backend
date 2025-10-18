@@ -1,7 +1,4 @@
 import express from 'express';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
 import { auth } from '../middleware/auth.js';
 import { publishLimiter, publicViewLimiter } from '../middleware/rateLimiter.js';
 import {
@@ -16,16 +13,117 @@ import {
 } from '../controllers/siteController.js';
 
 const router = express.Router();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
-// GET /api/sites/:subdomain - Serve published portfolio site
+// GET /api/sites/:subdomain/raw-html - Get raw HTML content for frontend to serve
+router.get('/:subdomain/raw-html', async (req, res) => {
+  try {
+    const { subdomain } = req.params;
+    const path = (await import('path')).default;
+    const fs = (await import('fs')).default;
+    const { fileURLToPath } = await import('url');
+
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    // Check if site is active in database
+    const Site = (await import('../models/Site.js')).default;
+    const site = await Site.findBySubdomain(subdomain, false);
+
+    if (!site) {
+      return res.status(404).json({
+        success: false,
+        message: 'Site not found'
+      });
+    }
+
+    // Read the HTML file
+    const htmlPath = path.join(__dirname, '../../generated-files', subdomain, 'index.html');
+
+    if (!fs.existsSync(htmlPath)) {
+      return res.status(404).json({
+        success: false,
+        message: 'HTML file not found'
+      });
+    }
+
+    const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+
+    res.json({
+      success: true,
+      html: htmlContent,
+      subdomain: subdomain
+    });
+
+  } catch (error) {
+    console.error('Error fetching raw HTML:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching HTML content'
+    });
+  }
+});
+
+// GET /api/sites/:subdomain/case-study/:projectId/raw-html - Get case study raw HTML
+router.get('/:subdomain/case-study/:projectId/raw-html', async (req, res) => {
+  try {
+    const { subdomain, projectId } = req.params;
+    const path = (await import('path')).default;
+    const fs = (await import('fs')).default;
+    const { fileURLToPath } = await import('url');
+
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    // Check if site is active in database
+    const Site = (await import('../models/Site.js')).default;
+    const site = await Site.findBySubdomain(subdomain, false);
+
+    if (!site) {
+      return res.status(404).json({
+        success: false,
+        message: 'Site not found'
+      });
+    }
+
+    // Read the case study HTML file
+    const htmlPath = path.join(__dirname, '../../generated-files', subdomain, `case-study-${projectId}.html`);
+
+    if (!fs.existsSync(htmlPath)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Case study HTML file not found'
+      });
+    }
+
+    const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+
+    res.json({
+      success: true,
+      html: htmlContent,
+      subdomain: subdomain,
+      projectId: projectId
+    });
+
+  } catch (error) {
+    console.error('Error fetching case study HTML:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching case study HTML content'
+    });
+  }
+});
+
+// GET /api/sites/:subdomain - Get portfolio data as JSON for frontend
+// Note: Raw HTML is served via /api/sites/:subdomain/raw-html
 router.get('/:subdomain', async (req, res) => {
   try {
     const { subdomain } = req.params;
 
-    // First, check if site is active in database
+    // Check if site is active in database
     const Site = (await import('../models/Site.js')).default;
+    const Portfolio = (await import('../models/Portfolio.js')).default;
+    const CaseStudy = (await import('../models/CaseStudy.js')).default;
+
     const site = await Site.findBySubdomain(subdomain, false); // false = only active sites
 
     if (!site) {
@@ -35,22 +133,39 @@ router.get('/:subdomain', async (req, res) => {
       });
     }
 
-    // Then check if files exist
-    const sitePath = path.join(__dirname, '../../generated-files', subdomain, 'index.html');
+    // Fetch the portfolio data
+    const portfolio = await Portfolio.findById(site.portfolioId);
 
-    if (fs.existsSync(sitePath)) {
-      res.sendFile(sitePath);
-    } else {
-      res.status(404).json({
+    if (!portfolio) {
+      return res.status(404).json({
         success: false,
-        message: 'Site files not found'
+        message: 'Portfolio not found'
       });
     }
+
+    // Fetch case studies
+    const caseStudies = await CaseStudy.find({ portfolioId: portfolio._id });
+
+    // Return portfolio data with case studies
+    res.json({
+      success: true,
+      data: {
+        ...portfolio.toObject(),
+        caseStudies: caseStudies.map(cs => cs.toObject()),
+        site: {
+          subdomain: site.subdomain,
+          url: site.url,
+          published: site.published,
+          lastDeployedAt: site.lastDeployedAt
+        }
+      }
+    });
+
   } catch (error) {
-    console.error('Error serving site:', error);
+    console.error('Error fetching site data:', error);
     res.status(500).json({
       success: false,
-      message: 'Error serving site'
+      message: 'Error fetching site data'
     });
   }
 });

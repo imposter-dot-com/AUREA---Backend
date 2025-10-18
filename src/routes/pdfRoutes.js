@@ -21,6 +21,7 @@ const router = express.Router();
  * @desc    Export portfolio as PDF (view inline)
  * @access  Private (owner) / Public (if portfolio is published)
  * @query   pageType - 'portfolio' (main page only) or 'all' or 'case-study-{id}'
+ * @query   templateId - Template to use (echolon, serene) - optional, defaults to portfolio's template
  * @query   save - 'true' to save to filesystem (owner only)
  * @query   format - PDF page format (A4, A3, Letter, Legal)
  * @query   landscape - 'true' for landscape orientation
@@ -31,6 +32,7 @@ router.get('/portfolio/:portfolioId', optionalAuth, exportPortfolioPDF);
  * @route   GET /api/pdf/portfolio/:portfolioId/complete
  * @desc    Export complete portfolio with all case studies as single PDF
  * @access  Private (owner) / Public (if portfolio is published)
+ * @query   templateId - Template to use (echolon, serene) - optional, defaults to portfolio's template
  * @query   save - 'true' to save to filesystem (owner only)
  * @query   format - PDF page format (A4, A3, Letter, Legal)
  * @query   landscape - 'true' for landscape orientation
@@ -42,6 +44,7 @@ router.get('/portfolio/:portfolioId/complete', optionalAuth, exportCompletePDF);
  * @desc    Download portfolio PDF (forces download dialog)
  * @access  Private (owner) / Public (if portfolio is published)
  * @query   pageType - 'portfolio' (main page only) or specific case study
+ * @query   templateId - Template to use (echolon, serene) - optional, defaults to portfolio's template
  * @query   format - PDF page format (A4, A3, Letter, Legal)
  * @query   landscape - 'true' for landscape orientation
  */

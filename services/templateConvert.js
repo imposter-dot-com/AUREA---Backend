@@ -1393,12 +1393,29 @@ function processPortfolioData(inputData) {
   
   // Check if it's using 'content' field (Portfolio model format)
   if (data.content && typeof data.content === 'object') {
+    // Get projects and ensure they have proper structure
+    const rawProjects = data.content.work?.projects || [];
+    const processedProjects = rawProjects.map((project, index) => ({
+      id: project.id || index,
+      title: project.title || 'Project',
+      meta: project.meta || 'PROJECT',
+      description: project.description || '',
+      image: project.image || project.thumbnail || '',
+      tags: project.tags || [],
+      hasCaseStudy: project.hasCaseStudy || false  // Preserve this flag!
+    }));
+
+    console.log(`\n📦 Processing ${processedProjects.length} projects:`);
+    processedProjects.forEach((p, i) => {
+      console.log(`  ${i + 1}. ${p.title} - hasCaseStudy: ${p.hasCaseStudy}`);
+    });
+
     return {
       hero: data.content.hero || { title: data.title || 'PORTFOLIO', subtitle: data.description || 'Creative Work' },
       about: data.content.about || { name: 'Designer', bio: 'Creative professional' },
       work: {
         heading: data.content.work?.heading || "My Work",
-        projects: data.content.work?.projects || []
+        projects: processedProjects
       },
       caseStudies: data.caseStudies || {},
       gallery: data.content.gallery || { heading: 'VISUAL STUDIES', images: [] },
