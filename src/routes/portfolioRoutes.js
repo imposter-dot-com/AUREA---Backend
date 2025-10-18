@@ -15,6 +15,7 @@ import {
   validateObjectId,
   validatePortfolioQuery
 } from '../middleware/validation.js';
+import validatePortfolioContent from '../middleware/validatePortfolioContent.js';
 import { cachePublicPortfolio } from '../utils/cache.js';
 import {
   createPortfolio,
@@ -31,10 +32,11 @@ import {
 
 const router = express.Router();
 
-router.post('/', 
-  auth, 
-  portfolioCrudLimiter, 
-  validatePortfolioCreation, 
+router.post('/',
+  auth,
+  portfolioCrudLimiter,
+  validatePortfolioCreation,
+  validatePortfolioContent, // Validate content against template schema
   createPortfolio
 );
 
@@ -51,10 +53,9 @@ router.get('/user/me',
   getUserPortfolios
 );
 
-router.get('/check-slug/:slug', 
-  auth, 
-  slugCheckLimiter, 
-  validateSlugCheck, 
+router.get('/check-slug/:slug',
+  optionalAuth,  // Changed to optional - allow public checks
+  // Rate limiter removed - allow unlimited subdomain checks
   checkSlug
 );
 
@@ -71,12 +72,13 @@ router.get('/:id',
   getPortfolioById
 );
 
-router.put('/:id', 
-  auth, 
-  portfolioCrudLimiter, 
-  validateObjectId('id'), 
-  validatePortfolioUpdate, 
-  checkPortfolioOwnership, 
+router.put('/:id',
+  auth,
+  portfolioCrudLimiter,
+  validateObjectId('id'),
+  validatePortfolioUpdate,
+  checkPortfolioOwnership,
+  validatePortfolioContent, // Validate content against template schema
   updatePortfolio
 );
 

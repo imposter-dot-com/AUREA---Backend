@@ -345,3 +345,162 @@ export const getDefaultTemplate = async (req, res) => {
     });
   }
 };
+
+/**
+ * Validate portfolio content against template schema
+ * @route POST /api/templates/:id/validate
+ */
+export const validateTemplateContent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+
+    if (!content) {
+      return res.status(400).json({
+        success: false,
+        message: 'Content is required for validation'
+      });
+    }
+
+    // Support both MongoDB ObjectId and templateId
+    const query = id.match(/^[0-9a-fA-F]{24}$/)
+      ? { _id: id }
+      : { templateId: id };
+
+    const template = await Template.findOne(query);
+
+    if (!template) {
+      return res.status(404).json({
+        success: false,
+        message: 'Template not found'
+      });
+    }
+
+    // Validate content against template schema
+    const validation = template.validateContent(content);
+
+    return res.status(200).json({
+      success: true,
+      message: validation.valid ? 'Content is valid' : 'Content has validation errors',
+      data: validation
+    });
+  } catch (error) {
+    console.error('Error validating template content:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Validation failed',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+/**
+ * Create new template version (Admin only)
+ * @route POST /api/templates/:id/version
+ */
+export const createTemplateVersion = async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admins can create template versions'
+      });
+    }
+
+    const { id } = req.params;
+    const { schema, changelog } = req.body;
+
+    if (!schema) {
+      return res.status(400).json({
+        success: false,
+        message: 'New schema is required'
+      });
+    }
+
+    const query = id.match(/^[0-9a-fA-F]{24}$/)
+      ? { _id: id }
+      : { templateId: id };
+
+    const template = await Template.findOne(query);
+
+    if (!template) {
+      return res.status(404).json({
+        success: false,
+        message: 'Template not found'
+      });
+    }
+
+    // Create new version
+    await template.createNewVersion(schema, changelog);
+
+    res.status(200).json({
+      success: true,
+      message: 'Template version created successfully',
+      data: {
+        templateId: template.templateId,
+        version: template.version,
+        changelog: changelog || 'Version update'
+      }
+    });
+  } catch (error) {
+    console.error('Error creating template version:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create template version',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+/**
+ * Add rating to template
+ * @route POST /api/templates/:id/rating
+ */
+export const addTemplateRating = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rating } = req.body;
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rating must be between 1 and 5'
+      });
+    }
+
+    const query = id.match(/^[0-9a-fA-F]{24}$/)
+      ? { _id: id }
+      : { templateId: id };
+
+    const template = await Template.findOne(query);
+
+    if (!template) {
+      return res.status(404).json({
+        success: false,
+        message: 'Template not found'
+      });
+    }
+
+    await template.addRating(rating);
+
+    res.status(200).json({
+      success: true,
+      message: 'Rating added successfully',
+      data: {
+        templateId: template.templateId,
+        rating: {
+          average: template.rating.average,
+          count: template.rating.count
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error adding template rating:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to add rating',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};

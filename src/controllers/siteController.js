@@ -12,6 +12,9 @@ const __dirname = path.dirname(__filename);
 // Import HTML generation service
 import { generatePortfolioHTML, generateAllPortfolioFiles } from '../../services/templateConvert.js';
 
+// Import subdomain validation utility
+import { validateSubdomain, isReservedSubdomain, generateSubdomainSuggestions } from '../utils/subdomainValidator.js';
+
 // Import deployment service modules
 import { 
   generateDeploymentFiles, 
@@ -396,7 +399,7 @@ export const publishSite = async (req, res) => {
     console.log('✅ Successfully deployed to Vercel!');
     console.log(`🌐 Live URL: ${vercelDeployment.url}`);
 
-    // Create or update site record in database
+    // Create or update site record in database with enhanced metadata
     const siteData = {
       userId: actualUserId,
       portfolioId: portfolioId,
@@ -406,12 +409,32 @@ export const publishSite = async (req, res) => {
       customDomain,
       template: portfolio.template,
       published: true,
+      isActive: true,  // Explicitly set active
       lastDeployedAt: new Date(),
       deploymentStatus: 'success',
       files: saveResult.files.map(f => f.filename),
       styling: portfolio.styling,
       vercelDeploymentId: vercelDeployment.deploymentId,
-      vercelUrl: vercelDeployment.url
+      vercelUrl: vercelDeployment.url,
+
+      // Enhanced metadata for search/display
+      metadata: {
+        ownerName: req.user.name || req.user.username || '',
+        ownerEmail: req.user.email || ''
+      },
+
+      // SEO fields
+      seo: {
+        title: portfolio.title || `${req.user.name || req.user.username}'s Portfolio`,
+        description: portfolio.description || `Professional portfolio by ${req.user.name || req.user.username}`,
+        image: portfolio.content?.hero?.backgroundImage || portfolio.content?.about?.profileImage || '',
+        keywords: [
+          portfolio.template || 'portfolio',
+          req.user.name || '',
+          'designer',
+          'creative professional'
+        ].filter(Boolean)
+      }
     };
 
     let site = await Site.findOne({ subdomain, userId: actualUserId });
@@ -429,9 +452,10 @@ export const publishSite = async (req, res) => {
     }
 
     // Update portfolio with publication info
-    portfolio.published = true;
-    portfolio.url = vercelDeployment.url; // Use real Vercel URL
+    portfolio.isPublished = true;
+    portfolio.publishedUrl = vercelDeployment.url; // Use real Vercel URL
     portfolio.slug = subdomain;
+    portfolio.publishedAt = new Date();
     await portfolio.save();
 
     // Generate deployment summary
@@ -717,7 +741,7 @@ export const updateSiteConfig = async (req, res) => {
 // @access  Public
 export const recordSiteView = async (req, res) => {
   try {
-    const { subdomain, userAgent, referrer } = req.body;
+    const { subdomain, userAgent, referrer, isUniqueVisitor } = req.body;
 
     if (!subdomain) {
       return res.status(400).json({
@@ -726,8 +750,8 @@ export const recordSiteView = async (req, res) => {
       });
     }
 
-    // Find site and increment view count
-    const site = await Site.findOne({ subdomain });
+    // Find active site
+    const site = await Site.findBySubdomain(subdomain);
 
     if (!site) {
       return res.status(404).json({
@@ -736,10 +760,19 @@ export const recordSiteView = async (req, res) => {
       });
     }
 
-    // Update view count
-    site.viewCount = (site.viewCount || 0) + 1;
-    site.lastViewedAt = new Date();
-    await site.save();
+    // Extract referrer domain if provided
+    let referrerSource = null;
+    if (referrer) {
+      try {
+        const referrerUrl = new URL(referrer);
+        referrerSource = referrerUrl.hostname;
+      } catch (error) {
+        referrerSource = referrer.substring(0, 100);
+      }
+    }
+
+    // Update view count with enhanced analytics
+    await site.incrementViews(referrerSource, isUniqueVisitor || false);
 
     // Update associated portfolio view count
     if (site.portfolioId) {
@@ -756,8 +789,9 @@ export const recordSiteView = async (req, res) => {
     logDeploymentActivity('Page view recorded', {
       subdomain,
       totalViews: site.viewCount,
-      userAgent: userAgent?.substring(0, 100), // Truncate for privacy
-      referrer: referrer?.substring(0, 100)
+      uniqueVisitors: site.uniqueVisitors,
+      referrer: referrerSource,
+      userAgent: userAgent?.substring(0, 100) // Truncate for privacy
     });
 
     res.json({
@@ -765,6 +799,7 @@ export const recordSiteView = async (req, res) => {
       message: 'View recorded successfully',
       data: {
         viewCount: site.viewCount,
+        uniqueVisitors: site.uniqueVisitors,
         timestamp: new Date()
       }
     });
@@ -795,9 +830,9 @@ export const subPublish = async (req, res) => {
     }
 
     // Find and validate portfolio
-    const portfolio = await Portfolio.findOne({ 
-      _id: portfolioId, 
-      userId: actualUserId 
+    const portfolio = await Portfolio.findOne({
+      _id: portfolioId,
+      userId: actualUserId
     });
 
     if (!portfolio) {
@@ -807,80 +842,84 @@ export const subPublish = async (req, res) => {
       });
     }
 
-    // Determine subdomain to use
-    let subdomain;
-    let isCustomSubdomain = false;
+    // customSubdomain is ALWAYS required - user must explicitly provide it
+    if (!customSubdomain) {
+      // Generate suggestions based on portfolio name for user convenience
+      const suggestedSubdomain = generateSubdomainFromPortfolio(portfolio, req.user);
+      const suggestions = [suggestedSubdomain];
 
-    // Priority 1: User provided custom subdomain (new or update)
-    if (customSubdomain) {
-      // Validate custom subdomain format
-      const subdomainRegex = /^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$/;
-      if (!subdomainRegex.test(customSubdomain)) {
-        return res.status(400).json({
+      // Add more suggestions
+      const existingSite = await Site.findOne({ subdomain: suggestedSubdomain });
+      if (existingSite) {
+        suggestions.push(`${suggestedSubdomain}-portfolio`);
+        suggestions.push(`${suggestedSubdomain}-${new Date().getFullYear()}`);
+      } else {
+        suggestions.push(`${suggestedSubdomain}-portfolio`);
+        suggestions.push(`${req.user.name.toLowerCase().replace(/\s+/g, '-')}`);
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: 'Custom subdomain is required. Please choose a unique subdomain for your portfolio.',
+        required: 'customSubdomain',
+        currentSubdomain: portfolio.slug || null,
+        suggestions: suggestions.filter(s => s.length >= 3 && s.length <= 30).slice(0, 5)
+      });
+    }
+
+    // Validate custom subdomain format using validation utility
+    const validation = validateSubdomain(customSubdomain);
+
+    if (!validation.valid) {
+      const suggestions = generateSubdomainSuggestions(customSubdomain);
+      return res.status(400).json({
+        success: false,
+        message: validation.error,
+        suggestions: suggestions.length > 0 ? suggestions : undefined
+      });
+    }
+
+    // Check if custom subdomain is available
+    const existingSite = await Site.findOne({ subdomain: customSubdomain });
+
+    if (existingSite) {
+      // Check if it belongs to the current user's THIS portfolio
+      const isSamePortfolio = existingSite.portfolioId.toString() === portfolioId.toString();
+      const isSameUser = existingSite.userId.toString() === actualUserId.toString();
+
+      if (!isSameUser) {
+        // Different user owns this subdomain - generate suggestions
+        const suggestions = generateSubdomainSuggestions(customSubdomain);
+        return res.status(409).json({
           success: false,
-          message: 'Invalid subdomain format. Use 3-30 lowercase letters, numbers, and hyphens only.',
-          example: 'john-designer'
+          message: 'This subdomain is already taken by another user. Please choose a different subdomain.',
+          subdomain: customSubdomain,
+          available: false,
+          suggestions: suggestions.length > 0 ? suggestions : undefined
         });
       }
 
-      // Check if custom subdomain is available
-      const existingSite = await Site.findOne({ subdomain: customSubdomain });
-      
-      if (existingSite) {
-        // Check if it belongs to the current user's THIS portfolio
-        const isSamePortfolio = existingSite.portfolioId.toString() === portfolioId.toString();
-        const isSameUser = existingSite.userId.toString() === actualUserId.toString();
-        
-        if (!isSameUser) {
-          // Different user owns this subdomain
-          return res.status(409).json({
-            success: false,
-            message: 'Subdomain is already taken by another user',
-            subdomain: customSubdomain,
-            available: false
-          });
-        }
-        
-        if (isSameUser && !isSamePortfolio) {
-          // Same user but different portfolio owns this subdomain
-          return res.status(409).json({
-            success: false,
-            message: 'This subdomain is used by your another portfolio',
-            subdomain: customSubdomain,
-            available: false
-          });
-        }
-        
-        // If it's the same portfolio, allow update (changing subdomain)
-        console.log(`User is updating their portfolio subdomain: ${customSubdomain}`);
+      if (isSameUser && !isSamePortfolio) {
+        // Same user but different portfolio owns this subdomain
+        const suggestions = generateSubdomainSuggestions(customSubdomain);
+        return res.status(409).json({
+          success: false,
+          message: 'This subdomain is already used by another one of your portfolios. Please choose a different subdomain.',
+          subdomain: customSubdomain,
+          available: false,
+          suggestions: suggestions.length > 0 ? suggestions : undefined
+        });
       }
 
-      subdomain = customSubdomain;
-      isCustomSubdomain = true;
-      console.log(`Using custom subdomain: ${subdomain}`);
+      // If it's the same portfolio, allow update (user is keeping/changing subdomain)
+      console.log(`✅ User is publishing/updating portfolio with subdomain: ${customSubdomain}`);
+    } else {
+      console.log(`✅ Subdomain is available: ${customSubdomain}`);
     }
-    // Priority 2: Reuse existing slug if portfolio was published before
-    else if (portfolio.slug && portfolio.isPublished) {
-      subdomain = portfolio.slug;
-      console.log(`Reusing existing subdomain: ${subdomain}`);
-    }
-    // Priority 3: Auto-generate from portfolio designer name
-    else {
-      subdomain = generateSubdomainFromPortfolio(portfolio, req.user);
-      
-      // Check if auto-generated subdomain is taken
-      const existingSite = await Site.findOne({ 
-        subdomain,
-        userId: { $ne: actualUserId }
-      });
 
-      if (existingSite) {
-        // If subdomain is taken by another user, add timestamp
-        const uniqueSubdomain = `${subdomain}-${Date.now()}`;
-        console.log(`Subdomain ${subdomain} taken, using ${uniqueSubdomain}`);
-        subdomain = uniqueSubdomain;
-      }
-    }
+    const subdomain = customSubdomain;
+    const isCustomSubdomain = true;
+    console.log(`Using subdomain from user: ${subdomain}`);
 
     logDeploymentActivity('Sub-publication started', { 
       portfolioId, 
@@ -948,15 +987,15 @@ export const subPublish = async (req, res) => {
     };
 
     // Validate deployment
-    const validation = validateDeployment(siteConfig, htmlContent, '');
+    const deploymentValidation = validateDeployment(siteConfig, htmlContent, '');
 
-    if (!validation.isValid) {
+    if (!deploymentValidation.isValid) {
       return res.status(400).json({
         success: false,
         message: 'Deployment validation failed',
         data: {
-          issues: validation.issues,
-          recommendations: validation.recommendations
+          issues: deploymentValidation.issues,
+          recommendations: deploymentValidation.recommendations
         }
       });
     }
@@ -996,7 +1035,7 @@ export const subPublish = async (req, res) => {
     }
     console.log(`📁 Location: ${subdomainDir}`);
 
-    // Create or update site record in database with local URL
+    // Create or update site record in database with enhanced metadata
     const siteData = {
       userId: actualUserId,
       portfolioId: portfolio._id,
@@ -1005,9 +1044,29 @@ export const subPublish = async (req, res) => {
       description: portfolio.description || '',
       template: portfolio.template || 'default',
       published: true,
+      isActive: true,  // Explicitly set active
       deploymentStatus: 'success',
       lastDeployedAt: new Date(),
-      files: Object.keys(deploymentFiles)
+      files: Object.keys(deploymentFiles),
+
+      // Enhanced metadata for search/display
+      metadata: {
+        ownerName: req.user.name || req.user.username || '',
+        ownerEmail: req.user.email || ''
+      },
+
+      // SEO fields
+      seo: {
+        title: portfolio.title || `${req.user.name || req.user.username}'s Portfolio`,
+        description: portfolio.description || `Professional portfolio by ${req.user.name || req.user.username}`,
+        image: portfolio.content?.hero?.backgroundImage || portfolio.content?.about?.profileImage || '',
+        keywords: [
+          portfolio.template || 'portfolio',
+          req.user.name || '',
+          'designer',
+          'creative professional'
+        ].filter(Boolean)
+      }
     };
 
     // Find existing site for this user's portfolio
@@ -1083,10 +1142,88 @@ export const subPublish = async (req, res) => {
   } catch (error) {
     logDeploymentActivity('Sub-publication failed', { error: error.message }, 'error');
     console.error('Sub-publish site error:', error);
-    
+
     res.status(500).json({
       success: false,
       message: 'Failed to publish portfolio',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+// @desc    Unpublish a site (soft delete)
+// @route   DELETE /api/sites/unpublish/:portfolioId
+// @access  Private
+export const unpublishSite = async (req, res) => {
+  try {
+    const { portfolioId } = req.params;
+    const userId = req.user._id;
+
+    // Validate portfolio ID
+    if (!portfolioId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Portfolio ID is required'
+      });
+    }
+
+    // Find site for this portfolio
+    const site = await Site.findOne({
+      portfolioId,
+      userId
+    });
+
+    if (!site) {
+      return res.status(404).json({
+        success: false,
+        message: 'Published site not found'
+      });
+    }
+
+    // Deactivate site (soft delete)
+    await site.deactivate();
+
+    // Update portfolio published status
+    const portfolio = await Portfolio.findById(portfolioId);
+    if (portfolio) {
+      portfolio.isPublished = false;
+      portfolio.publishedUrl = null;
+      await portfolio.save();
+    }
+
+    // Optionally delete generated files from disk
+    const subdomainDir = path.join(process.cwd(), 'generated-files', site.subdomain);
+    try {
+      if (fs.existsSync(subdomainDir)) {
+        fs.rmSync(subdomainDir, { recursive: true, force: true });
+        console.log(`🗑️  Removed generated files for: ${site.subdomain}`);
+      }
+    } catch (error) {
+      console.warn(`Warning: Could not remove generated files: ${error.message}`);
+      // Continue even if file deletion fails
+    }
+
+    logDeploymentActivity('Site unpublished', {
+      siteId: site._id,
+      subdomain: site.subdomain,
+      portfolioId
+    }, 'success');
+
+    res.status(200).json({
+      success: true,
+      message: 'Site unpublished successfully',
+      data: {
+        subdomain: site.subdomain,
+        portfolioId,
+        unpublishedAt: new Date()
+      }
+    });
+
+  } catch (error) {
+    console.error('Unpublish site error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to unpublish site',
       error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }

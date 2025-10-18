@@ -364,36 +364,85 @@ export const getUserPortfolios = async (req, res) => {
   }
 };
 
-// @desc    Check slug availability
+// @desc    Check slug/subdomain availability
 // @route   GET /api/portfolios/check-slug/:slug
-// @access  Private
+// @access  Public (auth optional)
 export const checkSlug = async (req, res) => {
   try {
     const { slug } = req.params;
+    const userId = req.user?._id; // Optional - user might not be authenticated
 
-    // Use utility function for comprehensive checking
-    const availabilityResult = await checkSlugAvailability(slug);
+    // Import subdomain validator
+    const { validateSubdomain, generateSubdomainSuggestions } = await import('../utils/subdomainValidator.js');
 
-    if (availabilityResult.isAvailable) {
-      res.json({
-        success: true,
-        available: true,
-        message: 'Slug is available'
-      });
-    } else {
-      // Format error response with suggestions if slug is taken
-      const responseData = {
+    // Step 1: Validate format using subdomain rules
+    const formatValidation = validateSubdomain(slug);
+
+    if (!formatValidation.valid) {
+      const suggestions = generateSubdomainSuggestions(slug);
+      return res.json({
         success: true,
         available: false,
-        message: availabilityResult.error
-      };
-
-      if (availabilityResult.suggestions) {
-        responseData.suggestions = availabilityResult.suggestions;
-      }
-
-      res.json(responseData);
+        message: formatValidation.error,
+        reason: 'INVALID_FORMAT',
+        suggestions: suggestions.length > 0 ? suggestions : undefined
+      });
     }
+
+    // Step 2: Check if it's available (not taken by another user)
+    const Site = (await import('../models/Site.js')).default;
+    const existingSite = await Site.findOne({ subdomain: slug.toLowerCase() });
+
+    if (existingSite) {
+      // Check if it belongs to the current user (if authenticated)
+      const isSameUser = userId && existingSite.userId.toString() === userId.toString();
+
+      if (!isSameUser) {
+        // Taken by another user
+        const suggestions = generateSubdomainSuggestions(slug);
+        return res.json({
+          success: true,
+          available: false,
+          message: 'This subdomain is already taken by another user. Please choose a different subdomain.',
+          reason: 'TAKEN_BY_ANOTHER_USER',
+          suggestions: suggestions.length > 0 ? suggestions : undefined
+        });
+      } else {
+        // Taken by current user (different portfolio)
+        const suggestions = generateSubdomainSuggestions(slug);
+        return res.json({
+          success: true,
+          available: false,
+          message: 'This subdomain is already used by another one of your portfolios.',
+          reason: 'TAKEN_BY_YOUR_PORTFOLIO',
+          ownedByYou: true,
+          portfolioId: existingSite.portfolioId.toString(),
+          suggestions: suggestions.length > 0 ? suggestions : undefined
+        });
+      }
+    }
+
+    // Step 3: Also check Portfolio model (legacy slug check)
+    const availabilityResult = await checkSlugAvailability(slug);
+
+    if (!availabilityResult.isAvailable) {
+      const suggestions = generateSubdomainSuggestions(slug);
+      return res.json({
+        success: true,
+        available: false,
+        message: availabilityResult.error || 'This subdomain is not available',
+        reason: availabilityResult.code || 'UNAVAILABLE',
+        suggestions: suggestions.length > 0 ? (suggestions) : (availabilityResult.suggestions || undefined)
+      });
+    }
+
+    // Available!
+    res.json({
+      success: true,
+      available: true,
+      message: '✅ This subdomain is available! You can use it for your portfolio.',
+      subdomain: slug.toLowerCase()
+    });
 
   } catch (error) {
     console.error('Check slug error:', error);

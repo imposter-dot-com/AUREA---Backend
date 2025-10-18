@@ -22,56 +22,106 @@ const echelonTemplate = {
     sections: [
       {
         id: 'hero',
+        type: 'hero',
+        variant: 'centered-large',
         name: 'Hero Section',
-        required: true, // Cannot be deleted
+        description: 'Main hero section with title and subtitle',
+        required: true,
         order: 1,
+        styling: {
+          background: 'solid',
+          backgroundColor: '#FFFFFF',
+          height: 'fullscreen',
+          padding: 'default'
+        },
         fields: [
           {
             id: 'title',
-            type: 'string',
+            type: 'text',
             label: 'Hero Title',
-            required: false,
             placeholder: 'DESIGNING WITH PRECISION',
-            maxLength: 200
+            required: false,
+            validation: {
+              maxLength: 200
+            },
+            uiHints: {
+              helpText: 'Main heading displayed in the hero section',
+              order: 1
+            }
           },
           {
             id: 'subtitle',
-            type: 'string',
+            type: 'text',
             label: 'Hero Subtitle',
-            required: false,
             placeholder: 'Case studies in clarity and form',
-            maxLength: 300
+            required: false,
+            validation: {
+              maxLength: 300
+            },
+            uiHints: {
+              helpText: 'Supporting text below the main heading',
+              order: 2
+            }
           }
         ]
       },
       {
         id: 'about',
+        type: 'about',
+        variant: 'split-image-text',
         name: 'About Section',
-        required: false, // Can be deleted
+        description: 'About the designer/artist',
+        required: false,
         order: 2,
+        styling: {
+          background: 'solid',
+          backgroundColor: '#F9FAFB',
+          padding: 'default'
+        },
         fields: [
           {
             id: 'name',
-            type: 'string',
+            type: 'text',
             label: 'Your Name',
-            required: true,
             placeholder: 'JOHN DESIGNER',
-            maxLength: 100
+            required: true,
+            validation: {
+              minLength: 2,
+              maxLength: 100
+            },
+            uiHints: {
+              helpText: 'Your full name or professional name',
+              order: 1
+            }
           },
           {
             id: 'image',
             type: 'image',
             label: 'Profile Photo',
+            placeholder: 'Upload your professional photo',
             required: false,
-            placeholder: 'Upload your professional photo'
+            validation: {
+              allowedFormats: ['jpg', 'jpeg', 'png', 'webp'],
+              maxSize: 5242880 // 5MB in bytes
+            },
+            uiHints: {
+              helpText: 'Professional headshot or portrait',
+              order: 2
+            }
           },
           {
             id: 'bio',
             type: 'textarea',
             label: 'Biography',
-            required: false,
             placeholder: 'I am a designer focused on minimalism, clarity, and modernist design systems...',
-            maxLength: 1000
+            required: false,
+            validation: {
+              maxLength: 1000
+            },
+            uiHints: {
+              helpText: 'Brief professional biography',
+              order: 3
+            }
           }
         ]
       },
