@@ -1,1092 +1,1093 @@
+<div align="center">
+
 # 🌟 AUREA Backend API
 
-## 🎯 **COMPLETE API SYSTEM: 27 Endpoints**
+### Professional Portfolio Management Platform
 
-A comprehensive portfolio management platform with complete CRUD operations, user management, authentication, and media handling:
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-5.1.0-000000?style=flat&logo=express&logoColor=white)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-8.18+-47A248?style=flat&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![License](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
 
-### 🏗️ System Architecture
-**Authentication Layer**: JWT-based secure access control  
-**User Management System**: Complete profile and account management
-**Portfolio Management**: Complete lifecycle from creation to publishing  
-**Case Study System**: Structured project documentation  
-**Site Publishing**: Dual-mode deployment (Vercel + Local subdomain)  
-**Media Handling**: Professional image upload and management  
+**A comprehensive, production-ready portfolio management system with 65+ API endpoints, dynamic template system, AI-powered PDF processing, and enterprise-grade security.**
+
+[Features](#-key-features) • [Quick Start](#-quick-start) • [API Docs](#-api-reference) • [Architecture](#-architecture) • [Contributing](#-contributing)
+
+</div>
+
+---
+
+## 📋 Table of Contents
+
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [Technology Stack](#-technology-stack)
+- [Quick Start](#-quick-start)
+- [API Reference](#-api-reference)
+- [Architecture](#-architecture)
+- [Testing](#-testing)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---
+
+## 🎯 Overview
+
+AUREA Backend is a sophisticated portfolio management platform that enables designers, developers, and creative professionals to build, manage, and deploy stunning portfolio websites. Built with modern technologies and best practices, it offers a complete ecosystem for portfolio creation and management.
+
+### What Makes AUREA Special?
+
+- **🎨 Dynamic Template System** - Schema-driven templates with no-code deployment
+- **🤖 AI-Powered Processing** - Gemini AI integration for intelligent PDF extraction
+- **🌐 Multi-Deployment Options** - Vercel deployment or local subdomain hosting
+- **📱 Responsive HTML Generation** - Automatic mobile-optimized site generation
+- **🔒 Enterprise Security** - JWT authentication, rate limiting, and role-based access
+- **⚡ High Performance** - Redis caching, database indexing, and optimized queries
+- **📊 Analytics & Tracking** - View counts, usage statistics, and user insights
+
+---
 
 ## ✨ Key Features
 
-- 🔐 **Complete Authentication System** - JWT-based user management with secure access control
-- 👤 **User Profile Management** - Full CRUD operations for user accounts with password management
-- 📁 **Advanced Portfolio Management** - Full CRUD operations with publishing, slug management, and view tracking
-- 🌐 **Gmail-Style Custom Subdomains** ⭐ - Choose your own subdomain like Gmail (e.g., `aurea.tool/my-awesome-portfolio`)
-- 📖 **Case Study System** - Structured case study creation linked to portfolio projects
-- 🖼️ **Professional Image Upload** - Cloudinary integration with structured file organization  
-- ⚡ **Performance Optimized** - Redis caching, rate limiting, and database indexing
-- 🛡️ **Enterprise Security** - Helmet, CORS, validation, and ownership middleware
-- 📊 **Interactive Documentation** - Complete Swagger UI with live testing
-- 🚀 **Production Ready** - Error handling, logging, and graceful degradation
+### 🔐 Authentication & User Management
+- **JWT-Based Authentication** with secure token management
+- **Complete User CRUD** with profile management and password updates
+- **Role-Based Access Control** (User, Admin, Premium)
+- **Account Security** with password hashing (bcrypt) and validation
 
-- 🤖 **Two-Step AI PDF Processing** - Advanced document analysis with Gemini AI
-- 📊 **Pricing Calculator Integration** - Extract pricing-relevant data from client briefs  
-- � **JWT Authentication** - Secure user management with optional auth
-- 📁 **Portfolio Management** - Complete portfolio CRUD operations
-- 🖼️ **Image Upload** - Cloudinary integration for media handling
-- 📖 **Interactive Documentation** - Swagger UI with live testing
-- ⚡ **ES6 Modules** - Modern JavaScript with clean architecture
+### 📁 Portfolio Management
+- **Full Portfolio Lifecycle** - Create, Read, Update, Delete operations
+- **Dynamic Template System** - 10+ professional templates with schema validation
+- **Custom Slug URLs** - SEO-friendly portfolio URLs
+- **Publishing System** - Publish/unpublish with version control
+- **View Analytics** - Track portfolio views and engagement
+
+### � Template System (NEW)
+- **Schema-Driven Architecture** - JSON schema defines form structure
+- **Real-Time Validation** - Content validation against template schema
+- **Version Control** - Template versioning with rollback capability
+- **Rating System** - User-driven template ratings and feedback
+- **Premium Templates** - Support for free and premium template tiers
+- **14 Template Endpoints** - Complete template lifecycle management
+
+### 📖 Case Study System
+- **Structured Project Documentation** - Rich case study creation
+- **Smart Content Transformation** - Automatic HTML generation from data
+- **Linked to Portfolios** - Seamless integration with portfolio projects
+- **Public Access** - Share case studies via public URLs
+- **Responsive Design** - Mobile-optimized case study pages
+
+### 🌐 Site Publishing System
+- **Vercel Deployment** - One-click deployment to Vercel
+- **Gmail-Style Subdomains** ⭐ - Custom subdomains (e.g., `aurea.tool/your-name`)
+- **Dual Publishing Modes** - Vercel OR local subdomain hosting
+- **Automatic HTML Generation** - Dynamic responsive HTML from portfolio data
+- **View Tracking** - Analytics for published sites
+
+### 📄 PDF Export System
+- **Portfolio PDF Export** - Generate professional PDF portfolios
+- **Complete Export** - Include all case studies in single PDF
+- **Template-Based Generation** - Multiple PDF templates available
+- **Download or View** - Inline viewing or force download
+- **Automatic Cleanup** - Old PDF cleanup functionality
+
+### 🤖 AI-Powered PDF Processing
+- **Gemini AI Integration** - Advanced document analysis
+- **Two-Step Extraction** - Complete analysis + pricing focus
+- **Structured Data Output** - Clean, usable JSON format
+- **Extraction History** - Track all processed documents
+- **Test Endpoints** - Verify AI connectivity
+
+### 🖼️ Media Management
+- **Cloudinary Integration** - Professional image hosting
+- **Single & Batch Upload** - Upload one or multiple images
+- **Image Validation** - Format and size validation
+- **Automatic Optimization** - Image optimization on upload
+- **Delete Functionality** - Remove images from cloud storage
+
+### �️ Security & Performance
+- **Helmet.js** - HTTP security headers
+- **CORS Protection** - Configurable cross-origin policies
+- **Rate Limiting** - Per-endpoint rate limits
+- **Redis Caching** - Optional high-performance caching
+- **Input Validation** - Comprehensive request validation
+- **Error Handling** - Centralized error management
+- **Request Logging** - Detailed API request logs
+
+### � Interactive Documentation
+- **Swagger UI** - Complete API documentation at `/api-docs`
+- **Live Testing** - Test endpoints directly from browser
+- **Request/Response Examples** - Comprehensive examples for all endpoints
+- **Authentication Support** - Test protected endpoints with JWT tokens
+
+---
+
+## � Technology Stack
+
+### Core Technologies
+- **Runtime:** Node.js 18+
+- **Framework:** Express 5.1.0
+- **Database:** MongoDB 8.18+ (Mongoose ODM)
+- **Authentication:** JWT (JSON Web Tokens)
+- **File Storage:** Cloudinary
+- **Caching:** Redis 4.7+ (optional)
+
+### Key Dependencies
+```json
+{
+  "express": "^5.1.0",           // Web framework
+  "mongoose": "^8.18.1",         // MongoDB ODM
+  "jsonwebtoken": "^9.0.2",      // JWT authentication
+  "bcrypt": "^6.0.0",            // Password hashing
+  "cloudinary": "^2.7.0",        // Media management
+  "puppeteer": "^24.25.0",       // PDF generation
+  "@google/genai": "^1.21.0",    // AI processing
+  "helmet": "^8.0.0",            // Security headers
+  "express-rate-limit": "^7.4.0", // Rate limiting
+  "swagger-ui-express": "^5.0.1", // API documentation
+  "joi": "^17.13.3",             // Validation
+  "redis": "^4.7.0"              // Caching
+}
+```
+
+### Development Tools
+- **ES6 Modules** - Modern JavaScript module system
+- **Nodemon** - Auto-restart on file changes
+- **Swagger** - Interactive API documentation
+- **dotenv** - Environment variable management
+
+---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js (v18+ recommended)
-- MongoDB Atlas account
-- Cloudinary account
-- Redis instance (optional - gracefully degrades if unavailable)
 
-### 1. Installation
+Before you begin, ensure you have the following installed and configured:
+
+- ✅ **Node.js 18+** - [Download](https://nodejs.org/)
+- ✅ **MongoDB** - Local instance or [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) account
+- ✅ **Cloudinary Account** - [Sign up](https://cloudinary.com/) for image storage
+- ✅ **Redis** (Optional) - [Download](https://redis.io/download) for caching
+- ✅ **Git** - For version control
+
+### Installation
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/your-org/aurea-backend.git
+   cd aurea-backend
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Configuration**
+   
+   Create a `.env` file in the root directory:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Update the `.env` file with your configuration:
+   ```bash
+   # MongoDB Configuration
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/aurea
+   
+   # JWT Configuration
+   JWT_SECRET=your-super-secret-jwt-key-here
+   JWT_EXPIRE=30d
+   
+   # Server Configuration
+   PORT=5000
+   NODE_ENV=development
+   
+   # Frontend URL (for CORS)
+   FRONTEND_URL=http://localhost:5173
+   
+   # Cloudinary Configuration
+   CLOUDINARY_CLOUD_NAME=your-cloud-name
+   CLOUDINARY_API_KEY=your-api-key
+   CLOUDINARY_API_SECRET=your-api-secret
+   
+   # Redis Configuration (Optional - gracefully degrades if unavailable)
+   REDIS_URL=redis://localhost:6379
+   
+   # Google Gemini AI (Optional - for PDF extraction)
+   GEMINI_API_KEY=your-gemini-api-key
+   
+   # Vercel Configuration (Optional - for Vercel deployments)
+   VERCEL_TOKEN=your-vercel-token
+   VERCEL_ORG_ID=your-org-id
+   VERCEL_PROJECT_ID=your-project-id
+   ```
+
+4. **Seed Initial Data** (Optional)
+   ```bash
+   # Seed template data
+   node seeds/templateSeeds.js
+   
+   # Migrate existing portfolios (if upgrading)
+   node seeds/migratePortfolios.js
+   ```
+
+5. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
+
+   **Expected Output:**
+   ```
+   🚀 AUREA Backend Server
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   📊 Environment: development
+   🌐 Port: 5000
+   ✅ MongoDB Connected: aurea-cluster.mongodb.net
+   ✅ Redis Connected: localhost:6379 (optional)
+   ✅ Cloudinary Configured: your-cloud-name
+   📝 Templates Initialized: 3 templates loaded
+   🎯 65+ API Endpoints Active
+   📚 API Documentation: http://localhost:5000/api-docs
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ✨ Server ready at: http://localhost:5000
+   ```
+
+6. **Verify Installation**
+   ```bash
+   # Test health endpoint
+   curl http://localhost:5000/health
+   
+   # Expected response:
+   # {"status":"healthy","timestamp":"2025-10-20T...","database":"connected"}
+   ```
+
+7. **Access API Documentation**
+   
+   Open your browser and navigate to:
+   ```
+   http://localhost:5000/api-docs
+   ```
+
+### Quick Test
+
+Test the API with these commands:
+
 ```bash
-# Clone and install dependencies
-npm install
-```
-
-### 2. Environment Configuration
-Create a `.env` file in the root directory with your credentials. Contact the team for required environment variables.
-
-### 3. Start Development Server
-```bash
-npm run dev
-```
-
-**Expected Output:**
-```
-🚀 AUREA Backend Server running on port 5000
-📊 Environment: development
-✅ MongoDB Connected: cluster-name.mongodb.net
-🎯 25 API Endpoints Active
-📚 API Documentation: http://localhost:5000/api-docs
-```
-
-## 🎯 **MAIN FEATURE: Two-Step PDF Extraction**
-
-Our flagship feature extracts comprehensive data from client proposal PDFs using advanced AI processing:
-
-### 🔍 How It Works
-**Step 1**: Complete document analysis - extracts ALL information  
-**Step 2**: Pricing-focused filtering - filters pricing calculator relevant data
-
-### � Extracted Data Structure
-```javascript
-// Portfolio Model
-{
-  userId: ObjectId,
-  title: String,
-  description: String,
-  templateId: "echelon",
-  content: Object,     // Flexible content structure
-  styling: Object,     // Custom styling data
-  isPublished: Boolean,
-  slug: String,        // SEO-friendly URL
-  viewCount: Number,
-  caseStudies: [ObjectId]
-}
-
-// Case Study Model  
-{
-  portfolioId: ObjectId,
-  userId: ObjectId,
-  projectId: String,
-  content: {
-    hero: { title, subtitle, coverImage, client, year, role, duration },
-    overview: { heading, description, challenge, solution, results },
-    sections: [{ id, type, heading, content, image, images, layout }],
-    additionalContext: { heading, content },
-    nextProject: { id, title, image }
-  }
-}
-```
-
-### 🛠️ Quick Test
-```bash
-# Test API connectivity
-curl http://localhost:5000/health
-
-# Create portfolio (requires authentication)
-# Visit: http://localhost:5000/api-docs
-# Navigate to: POST /api/portfolios
-```
-
-## 📊 Complete API Endpoints (32 Total)
-
-### 🔐 Authentication Endpoints (3)
-- `POST /api/auth/signup` - User registration with validation
-- `POST /api/auth/login` - User authentication with JWT tokens  
-- `GET /api/auth/me` - Get current user profile (protected)
-
-### 👤 User Management Endpoints (7)
-- `GET /api/users/profile` - Get current user profile with statistics
-- `PUT /api/users/profile` - Update name, email, or password
-- `DELETE /api/users/profile` - Delete account with password confirmation
-- `GET /api/users` - Get all users with pagination (Admin)
-- `GET /api/users/:id` - Get user by ID with stats (Admin)
-- `PUT /api/users/:id` - Update any user (Admin)
-- `DELETE /api/users/:id` - Delete any user (Admin)
-
-### 📁 Portfolio Management (8)
-- `POST /api/portfolios` - Create new portfolio with template support
-- `GET /api/portfolios/:id` - Get portfolio by ID with view tracking
-- `PUT /api/portfolios/:id` - Update portfolio (owner only)
-- `DELETE /api/portfolios/:id` - Delete portfolio and case studies  
-- `GET /api/portfolios/user/:userId` - Get user's portfolios with filtering
-- `GET /api/portfolios/slug/:slug/check` - Check slug availability
-- `PUT /api/portfolios/:id/publish` - Publish portfolio with slug validation
-- `GET /api/public/portfolio/:slug` - Get public portfolio (no auth required)
-
-### 📖 Case Study Management (4)  
-- `POST /api/case-studies` - Create case study linked to portfolio project
-- `GET /api/case-studies/:id` - Get case study by ID
-- `PUT /api/case-studies/:id` - Update case study content
-- `DELETE /api/case-studies/:id` - Delete case study
-
-**✨ Smart Data Transformation**: Case studies automatically transform database content to HTML with intelligent fallbacks:
-- Real database content when available (hero, overview, sections)
-- Professional defaults when content is empty or using template placeholders
-- Fully responsive HTML generation with mobile-optimized layouts
-- Automatic project marking with `hasCaseStudy` flags for portfolio integration
-
-### 🌐 Site Publishing System (3)
-- `POST /api/sites/publish` - Deploy portfolio to Vercel with custom domain
-- `POST /api/sites/sub-publish` - **NEW: Publish to local subdomain (Gmail-style)** ⭐
-- `GET /api/sites/:subdomain` - Get published site details by subdomain
-
-**🎯 Gmail-Style Custom Subdomain Feature**: 
-- Choose your own subdomain like Gmail (e.g., `my-awesome-portfolio`)
-- URL Pattern: `aurea.tool/{your-subdomain}`
-- Auto-generated if not specified (e.g., `jane-designer-1760525444554`)
-- Format: 3-30 lowercase letters, numbers, and hyphens
-- Ownership protection: Cannot take another user's subdomain
-- Update anytime: Change your subdomain and old folder auto-deletes
-- Local file storage: `generated-files/{subdomain}/`
-
-### 🖼️ File Upload System (2)
-- `POST /api/upload/image` - Upload image to Cloudinary with validation
-- `DELETE /api/upload/image` - Delete image from Cloudinary
-
-### 📄 PDF Export System (5) **NEW**
-- `GET /api/pdf/portfolio/:portfolioId` - Export portfolio as PDF (inline view)
-- `GET /api/pdf/portfolio/:portfolioId/complete` - Export complete portfolio with all case studies
-- `GET /api/pdf/portfolio/:portfolioId/download` - Download portfolio PDF (force download)
-- `GET /api/pdf/portfolio/:portfolioId/info` - Get PDF export information and options
-- `POST /api/pdf/cleanup` - Clean up old generated PDFs (Admin only)
-
-### 🏥 System Health (1)
-- `GET /health` - Server status and database connectivity
-
-## 🔗 Detailed API Documentation
-
-### � Authentication System
-All protected endpoints require JWT Bearer tokens in the `Authorization` header:
-```bash
-Authorization: Bearer <your-jwt-token>
-```
-
-#### Registration & Login Flow
-```bash
-# 1. Register new user
+# 1. Register a new user
 curl -X POST http://localhost:5000/api/auth/signup \
   -H "Content-Type: application/json" \
-  -d '{"name":"John Doe","email":"john@example.com","password":"securepass123"}'
-
-# 2. Login and get JWT token  
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"john@example.com","password":"securepass123"}'
-
-# 3. Access protected routes
-curl -X GET http://localhost:5000/api/auth/me \
-  -H "Authorization: Bearer <jwt-token>"
-```
-
-### 👤 User Profile Management
-
-#### Get Current User Profile
-Retrieve authenticated user's profile with portfolio and case study statistics:
-```bash
-curl -X GET http://localhost:5000/api/users/profile \
-  -H "Authorization: Bearer <token>"
-
-# Response includes:
-{
-  "success": true,
-  "data": {
-    "_id": "user-id",
+  -d '{
     "name": "John Doe",
     "email": "john@example.com",
-    "createdAt": "2025-10-12T...",
-    "updatedAt": "2025-10-12T...",
-    "stats": {
-      "totalPortfolios": 5,
-      "publishedPortfolios": 3,
-      "draftPortfolios": 2,
-      "caseStudies": 8
-    }
+    "password": "SecurePass123!"
+  }'
+
+# 2. Login and get JWT token
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john@example.com",
+    "password": "SecurePass123!"
+  }'
+
+# 3. Get templates (no auth required)
+curl http://localhost:5000/api/templates
+
+# 4. Get user profile (auth required - use token from login)
+curl http://localhost:5000/api/auth/me \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+---
+
+## 📚 API Reference
+
+### API Endpoints Overview
+
+AUREA Backend provides **65+ RESTful API endpoints** organized into 9 main categories:
+
+| Category | Endpoints | Description |
+|----------|-----------|-------------|
+| 🏥 Health | 1 | Server health and status checks |
+| 🔐 Authentication | 4 | User signup, login, profile management |
+| 👤 User Management | 13 | Complete user CRUD operations |
+| 📁 Portfolio | 9 | Portfolio lifecycle management |
+| 🎨 Templates | 14 | Dynamic template system |
+| 📖 Case Studies | 6 | Project case study management |
+| 🌐 Site Publishing | 10 | Vercel & subdomain deployment |
+| 📄 PDF Export | 5 | Portfolio PDF generation |
+| 🖼️ Media Upload | 2 | Image upload and management |
+| 🤖 AI Processing | 3 | PDF extraction with Gemini AI |
+
+### Quick Reference
+
+#### Health Check
+```http
+GET /health
+```
+Returns server status, database connectivity, and system info.
+
+---
+
+#### Authentication Endpoints
+
+```http
+POST   /api/auth/signup          # Register new user
+POST   /api/auth/login           # Login and get JWT token
+GET    /api/auth/me              # Get current user profile (protected)
+PUT    /api/auth/me              # Update current user (protected)
+```
+
+**Example: User Registration**
+```bash
+curl -X POST http://localhost:5000/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Jane Designer",
+    "email": "jane@example.com",
+    "password": "SecurePass123!"
+  }'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "user": {
+      "_id": "6501234567890abcdef12345",
+      "name": "Jane Designer",
+      "email": "jane@example.com",
+      "role": "user"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
 }
 ```
 
-#### Update Profile
-Update name, email, or password for the authenticated user:
-```bash
-# Update name
-curl -X PUT http://localhost:5000/api/users/profile \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"John Updated"}'
+---
 
-# Update email
-curl -X PUT http://localhost:5000/api/users/profile \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"john.updated@example.com"}'
+#### User Management Endpoints
 
-# Change password (requires current password)
-curl -X PUT http://localhost:5000/api/users/profile \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"currentPassword":"oldpass123","newPassword":"newpass123"}'
+```http
+GET    /api/users/profile                    # Get current user profile
+PUT    /api/users/profile                    # Update profile (name, email, password)
+PATCH  /api/users/profile/password           # Change password
+POST   /api/users/profile/verify-password    # Verify current password
+DELETE /api/users/profile                    # Delete account
+GET    /api/users/premium/status             # Check premium status
+
+# Admin endpoints
+GET    /api/users                            # List all users (paginated)
+GET    /api/users/:id                        # Get user by ID
+PUT    /api/users/:id                        # Update user
+DELETE /api/users/:id                        # Delete user
+GET    /api/users/:id/portfolios             # Get user's portfolios
+PUT    /api/users/:id/role                   # Update user role
+DELETE /api/users/:id/force                  # Force delete with portfolios
 ```
 
-#### Delete Account
-Permanently delete user account and all associated data (portfolios, case studies):
-```bash
-curl -X DELETE http://localhost:5000/api/users/profile \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"password":"securepass123"}'
+---
+
+#### Portfolio Endpoints
+
+```http
+POST   /api/portfolios                       # Create new portfolio
+GET    /api/portfolios/stats                 # Get portfolio statistics
+GET    /api/portfolios/user/me               # Get current user's portfolios
+GET    /api/portfolios/check-slug/:slug      # Check slug availability
+GET    /api/portfolios/public/:slug          # Get public portfolio
+GET    /api/portfolios/:id                   # Get portfolio by ID
+PUT    /api/portfolios/:id                   # Update portfolio
+DELETE /api/portfolios/:id                   # Delete portfolio
+PUT    /api/portfolios/:id/publish           # Publish portfolio
+PUT    /api/portfolios/:id/unpublish         # Unpublish portfolio
 ```
 
-#### Admin User Management
-Admin-only endpoints for managing all users:
+**Example: Create Portfolio**
 ```bash
-# Get all users with pagination and search
-curl -X GET "http://localhost:5000/api/users?page=1&limit=10&search=john" \
-  -H "Authorization: Bearer <admin-token>"
-
-# Get specific user by ID
-curl -X GET http://localhost:5000/api/users/:userId \
-  -H "Authorization: Bearer <admin-token>"
-
-# Update any user
-curl -X PUT http://localhost:5000/api/users/:userId \
-  -H "Authorization: Bearer <admin-token>" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Updated Name","email":"newemail@example.com"}'
-
-# Delete any user
-curl -X DELETE http://localhost:5000/api/users/:userId \
-  -H "Authorization: Bearer <admin-token>"
-```
-
-### 📁 Portfolio Management System
-
-#### Creating and Managing Portfolios
-```bash
-# Create portfolio
 curl -X POST http://localhost:5000/api/portfolios \
-  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{"title":"My Portfolio","templateId":"echelon","description":"Portfolio description"}'
-
-# Update portfolio  
-curl -X PUT http://localhost:5000/api/portfolios/:id \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Updated Title","content":{...}}'
-
-# Publish portfolio with slug
-curl -X PUT http://localhost:5000/api/portfolios/:id/publish \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"slug":"my-awesome-portfolio"}'
-```
-
-### 📖 Case Study System
-Case studies are linked to specific projects within portfolios and feature intelligent data transformation:
-
-```bash
-# Create case study
-curl -X POST http://localhost:5000/api/case-studies \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"portfolioId":"portfolio-id","projectId":"project-1","content":{...}}'
-```
-
-**Case Study Features:**
-- **Smart Data Transformation**: Automatically converts database content to HTML format
-- **Intelligent Fallbacks**: Uses real data when available, professional defaults when empty
-- **Responsive HTML**: Generated case study pages adapt to all screen sizes
-- **Portfolio Integration**: Projects with case studies are automatically flagged with `hasCaseStudy: true`
-- **Flexible Content Structure**: Supports hero sections, overview, multiple content sections, and additional context
-- **SEO-Friendly URLs**: Case study pages generated as `case-study-{projectId}.html`
-
-**Content Structure:**
-```javascript
-{
-  hero: { title, subtitle, coverImage, client, year, role, duration },
-  overview: { heading, description, challenge, solution, results },
-  sections: [
-    { 
-      id: "section-1",
-      type: "text|image|gallery",
-      heading: "Section Title",
-      content: "Section content...",
-      image: "image-url",
-      images: ["url1", "url2"],
-      layout: "default|full|side-by-side"
-    }
-  ],
-  additionalContext: { heading, content },
-  nextProject: { id, title, image }
-}
-```
-
-### 🌐 Site Publishing System - Custom Subdomain Feature ⭐
-
-**Gmail-Style Subdomain Selection** - Choose your own portfolio subdomain just like Gmail!
-
-#### 🎯 Quick Start
-```bash
-# Publish with custom subdomain
-curl -X POST http://localhost:5000/api/sites/sub-publish \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -d '{
-    "portfolioId": "your-portfolio-id",
-    "customSubdomain": "my-awesome-portfolio"
-  }'
-
-# Response
-{
-  "success": true,
-  "message": "Portfolio published successfully to local subdomain",
-  "data": {
-    "site": {
-      "subdomain": "my-awesome-portfolio",
-      "url": "aurea.tool/my-awesome-portfolio",
-      "localUrl": "http://localhost:5000/api/sites/my-awesome-portfolio"
-    },
-    "portfolio": {
-      "slug": "my-awesome-portfolio",
-      "publishedUrl": "aurea.tool/my-awesome-portfolio"
-    }
-  }
-}
-```
-
-#### ✨ Key Features
-- **Custom Selection**: Choose your own subdomain (3-30 characters)
-- **Auto-Generation**: Omit `customSubdomain` for auto-generated name
-- **Format Validation**: Only lowercase letters, numbers, and hyphens
-- **Ownership Protection**: Cannot take another user's subdomain
-- **Update Anytime**: Change your subdomain whenever you want
-- **Auto Cleanup**: Old folder deleted when subdomain changes
-- **Conflict Detection**: 409 error if subdomain is already taken
-
-#### 📋 Subdomain Rules
-```javascript
-// Valid Examples
-"my-portfolio"          // ✅ Perfect
-"john-designer"         // ✅ Great
-"awesome-work-2024"     // ✅ Nice
-"jane123"               // ✅ OK
-
-// Invalid Examples
-"My-Portfolio"          // ❌ Uppercase not allowed
-"my_portfolio"          // ❌ Underscores not allowed
-"ab"                    // ❌ Too short (min 3 chars)
-"my-portfolio-name..."  // ❌ Too long (max 30 chars)
-"-my-portfolio"         // ❌ Cannot start with hyphen
-"my-portfolio-"         // ❌ Cannot end with hyphen
-```
-
-#### 🔄 Update Your Subdomain
-```bash
-# Update to a new subdomain
-curl -X POST http://localhost:5000/api/sites/sub-publish \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "portfolioId": "your-portfolio-id",
-    "customSubdomain": "new-subdomain-name"
-  }'
-
-# What happens:
-# 1. Validates new subdomain is available
-# 2. Deletes old folder (generated-files/old-subdomain/)
-# 3. Creates new folder (generated-files/new-subdomain-name/)
-# 4. Updates portfolio.slug and portfolio.publishedUrl
-# 5. Updates site record with new subdomain
-```
-
-#### ⚠️ Conflict Handling
-```bash
-# Try to use a taken subdomain
-# Response: 409 Conflict
-{
-  "success": false,
-  "message": "Subdomain is already taken by another user",
-  "subdomain": "john-designer",
-  "available": false
-}
-```
-
-#### 🚀 Auto-Generated Subdomain
-```bash
-# Publish without customSubdomain parameter
-curl -X POST http://localhost:5000/api/sites/sub-publish \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "portfolioId": "your-portfolio-id"
-  }'
-
-# Response includes auto-generated subdomain
-{
-  "data": {
-    "site": {
-      "subdomain": "jane-designer-1760525444554",  // Auto-generated
-      "url": "aurea.tool/jane-designer-1760525444554"
-    }
-  }
-}
-```
-
-#### 📁 File Structure
-```
-generated-files/
-├── my-awesome-portfolio/
-│   ├── index.html                    # Main portfolio page
-│   ├── case-study-project1.html      # Case study pages
-│   └── case-study-project2.html
-└── jane-designer-1760525444554/
-    └── index.html
-```
-
-#### 🔍 Check Published Site
-```bash
-# Get site details by subdomain
-curl -X GET http://localhost:5000/api/sites/my-awesome-portfolio \
-  -H "Authorization: Bearer <token>"
-```
-
-#### 💡 Frontend Integration Example
-```javascript
-// React/Next.js: Publish with custom subdomain
-const publishPortfolio = async (portfolioId, customSubdomain) => {
-  const response = await fetch('/api/sites/sub-publish', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      portfolioId,
-      customSubdomain  // Optional
-    })
-  });
-  
-  const result = await response.json();
-  
-  if (response.status === 409) {
-    // Subdomain taken - ask user to choose another
-    alert(result.message);
-    return null;
-  }
-  
-  return result.data;
-};
-
-// Check subdomain availability before publishing
-const checkSubdomainAvailability = async (subdomain) => {
-  const response = await fetch(`/api/sites/check/${subdomain}`, {
-    method: 'GET',
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  
-  const result = await response.json();
-  return result.available;
-};
-```
-
-### 📄 PDF Export System **NEW**
-Export portfolios as high-quality PDF documents with Puppeteer:
-
-```bash
-# Export portfolio as PDF (view inline)
-curl -X GET http://localhost:5000/api/pdf/portfolio/:portfolioId \
-  -H "Authorization: Bearer <token>" \
-  --output portfolio.pdf
-
-# Export complete portfolio with case studies
-curl -X GET http://localhost:5000/api/pdf/portfolio/:portfolioId/complete \
-  -H "Authorization: Bearer <token>" \
-  --output portfolio-complete.pdf
-
-# Get PDF export information
-curl -X GET http://localhost:5000/api/pdf/portfolio/:portfolioId/info \
-  -H "Authorization: Bearer <token>"
-
-# Response includes:
-{
-  "success": true,
-  "data": {
-    "portfolio": {
-      "projectCount": 5,
-      "caseStudyCount": 3
-    },
-    "exportInfo": {
-      "estimatedSize": {
-        "mainPortfolio": "~586KB",
-        "caseStudies": "~600KB",
-        "total": "~1186KB"
-      },
-      "options": {
-        "formats": ["A4", "A3", "Letter", "Legal"],
-        "orientations": ["portrait", "landscape"],
-        "pageTypes": ["portfolio", "all", "case-study-1", "case-study-2"]
+    "title": "My Design Portfolio",
+    "description": "A showcase of my creative work",
+    "templateId": "echelon",
+    "customData": {
+      "hero": {
+        "title": "Jane Designer",
+        "subtitle": "UI/UX Designer & Creative Director"
       }
     }
-  }
-}
+  }'
 ```
 
-**PDF Features:**
-- **High Quality Output**: Uses Puppeteer for pixel-perfect PDF generation
-- **Maintains Design**: Preserves exact HTML/CSS styling from templateConvert.js
-- **Multiple Formats**: Support for A4, A3, Letter, Legal paper sizes
-- **Flexible Access**: Public portfolios can be exported without authentication
-- **Batch Export**: Generate combined PDF with portfolio and all case studies
-- **Smart Loading**: Waits for fonts and images before generating PDF
+---
 
-### 🖼️ Media Upload System
-Upload images with automatic Cloudinary optimization:
+#### Template System Endpoints (NEW)
 
+```http
+GET    /api/templates                        # Get all templates (with filters)
+GET    /api/templates/categories             # Get template categories
+GET    /api/templates/default                # Get default template
+GET    /api/templates/:id                    # Get template by ID
+GET    /api/templates/:id/schema             # Get template schema only
+POST   /api/templates/:id/validate           # Validate content against schema
+POST   /api/templates/:id/rating             # Rate template (1-5 stars)
+
+# Admin endpoints
+POST   /api/templates                        # Create new template
+PUT    /api/templates/:id                    # Update template
+DELETE /api/templates/:id                    # Deactivate template
+POST   /api/templates/:id/version            # Create new template version
+```
+
+**Example: Get Templates with Filters**
 ```bash
-# Upload single image
-curl -X POST http://localhost:5000/api/upload/image \
-  -H "Authorization: Bearer <token>" \
-  -F "image=@myimage.jpg"
+# Get all minimal category templates
+curl "http://localhost:5000/api/templates?category=minimal"
+
+# Get premium templates with specific tags
+curl "http://localhost:5000/api/templates?isPremium=true&tags=modern,clean"
 ```
 
-### 🏥 System Health & Documentation
-- **Health Check**: `GET /health` - Server status and database connectivity
-- **API Documentation**: `GET /api-docs` - Interactive Swagger UI interface  
-- **API Overview**: `GET /` - Available endpoints and system information
+**Example: Validate Portfolio Content**
+```bash
+curl -X POST http://localhost:5000/api/templates/echelon/validate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": {
+      "hero": {
+        "title": "My Portfolio",
+        "subtitle": "Designer & Developer"
+      },
+      "about": {
+        "name": "John Doe",
+        "bio": "Passionate about creating beautiful designs"
+      }
+    }
+  }'
+```
 
-## 🛡️ Enterprise-Grade Security & Architecture
+---
 
-### 🔒 Security Features
-- **Password Hashing**: bcrypt with salt rounds for secure storage
-- **JWT Authentication**: Secure Bearer token validation with 30-day expiration
-- **Ownership Middleware**: Users can only access/modify their own resources
-- **Rate Limiting**: Endpoint-specific limits (10/min slug checks, 5/min publish, 30/min CRUD)
-- **CORS Protection**: Configurable origins with development/production modes
-- **Input Validation**: Comprehensive validation with express-validator
-- **XSS Protection**: Input sanitization and security headers via Helmet
-- **File Upload Security**: Type validation, size limits, and structured storage paths
+#### Case Study Endpoints
 
-### 🏗️ Modern Architecture  
-- **ES6 Modules**: Modern `import`/`export` syntax throughout codebase
-- **Async/Await**: Promise-based asynchronous operations with proper error handling
-- **Clean MVC Structure**: Controllers, models, routes, and middleware organized by feature
-- **Environment Configuration**: Centralized `.env` management with validation
-- **Middleware Pipeline**: Modular request processing with authentication, validation, and ownership
-- **Database Optimization**: MongoDB with Mongoose ODM, strategic indexing, and aggregation
-- **Caching Layer**: Optional Redis integration with graceful degradation
-- **Error Recovery**: Comprehensive error handling with standardized JSON responses
-- **Smart HTML Generation**: Intelligent case study transformation with responsive templates and fallback logic
+```http
+POST   /api/case-studies                     # Create case study
+GET    /api/case-studies/:id                 # Get case study by ID
+GET    /api/case-studies/portfolio/:portfolioId/project/:projectId
+PUT    /api/case-studies/:id                 # Update case study
+DELETE /api/case-studies/:id                 # Delete case study
+GET    /api/case-studies/public/:portfolioSlug/:projectId
+```
 
-## 📁 Professional Project Structure
+---
+
+#### Site Publishing Endpoints
+
+```http
+# Site publishing
+POST   /api/sites/publish                    # Deploy to Vercel
+POST   /api/sites/sub-publish                # Publish to local subdomain ⭐
+POST   /api/sites/debug-generate             # Debug HTML generation
+DELETE /api/sites/unpublish/:portfolioId     # Unpublish site
+
+# Site access
+GET    /api/sites/:subdomain                 # Get site by subdomain
+GET    /api/sites/:subdomain/raw-html        # Get raw HTML
+GET    /api/sites/:subdomain/case-study/:projectId/raw-html
+
+# Configuration
+GET    /api/sites/status                     # Get publishing status
+GET    /api/sites/config                     # Get site configuration
+PUT    /api/sites/config                     # Update site configuration
+POST   /api/sites/analytics/view             # Record site view
+```
+
+**Example: Gmail-Style Subdomain Publishing** ⭐
+```bash
+curl -X POST http://localhost:5000/api/sites/sub-publish \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "portfolioId": "6501234567890abcdef12345",
+    "subdomain": "jane-designer"
+  }'
+```
+
+**Result:**
+```
+✅ Site published at: aurea.tool/jane-designer
+📁 Files generated in: generated-files/jane-designer/
+```
+
+---
+
+#### PDF Export Endpoints
+
+```http
+GET    /api/pdf/portfolio/:portfolioId       # View portfolio PDF (inline)
+GET    /api/pdf/portfolio/:portfolioId/complete # Complete PDF with case studies
+GET    /api/pdf/portfolio/:portfolioId/download # Force download PDF
+GET    /api/pdf/portfolio/:portfolioId/info  # Get PDF generation info
+POST   /api/pdf/cleanup                      # Cleanup old PDFs (admin)
+```
+
+**Example: Export Portfolio as PDF**
+```bash
+# View PDF in browser
+curl http://localhost:5000/api/pdf/portfolio/6501234567890abcdef12345
+
+# Download PDF file
+curl -O http://localhost:5000/api/pdf/portfolio/6501234567890abcdef12345/download
+```
+
+---
+
+#### Media Upload Endpoints
+
+```http
+POST   /api/upload/single                    # Upload single image
+POST   /api/upload/multiple                  # Upload multiple images
+```
+
+**Example: Upload Image**
+```bash
+curl -X POST http://localhost:5000/api/upload/single \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "image=@/path/to/image.jpg"
+```
+
+---
+
+#### AI PDF Processing Endpoints
+
+```http
+POST   /api/proposal-extract/extract         # Extract data from PDF
+GET    /api/proposal-extract/history         # Get extraction history
+GET    /api/proposal-extract/test-gemini     # Test Gemini AI connection
+```
+
+**Example: Extract Data from PDF**
+```bash
+curl -X POST http://localhost:5000/api/proposal-extract/extract \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "pdf=@/path/to/proposal.pdf"
+```
+
+---
+
+### 📖 Detailed Documentation
+
+For complete API documentation with request/response examples, authentication details, and interactive testing:
+
+**🔗 Visit Swagger UI:** http://localhost:5000/api-docs
+
+The interactive documentation includes:
+- ✅ All 65+ endpoints with detailed descriptions
+- ✅ Request/response schemas and examples
+- ✅ Authentication testing with JWT tokens
+- ✅ Live API testing directly from browser
+- ✅ Model definitions and validation rules
+- ✅ Error response examples
+
+---
+
+## 🏗️ Architecture
+
+### Project Structure
 
 ```
 AUREA---Backend/
 ├── src/
-│   ├── config/
-│   │   ├── database.js           # MongoDB Atlas connection with retry logic
-│   │   ├── cloudinary.js        # Image upload configuration
-│   │   └── swagger.js           # API documentation setup
-│   ├── controllers/
-│   │   ├── authController.js     # JWT authentication & user management
-│   │   ├── userController.js     # User profile CRUD operations
-│   │   ├── portfolioController.js # Portfolio CRUD with publishing system
-│   │   ├── caseStudyController.js # Case study management linked to portfolios
-│   │   ├── siteController.js     # Vercel deployment & HTML generation
-│   │   ├── uploadController.js   # Cloudinary image upload & deletion
-│   │   ├── proposalExtract.controller.js      # Legacy PDF processing
-│   │   └── proposalExtract.genai.controller.js # AI-powered PDF extraction
-│   ├── middleware/
-│   │   ├── auth.js              # JWT token validation
-│   │   ├── ownership.js         # Resource ownership validation
-│   │   ├── rateLimiter.js       # Endpoint-specific rate limiting
-│   │   ├── validation.js        # Input validation with express-validator
-│   │   ├── errorHandler.js      # Standardized error responses
-│   │   ├── requestLogger.js     # Request/response logging
-│   │   └── upload.js           # Multer file upload configuration
-│   ├── models/
-│   │   ├── User.js             # User schema with bcrypt authentication
-│   │   ├── Portfolio.js        # Portfolio schema with virtual fields & indexes
-│   │   └── CaseStudy.js        # Case study schema with structured content
-│   ├── routes/
-│   │   ├── authRoutes.js        # Authentication endpoints (3)
-│   │   ├── userRoutes.js        # User management endpoints (7)
-│   │   ├── portfolioRoutes.js   # Portfolio management endpoints (8)
-│   │   ├── caseStudyRoutes.js   # Case study endpoints (4)
-│   │   ├── uploadRoutes.js      # Image upload endpoints (2)
-│   │   └── proposalExtract.routes.js # Legacy PDF extraction endpoints
-│   └── utils/
-│       ├── cache.js            # Redis caching utilities with fallback
-│       └── slugGenerator.js    # Slug validation & generation utilities
-├── services/
-│   └── templateConvert.js      # 🎨 Smart HTML generation with responsive templates
-├── test/
-│   ├── test-user-profile-crud.js            # Comprehensive user CRUD test suite
-│   ├── test-custom-subdomain.js             # ⭐ Custom subdomain feature test (7 tests)
-│   ├── test-vercel-deployment-improved.js   # Case study verification test suite
-│   ├── test-publish-flow.js                 # Publishing workflow tests
-│   └── test-sub-publish.js                  # Local subdomain publishing tests
-├── generated-files/              # 📁 Generated portfolio HTML files
-│   └── {subdomain}/
-│       ├── index.html           # Main portfolio page
-│       └── case-study-*.html    # Individual case study pages
-├── uploads/                     # Temporary file storage (auto-cleanup)
-├── swagger.yaml                 # 📖 Complete API documentation (27 endpoints)
-├── package.json                 # 📦 Production-optimized dependencies
-├── server.js                    # 🚀 Application entry point with graceful shutdown
-├── .env                         # Environment configuration
-├── CUSTOM_SUBDOMAIN_FEATURE.md  # 📋 Custom subdomain feature documentation ⭐
-├── SUB_PUBLISH_FEATURE_SUMMARY.md # 📋 Sub-publish feature summary
-├── SWAGGER_MIGRATION_SUMMARY.md # 📋 Swagger migration documentation
-├── IMPLEMENTATION_SUMMARY.md    # 📋 Complete implementation details
-├── PORTFOLIO_CONTROLLER_REVIEW.md # 📋 Controller review & updates
-└── README.md                    # 📋 This comprehensive documentation
+│   ├── config/              # Configuration files
+│   │   ├── database.js      # MongoDB connection
+│   │   ├── cloudinary.js    # Cloudinary setup
+│   │   ├── swagger.js       # Swagger documentation config
+│   │   └── templateRegistry.js # Template registration system
+│   │
+│   ├── controllers/         # Business logic layer
+│   │   ├── authController.js
+│   │   ├── userController.js
+│   │   ├── portfolioController.js
+│   │   ├── templateController.js
+│   │   ├── caseStudyController.js
+│   │   ├── siteController.js
+│   │   ├── pdfExportController.js
+│   │   ├── uploadController.js
+│   │   └── proposalExtract.*.controller.js
+│   │
+│   ├── models/              # Database schemas (Mongoose)
+│   │   ├── User.js          # User model with authentication
+│   │   ├── Portfolio.js     # Portfolio with template support
+│   │   ├── Template.js      # Dynamic template system
+│   │   ├── CaseStudy.js     # Case study documentation
+│   │   └── Site.js          # Published site records
+│   │
+│   ├── routes/              # API route definitions
+│   │   ├── authRoutes.js
+│   │   ├── userRoutes.js
+│   │   ├── portfolioRoutes.js
+│   │   ├── templateRoutes.js
+│   │   ├── caseStudyRoutes.js
+│   │   ├── siteRoutes.js
+│   │   ├── pdfRoutes.js
+│   │   ├── uploadRoutes.js
+│   │   └── proposalExtract.routes.js
+│   │
+│   ├── middleware/          # Express middleware
+│   │   ├── auth.js          # JWT authentication
+│   │   ├── ownership.js     # Resource ownership verification
+│   │   ├── validation.js    # Request validation
+│   │   ├── errorHandler.js  # Error handling
+│   │   ├── rateLimiter.js   # Rate limiting
+│   │   └── requestLogger.js # Request logging
+│   │
+│   ├── services/            # Template engine service
+│   │   └── templateEngine.js # HTML generation with Puppeteer
+│   │
+│   └── utils/               # Helper utilities
+│       ├── cache.js         # Redis caching utilities
+│       ├── slugGenerator.js # Slug generation & validation
+│       ├── subdomainValidator.js # Subdomain validation
+│       └── templateValidator.js  # Template validation
+│
+├── services/                # Business services (root level)
+│   ├── deploymentService.js # Vercel deployment
+│   ├── pdfGenerationService.js # PDF export
+│   └── templateConvert.js   # Template HTML conversion
+│
+├── seeds/                   # Database seeders
+│   ├── templateSeeds.js     # Seed initial templates
+│   └── migratePortfolios.js # Migration scripts
+│
+├── scripts/                 # Utility scripts
+│   └── upgrade-user-to-premium.js
+│
+├── test/                    # Test suites
+│   ├── test-template-system.js
+│   ├── test-custom-subdomain.js
+│   ├── test-publish-flow.js
+│   └── test-*.js
+│
+├── uploads/                 # Temporary file uploads
+│   └── pdfs/
+│
+├── generated-files/         # Published site files (Gmail-style subdomains)
+│   ├── {subdomain}/
+│   │   ├── index.html
+│   │   └── case-study-*.html
+│
+├── server.js                # Application entry point
+├── package.json             # Dependencies and scripts
+├── swagger.yaml             # OpenAPI specification
+├── .env                     # Environment variables (gitignored)
+├── .env.example             # Environment template
+└── README.md                # This file
 ```
 
-### 🎨 Recent Updates (October 2025)
+### System Architecture Diagram
 
-**Gmail-Style Custom Subdomain Feature (Latest):** ⭐
-1. **Custom Subdomain Selection** - Choose your own portfolio subdomain
-   - Format validation: 3-30 lowercase letters, numbers, and hyphens
-   - Ownership protection: Cannot take another user's subdomain
-   - Auto-generation fallback with timestamp for uniqueness
-   
-2. **Automatic Folder Management** - Smart cleanup when subdomain changes
-   - Old folder automatically deleted when user updates subdomain
-   - New folder created with updated subdomain name
-   - Portfolio and Site records updated atomically
-   
-3. **Conflict Detection** - Robust availability checking
-   - 409 Conflict response when subdomain is taken by another user
-   - Portfolio-level ownership checking (not just user-level)
-   - Allows users to update their own portfolio's subdomain
-   
-4. **Comprehensive Testing** - 100% test coverage with 7 test cases
-   - `test-custom-subdomain.js`: Auto-generation, custom selection, conflicts, updates
-   - Unique timestamp-based test names for reliability
-   - Folder cleanup verification with dynamic imports
-
-**Case Study System Enhancements:**
-1. **Fixed Data Transformation** - Case studies now correctly display real database content instead of mock data
-   - `siteController.js`: Fixed to pass complete case study objects (`cs.toObject()`) instead of just content
-   - `templateConvert.js`: Added `caseStudies` data passthrough in `processPortfolioData()` function
-   
-2. **Smart Fallback Logic** - Intelligent content detection and fallback system
-   - Detects empty/default template values (e.g., "My First Project", "Add a description...")
-   - Uses real database content when available
-   - Falls back to professional defaults when content is missing
-   
-3. **Responsive HTML Generation** - Mobile-first case study pages
-   - Fully responsive layouts with media queries
-   - Touch-optimized navigation
-   - Adaptive typography and spacing
-
-4. **Comprehensive Testing** - Enhanced test suite for case study verification
-   - `test-vercel-deployment-improved.js`: Verifies case study HTML generation
-   - Validates real data appears in generated files
-   - Checks for proper fallback behavior
-
-## � Optimized Dependencies
-
-**Production Dependencies:**
-```json
-{
-  "@google/genai": "^1.21.0",           // AI processing for PDF extraction
-  "bcrypt": "^6.0.0",                   // Password hashing
-  "cloudinary": "^2.7.0",               // Image upload service
-  "cors": "^2.8.5",                     // Cross-origin requests
-  "dotenv": "^17.2.2",                  // Environment management
-  "express": "^5.1.0",                  // Web framework
-  "jsonwebtoken": "^9.0.2",             // JWT authentication
-  "mongoose": "^8.18.1",                // MongoDB ODM
-  "multer": "^2.0.2",                   // File upload handling
-  "pdf-text-extract": "^1.5.0",        // PDF text extraction
-  "swagger-jsdoc": "^6.2.8",            // API documentation
-  "swagger-ui-express": "^5.0.1"        // Interactive documentation UI
-}
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        CLIENT LAYER                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │   React      │  │   Mobile     │  │   External   │      │
+│  │  Frontend    │  │    Apps      │  │     APIs     │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└─────────────────────────────────────────────────────────────┘
+                              ↕ HTTP/HTTPS
+┌─────────────────────────────────────────────────────────────┐
+│                      API GATEWAY LAYER                       │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │  Express.js Server (Port 5000)                         │ │
+│  │  - CORS, Helmet, Compression                           │ │
+│  │  - Rate Limiting (Express-Rate-Limit)                  │ │
+│  │  - Request Logging & Error Handling                    │ │
+│  └────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                              ↕
+┌─────────────────────────────────────────────────────────────┐
+│                   AUTHENTICATION LAYER                       │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │  JWT Middleware                                        │ │
+│  │  - Token verification                                  │ │
+│  │  - Role-based access control (User/Admin/Premium)     │ │
+│  │  - Optional authentication for public endpoints       │ │
+│  └────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                              ↕
+┌─────────────────────────────────────────────────────────────┐
+│                    ROUTING LAYER (9 Routers)                │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+│  │  Auth    │ │  Users   │ │Portfolio │ │Templates │      │
+│  │  Routes  │ │  Routes  │ │  Routes  │ │  Routes  │      │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+│  │   Case   │ │  Sites   │ │   PDF    │ │  Upload  │      │
+│  │  Studies │ │  Routes  │ │  Routes  │ │  Routes  │      │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
+│  ┌──────────┐                                               │
+│  │    AI    │                                               │
+│  │ Extract  │                                               │
+│  └──────────┘                                               │
+└─────────────────────────────────────────────────────────────┘
+                              ↕
+┌─────────────────────────────────────────────────────────────┐
+│                     CONTROLLER LAYER                         │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │  Business Logic & Validation                           │ │
+│  │  - Request validation (Joi, Express-Validator)         │ │
+│  │  - Authorization checks                                │ │
+│  │  - Business rule enforcement                           │ │
+│  └────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                              ↕
+┌─────────────────────────────────────────────────────────────┐
+│                      SERVICE LAYER                           │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │  Template    │  │  Deployment  │  │  PDF Gen     │      │
+│  │  Service     │  │  Service     │  │  Service     │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└─────────────────────────────────────────────────────────────┘
+                              ↕
+┌─────────────────────────────────────────────────────────────┐
+│                     DATA ACCESS LAYER                        │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │  Mongoose ODM                                          │ │
+│  │  - Schema definitions                                  │ │
+│  │  - Model methods                                       │ │
+│  │  - Query optimization                                  │ │
+│  └────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                              ↕
+┌─────────────────────────────────────────────────────────────┐
+│                    EXTERNAL SERVICES                         │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+│  │ MongoDB  │ │  Redis   │ │Cloudinary│ │ Google   │      │
+│  │ Database │ │  Cache   │ │  CDN     │ │ Gemini   │      │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
+│  ┌──────────┐ ┌──────────┐                                 │
+│  │  Vercel  │ │Puppeteer │                                 │
+│  │  Deploy  │ │ PDF Gen  │                                 │
+│  └──────────┘ └──────────┘                                 │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**Development Dependencies:**
-```json
-{
-  "nodemon": "^3.1.10"                  // Auto-restart development server
-}
-```
+### Request Flow Example
 
-**🧹 Removed Unused Dependencies:**
-- `@google/generative-ai` (duplicate AI library)
-- `pdf-poppler` (unused PDF processor)
-- `pdf2json` (unused JSON converter)
+**User Creates Portfolio:**
 
-## 🚀 Development Workflow
+1. **Client** → POST `/api/portfolios` with JWT token
+2. **Rate Limiter** → Check request rate limits
+3. **Auth Middleware** → Verify JWT token, extract user
+4. **Router** → Route to portfolio controller
+5. **Controller** → Validate request data (Joi)
+6. **Controller** → Check template exists
+7. **Service** → Validate content against template schema
+8. **Model** → Create portfolio document
+9. **Database** → Save to MongoDB
+10. **Cache** → Invalidate user portfolio cache (Redis)
+11. **Controller** → Return success response
+12. **Client** ← Receive portfolio data
 
-### 1. Setup & Start
-```bash
-# Install dependencies
-npm install
+---
 
-# Configure environment variables
-# Create .env file with required credentials
-
-# Start development server
-npm run dev
-```
-
-### 2. Testing the API
-```bash
-# Test server health
-curl http://localhost:5000/health
-
-# Interactive API testing
-open http://localhost:5000/api-docs
-```
-
-### 3. API Documentation
-- **Interactive UI**: `http://localhost:5000/api-docs`
-- **JSON Spec**: `http://localhost:5000/api-docs.json`  
-- **YAML Spec**: `http://localhost:5000/api-docs.yaml`
-
-### 4. Health Monitoring
-```bash
-# Server health check
-curl http://localhost:5000/health
-
-# Expected response:
-{
-  "success": true,
-  "message": "AUREA Backend is running",
-  "timestamp": "2025-09-26T...",
-  "environment": "development"
-}
-```
-
-## 🎯 Use Cases & Integration
-
-### Pricing Calculator Integration
-Perfect for agencies and freelancers who need to:
-1. **Upload client brief PDFs** 
-2. **Extract project requirements** automatically
-3. **Analyze complexity factors** for accurate pricing
-4. **Generate pricing recommendations** based on extracted data
-
-### Portfolio Management Platform
-Complete portfolio management system for creative professionals:
-- **User Registration & JWT Authentication**
-- **Portfolio Creation with Template System (Echelon)**  
-- **Gmail-Style Custom Subdomains** - Choose your own unique portfolio URL ⭐
-- **Dual Publishing Modes** - Vercel deployment OR local subdomain hosting
-- **Case Study Management with Rich Content Structure**
-- **Professional Image Upload via Cloudinary**
-- **Publishing System with Custom Slugs**
-- **Automatic Folder Management** - Old folders auto-delete when subdomain changes
-- **Ownership Protection** - Cannot take another user's subdomain
-- **View Tracking & Analytics**
-- **Public Portfolio Sharing**
-- **SEO-Friendly URLs**
-
-### Frontend Integration Example
-```javascript
-// React/Next.js User Profile Management
-const getUserProfile = async (token) => {
-  const response = await fetch('/api/users/profile', {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
-  
-  const result = await response.json();
-  return result.data; // User profile with stats
-};
-
-const updateUserProfile = async (token, updates) => {
-  const response = await fetch('/api/users/profile', {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(updates)
-  });
-  
-  const result = await response.json();
-  return result.data; // Updated user data
-};
-
-// Portfolio Management
-const createPortfolio = async (portfolioData) => {
-  const response = await fetch('/api/portfolios', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      title: portfolioData.title,
-      templateId: 'echelon',
-      description: portfolioData.description,
-      content: portfolioData.content
-    })
-  });
-  
-  const result = await response.json();
-  return result.data; // New portfolio with generated ID
-};
-
-// Image Upload Integration
-const uploadPortfolioImage = async (imageFile) => {
-  const formData = new FormData();
-  formData.append('image', imageFile);
-  
-  const response = await fetch('/api/upload/image', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-    body: formData
-  });
-  
-  const result = await response.json();
-  return result.data.imageUrl; // Cloudinary URL for use in portfolio
-};
-```
+## 🧪 Complete API Endpoints (65+ Total)
 
 ## 🧪 Testing
 
-### User CRUD Test Suite
-A comprehensive test script is included to verify all user profile operations:
+### Available Test Scripts
 
 ```bash
-# Run the complete user CRUD test suite
-node test/test-user-profile-crud.js
+# Run all tests
+npm test
+
+# Run specific test suites
+npm run test:integration          # Frontend integration tests
+npm run test:user                 # User management tests
+
+# Run template system tests
+node test/test-template-system.js
+
+# Test portfolio creation flow
+node test/test-publish-flow.js
+
+# Test PDF generation
+node test/test-pdf-generation.js
+
+# Test Vercel deployment
+node test/test-vercel-deployment-improved.js
+
+# Test custom subdomain publishing
+node test/test-custom-subdomain.js
 ```
 
-**Test Coverage (9 Tests):**
-1. ✅ **User Login** - Authenticate with credentials
-2. ✅ **Get Profile** - Retrieve user profile with statistics
-3. ✅ **Update Name** - Change user's display name
-4. ✅ **Update Email** - Change user's email address
-5. ✅ **Change Password** - Update user password with validation
-6. ✅ **Login with New Credentials** - Verify updated credentials work
-7. ✅ **Revert Changes** - Restore original values (cleanup)
-8. ✅ **Delete Account** - Permanently delete user account
-9. ✅ **Re-create Account** - Create new account after deletion
+### Test Coverage
 
-**Bonus Validation Tests:**
-- ❌ Invalid email format detection
-- ❌ Short password rejection
-- ❌ Password change without current password
+The test suite covers:
 
-**Test Output Example:**
-```
-╔════════════════════════════════════════════════════════════╗
-║     USER PROFILE CRUD OPERATIONS TEST SUITE               ║
-║     Testing user: user2@example.com                       ║
-╚════════════════════════════════════════════════════════════╝
+- ✅ **Authentication** - Signup, login, token validation
+- ✅ **User Management** - Profile CRUD operations
+- ✅ **Portfolio System** - Create, read, update, delete portfolios
+- ✅ **Template System** - Template selection, validation, rating
+- ✅ **Case Studies** - Case study creation and HTML generation
+- ✅ **Publishing** - Vercel and subdomain deployment
+- ✅ **PDF Export** - Portfolio and case study PDF generation
+- ✅ **Media Upload** - Image upload to Cloudinary
+- ✅ **AI Processing** - PDF extraction with Gemini AI
 
-✅ Server is running at http://localhost:5000
-✅ Login successful!
-✅ Profile retrieved successfully!
-✅ Name updated successfully!
-✅ Email updated successfully!
-✅ Password changed successfully!
-✅ Login with new credentials successful!
-✅ Changes reverted successfully!
-✅ Validation correctly rejected invalid email!
-✅ Validation correctly rejected short password!
-✅ Account deleted successfully!
-✅ Account re-created successfully!
+### Manual Testing
 
-────────────────────────────────────────────────────────────
-Total: 9/9 tests passed
-🎉 All tests passed!
-```
+**Using Swagger UI:**
+1. Navigate to http://localhost:5000/api-docs
+2. Click "Authorize" button
+3. Enter JWT token: `Bearer YOUR_TOKEN_HERE`
+4. Test any endpoint directly from the browser
 
-## 🐛 Troubleshooting
-
-### Common Issues & Solutions
-
-#### 🔑 Authentication Errors
+**Using cURL:**
 ```bash
-# "bad auth : authentication failed"
-# ✅ Solution: Replace <password> in MONGO_URI with actual password
-MONGO_URI=mongodb+srv://username:REAL_PASSWORD@cluster.mongodb.net/aurea
+# Health check
+curl http://localhost:5000/health
+
+# Register user
+curl -X POST http://localhost:5000/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@example.com","password":"Test123!"}'
+
+# Login
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"Test123!"}'
 ```
 
-#### 🖼️ Image Upload Issues  
-```bash
-# "Invalid image format" or size errors
-# ✅ Solution: Check file type (JPG, JPEG, PNG, WebP) and size limits
-curl -X POST -F "image=@photo.jpg" \
-  -H "Authorization: Bearer <token>" \
-  http://localhost:5000/api/upload/image
-```
+**Using Postman:**
+1. Import the Swagger JSON: `http://localhost:5000/api-docs.json`
+2. Set up environment variables for `BASE_URL` and `JWT_TOKEN`
+3. Run the collection
 
-#### 📁 Portfolio Management Issues
-```bash
-# "Access denied" or ownership errors
-# ✅ Solution: Ensure JWT token is valid and user owns the resource
-# Check token expiration (30 days) and refresh if needed
+---
 
-# "Slug already exists" when publishing
-# ✅ Solution: Use slug check endpoint before publishing
-curl -X GET http://localhost:5000/api/portfolios/slug/my-slug/check
-```
+## 📚 Additional Documentation
 
-#### 🌐 CORS Issues
-```bash
-# Frontend can't connect to backend
-# ✅ Solution: Ensure frontend URL is in allowed origins list
-# Check server.js for CORS configuration
-```
+### Comprehensive Guides
 
-#### 📦 Dependency Issues
-```bash
-# Node.js version warnings
-# ✅ Solution: Use Node.js 18+ recommended
-node --version  # Should be v18+
-```
+- **[Template System Guide](TEMPLATE_SYSTEM_GUIDE.md)** - Complete template management documentation
+- **[Frontend Integration Guide](FRONTEND_INTEGRATION_GUIDE.md)** - React integration patterns
+- **[Integration Success Outcomes](INTEGRATION_SUCCESS_OUTCOMES.md)** - Expected results and KPIs
+- **[PDF Performance Guide](PDF_PERFORMANCE.md)** - PDF generation optimization
+- **[Subdomain Publishing Guide](SUB_PUBLISH_GUIDE.md)** - Gmail-style subdomain setup
 
-### Debug Mode
-```bash
-# Enable detailed logging
-NODE_ENV=development npm run dev
+### API Documentation
 
-# Check logs for:
-# ✅ MongoDB connection success
-# ✅ Swagger UI availability  
-# ✅ Redis connection status (optional)
-# ✅ Cloudinary configuration
-```
+- **Swagger UI**: http://localhost:5000/api-docs
+- **OpenAPI Spec**: `swagger.yaml`
 
-## 🚀 Production Deployment
+### Development Guides
 
-### Environment Setup
-Ensure all required environment variables are properly configured for production:
-- Database connection strings
-- API keys for third-party services (Cloudinary, Redis)
-- JWT secrets and security configurations
-- CORS allowed origins
+- **[Backend Improvements](BACKEND_IMPROVEMENTS_IMPLEMENTED.md)** - Recent enhancements
+- **[Dynamic Template Refactor](DYNAMIC_TEMPLATE_REFACTOR.md)** - Template system architecture
 
-### Build & Start
-```bash
-# Production build check
-npm run build
-
-# Start production server
-npm start
-```
-
-### Health Monitoring
-Monitor these endpoints in production:
-- `GET /health` - Server status and environment information
-- `GET /api-docs` - API documentation availability
-- Database connection logs in console
-- Redis connection status (if enabled)
-
-## 📈 Performance Optimization
-
-- **Redis Caching**: Optional caching for public portfolios (5-10 min TTL)
-- **Database Indexing**: Strategic indexes on userId, slug, isPublished fields
-- **Rate Limiting**: Endpoint-specific limits to prevent abuse
-- **Response Compression**: Gzip compression for all API responses
-- **MongoDB Optimization**: Efficient queries with proper pagination
-- **Graceful Degradation**: Redis optional, system works without caching
-- **Connection Pooling**: Optimized MongoDB connection management
+---
 
 ## 🤝 Contributing
 
+We welcome contributions! Here's how you can help:
+
+### Getting Started
+
 1. **Fork the repository**
-2. **Create feature branch**: `git checkout -b feature/amazing-feature`
-3. **Commit changes**: `git commit -m 'Add amazing feature'`
-4. **Push to branch**: `git push origin feature/amazing-feature`
-5. **Open Pull Request**
+   ```bash
+   git clone https://github.com/your-username/aurea-backend.git
+   ```
 
-### Code Style
-- Use ES6+ features consistently
-- Follow existing file structure
-- Add JSDoc comments for complex functions
-- Update swagger.yaml for new endpoints
-- Test all endpoints before submitting
+2. **Create a feature branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+3. **Make your changes**
+   - Follow the existing code style
+   - Add tests for new features
+   - Update documentation
+
+4. **Commit your changes**
+   ```bash
+   git commit -m "feat: add amazing feature"
+   ```
+
+5. **Push to your fork**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+6. **Create a Pull Request**
+
+### Commit Message Convention
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `docs:` - Documentation changes
+- `style:` - Code style changes (formatting)
+- `refactor:` - Code refactoring
+- `test:` - Adding or updating tests
+- `chore:` - Maintenance tasks
+
+**Examples:**
+```
+feat: add template rating system
+fix: resolve JWT token expiration issue
+docs: update API documentation
+refactor: improve portfolio controller logic
+```
+
+### Code Style Guidelines
+
+- Use ES6+ features
+- Follow ESLint configuration
+- Use async/await for asynchronous code
+- Add comments for complex logic
+- Keep functions small and focused
+- Use meaningful variable names
+
+### Pull Request Guidelines
+
+- Provide clear description of changes
+- Reference related issues
+- Ensure all tests pass
+- Update documentation if needed
+- Add screenshots for UI changes
 
 ---
 
-## 📞 Support & Documentation
+## 📄 License
 
-- **API Documentation**: http://localhost:5000/api-docs  
-- **Custom Subdomain Guide**: See `CUSTOM_SUBDOMAIN_FEATURE.md` for complete details ⭐
-- **Sub-Publish Summary**: See `SUB_PUBLISH_FEATURE_SUMMARY.md` for feature overview
-- **Swagger Migration**: See `SWAGGER_MIGRATION_SUMMARY.md` for API documentation changes
-- **Implementation Summary**: See `IMPLEMENTATION_SUMMARY.md` for complete details
-- **Controller Review**: See `PORTFOLIO_CONTROLLER_REVIEW.md` for endpoint specifications
-- **Issues**: Create GitHub issue with detailed description
+This project is licensed under the **ISC License**.
 
 ---
 
-## 🎯 Quick Reference - Custom Subdomain Feature
+## 👥 Team & Support
 
-### ✅ Valid Subdomain Examples
-```bash
-my-portfolio          # ✅ Perfect
-john-designer         # ✅ Great
-awesome-work-2024     # ✅ Nice
-portfolio123          # ✅ OK
-```
+### Development Team
 
-### ❌ Invalid Subdomain Examples
-```bash
-My-Portfolio          # ❌ Uppercase not allowed
-my_portfolio          # ❌ Underscores not allowed
-ab                    # ❌ Too short (min 3)
-this-is-a-very-long-subdomain-name  # ❌ Too long (max 30)
--my-portfolio         # ❌ Cannot start with hyphen
-my-portfolio-         # ❌ Cannot end with hyphen
-```
+**AUREA Development Team**
+- Backend Architecture & API Design
+- Template System Development
+- Security & Performance Optimization
 
-### 🚀 Quick Commands
-```bash
-# Run custom subdomain tests
-node test/test-custom-subdomain.js
+### Contact & Support
 
-# Start development server
-npm run dev
+- **📧 Email**: support@aurea.com
+- **🐛 Bug Reports**: [GitHub Issues](https://github.com/your-org/aurea-backend/issues)
+- **💬 Discussions**: [GitHub Discussions](https://github.com/your-org/aurea-backend/discussions)
+- **📖 Documentation**: [Full Documentation](https://docs.aurea.com)
 
-# Access API documentation
-open http://localhost:5000/api-docs
+### Reporting Issues
 
-# Test subdomain publishing
-curl -X POST http://localhost:5000/api/sites/sub-publish \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"portfolioId":"xxx","customSubdomain":"my-portfolio"}'
-```
+When reporting issues, please include:
+
+1. **Description** - Clear description of the issue
+2. **Steps to Reproduce** - How to reproduce the issue
+3. **Expected Behavior** - What you expected to happen
+4. **Actual Behavior** - What actually happened
+5. **Environment** - Node version, OS, etc.
+6. **Logs** - Relevant error messages or logs
+7. **Screenshots** - If applicable
 
 ---
 
-**🎉 AUREA Backend - Professional Portfolio Management API**  
-**Version**: 1.0.0 | **Status**: Production Ready | **Last Updated**: October 15, 2025
+## 🙏 Acknowledgments
+
+### Technologies & Libraries
+
+- **Express.js** - Web framework
+- **MongoDB & Mongoose** - Database
+- **JWT** - Authentication
+- **Cloudinary** - Media management
+- **Puppeteer** - PDF generation
+- **Google Gemini AI** - AI processing
+- **Redis** - Caching
+- **Swagger** - API documentation
+
+### Inspiration & Resources
+
+- Portfolio design best practices
+- Modern web architecture patterns
+- RESTful API design principles
+
+---
+
+## 📊 Project Statistics
+
+- **65+ API Endpoints**
+- **5 Database Models**
+- **9 Route Modules**
+- **10+ Middleware Functions**
+- **3+ AI-Powered Features**
+- **100% RESTful Design**
+- **Production Ready**
+
+---
+
+<div align="center">
+
+**Made with ❤️ by the AUREA Team**
+
+[⭐ Star on GitHub](https://github.com/your-org/aurea-backend) • [🐛 Report Bug](https://github.com/your-org/aurea-backend/issues) • [📖 Documentation](https://docs.aurea.com)
+
+</div>
+
+---
+
+## 📝 Change Log
+
+### Version 1.0.0 (October 2025)
+
+**✨ Major Features**
+- Complete authentication and user management system
+- Dynamic template system with schema validation
+- Portfolio CRUD with template support
+- Case study management with smart HTML generation
+- Dual publishing system (Vercel + local subdomain)
+- PDF export with multiple template options
+- AI-powered PDF extraction with Gemini AI
+- Professional image upload with Cloudinary
+
+**🛡️ Security Enhancements**
+- JWT authentication with role-based access
+- Rate limiting on all endpoints
+- Input validation and sanitization
+- Helmet security headers
+- CORS configuration
+- Ownership verification middleware
+
+**⚡ Performance Improvements**
+- Redis caching implementation
+- Database query optimization
+- Response compression
+- Connection pooling
+- Graceful degradation for optional services
+
+**📚 Documentation**
+- Complete Swagger/OpenAPI documentation
+- Comprehensive README with examples
+- Integration guides for frontend
+- Template system documentation
+- Deployment guides
+
+---
+
+<div align="center">
+
+**Made with ❤️ by the AUREA Development Team**
+
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=flat&logo=github)](https://github.com/your-org/aurea-backend)
+[![Documentation](https://img.shields.io/badge/Docs-Swagger-85EA2D?style=flat&logo=swagger)](http://localhost:5000/api-docs)
+[![License](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
+
+**Version 1.0.0** | Production Ready | Last Updated: October 20, 2025

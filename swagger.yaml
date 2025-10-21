@@ -1,82 +1,180 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  title: AUREA Backend API
+  title: AUREA Portfolio Management API
   description: |
-    Comprehensive Portfolio Management Platform API with 25 professional endpoints.
+    # AUREA Backend API
     
-    **Features:**
-    - JWT Authentication System
-    - Complete User Profile Management
-    - Complete Portfolio CRUD Operations
-    - One-Click Vercel Deployment with Smart HTML Generation
-    - Dynamic Responsive HTML from User Data
-    - Case Study Management with Intelligent Transformation
-    - Professional Image Upload (Cloudinary)
-    - Publishing System with Slug Management
-    - View Tracking & Analytics
+    Professional portfolio creation and deployment platform with dynamic templates,
+    intelligent case study management, and one-click publishing.
     
-    **Case Study Smart Transformation (October 2025):**
-    - Automatically detects real vs template/default content
-    - Uses database data when available, professional fallbacks when empty
-    - Generates fully responsive mobile-optimized HTML pages
-    - Auto-marks projects with hasCaseStudy flags for portfolio integration
-    - Comprehensive test suite for verification
+    ## Core Capabilities
     
-    **Total Endpoints: 32**
-    - Authentication: 3 endpoints
-    - User Management: 7 endpoints
-    - Portfolio Management: 8 endpoints
-    - Site Publishing & Deployment: 3 endpoints
-    - Case Study Management: 4 endpoints
-    - Image Upload: 2 endpoints
-    - PDF Export: 5 endpoints
+    - 🔐 **Authentication & Authorization** - JWT-based secure authentication
+    - 👤 **User Management** - Complete profile and subscription management
+    - 📁 **Portfolio System** - Dynamic template-based portfolio creation
+    - 🎨 **Template Engine** - Schema-driven template system with validation
+    - 📝 **Case Studies** - Smart content transformation and management
+    - 🚀 **Publishing** - Local and Vercel deployment with custom subdomains
+    - 🖼️ **Media Management** - Cloudinary integration for image uploads
+    - 📄 **PDF Export** - High-quality PDF generation with Puppeteer
+    - 🤖 **AI Extraction** - Optional AI-powered proposal extraction
+    
+    ## API Standards
+    
+    - RESTful architecture following OpenAPI 3.0.3 specification
+    - JSON request/response format
+    - JWT Bearer token authentication
+    - Comprehensive error responses with standard HTTP status codes
+    - Rate limiting and security middleware
+    - CORS enabled for cross-origin requests
+    
+    ## Base URL
+    
+    **Development**: `http://localhost:5000`  
+    **Production**: `https://api.aurea.com`
+    
+    ## Authentication
+    
+    Most endpoints require authentication using JWT Bearer tokens.
+    Include the token in the Authorization header:
+    
+    ```
+    Authorization: Bearer <your_jwt_token>
+    ```
+    
+    Obtain tokens through the `/api/auth/login` or `/api/auth/signup` endpoints.
+    
   version: 1.0.0
+  termsOfService: https://aurea.com/terms
   contact:
-    name: AUREA Development Team
+    name: AUREA API Support
+    email: api-support@aurea.com
+    url: https://aurea.com/support
   license:
-    name: ISC
+    name: ISC License
+    url: https://opensource.org/licenses/ISC
+  x-logo:
+    url: https://aurea.com/logo.png
+    altText: AUREA Logo
 
 servers:
   - url: http://localhost:5000
-    description: Development server
+    description: Local Development Server
+    variables:
+      port:
+        default: '5000'
+        description: Server port number
   - url: https://api.aurea.com
-    description: Production server
+    description: Production API Server
+  - url: https://staging-api.aurea.com
+    description: Staging API Server (for testing)
 
 tags:
   - name: Health
-    description: Server health check endpoints
+    description: API health and status monitoring
+    externalDocs:
+      description: Learn more about health checks
+      url: https://docs.aurea.com/health
+      
   - name: Authentication
-    description: User registration and authentication (3 endpoints)
+    description: |
+      User authentication and session management
+      
+      **Endpoints**: 4  
+      **Authentication**: Not required (except `/me` endpoints)
+    externalDocs:
+      description: Authentication Guide
+      url: https://docs.aurea.com/auth
+      
   - name: User Management
-    description: User profile and account management (7 endpoints)
+    description: |
+      User profile, account settings, and subscription management
+      
+      **Endpoints**: 14  
+      **Authentication**: Required
+    externalDocs:
+      description: User Management Guide
+      url: https://docs.aurea.com/users
+      
   - name: Portfolios
-    description: Portfolio CRUD operations and publishing system (8 endpoints)
+    description: |
+      Portfolio creation, management, and publishing
+      
+      **Endpoints**: 10  
+      **Authentication**: Required (except public endpoints)
+    externalDocs:
+      description: Portfolio Guide
+      url: https://docs.aurea.com/portfolios
+      
+  - name: Templates
+    description: |
+      Template discovery, validation, and management
+      
+      **Endpoints**: 11  
+      **Authentication**: Mixed (some require admin)
+      
+      Provides schema-driven templates with validation, versioning, and rating system.
+    externalDocs:
+      description: Template System Guide
+      url: https://docs.aurea.com/templates
+      
   - name: Site Publishing
-    description: One-click portfolio publishing to Vercel with HTML generation (3 endpoints)
+    description: |
+      Portfolio publishing and deployment services
+      
+      **Endpoints**: 11  
+      **Authentication**: Required (except public views)
+      
+      Supports local HTML generation and Vercel deployment with custom subdomains.
+    externalDocs:
+      description: Publishing Guide
+      url: https://docs.aurea.com/publishing
+      
   - name: Case Studies
     description: |
-      Case study management linked to portfolios with smart HTML transformation (4 endpoints).
+      Case study creation and management
       
-      **Smart Features:**
-      - Intelligent data detection (real vs template/default values)
-      - Automatic fallbacks for empty content
-      - Responsive mobile-optimized HTML generation
-      - Projects automatically flagged with hasCaseStudy: true
+      **Endpoints**: 6  
+      **Authentication**: Required (except public endpoints)
+      
+      Features intelligent content transformation and responsive HTML generation.
+    externalDocs:
+      description: Case Study Guide
+      url: https://docs.aurea.com/case-studies
+      
   - name: Image Upload
-    description: Upload and delete images via Cloudinary (2 endpoints)
+    description: |
+      Image upload and management via Cloudinary
+      
+      **Endpoints**: 2  
+      **Authentication**: Required
+    externalDocs:
+      description: Media Upload Guide
+      url: https://docs.aurea.com/uploads
+      
   - name: PDF Export
     description: |
-      Export portfolios and case studies to PDF format using Puppeteer (5 endpoints).
-
-      **Features:**
-      - Export portfolio as PDF with preserved styling from templateConvert.js
-      - Export complete portfolio with all case studies in single PDF
-      - Download PDFs with customizable formats (A4, A3, Letter, Legal)
-      - Support for landscape/portrait orientation
-      - Public access for published portfolios
-      - PDF generation preserves exact design from HTML templates
+      PDF generation and export services
+      
+      **Endpoints**: 5  
+      **Authentication**: Optional (public for published portfolios)
+      
+      Supports customizable formats, orientations, and styling preservation.
+    externalDocs:
+      description: PDF Export Guide
+      url: https://docs.aurea.com/pdf-export
+      
   - name: Proposal Extraction
-    description: Legacy AI-powered PDF extraction (optional feature)
+    description: |
+      AI-powered proposal extraction (Optional Feature)
+      
+      **Endpoints**: 3  
+      **Authentication**: Required
+      
+      Uses Google Gemini AI for intelligent PDF content extraction.
+    externalDocs:
+      description: AI Extraction Guide
+      url: https://docs.aurea.com/ai-extraction
 
 components:
   securitySchemes:
@@ -350,6 +448,151 @@ components:
         - userId
         - subdomain
     
+    Template:
+      type: object
+      description: Portfolio template with dynamic schema validation
+      properties:
+        _id:
+          type: string
+          description: Unique identifier
+        templateId:
+          type: string
+          description: Unique template identifier (e.g., 'echelon', 'modern-portfolio')
+        name:
+          type: string
+          description: Display name of the template
+        slug:
+          type: string
+          description: URL-friendly template name
+        description:
+          type: string
+          description: Template description
+        category:
+          type: string
+          description: Template category (e.g., 'modern', 'minimal', 'creative')
+        tags:
+          type: array
+          items:
+            type: string
+          description: Searchable tags
+        schema:
+          type: object
+          description: Template structure definition with sections and fields
+          properties:
+            sections:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  type:
+                    type: string
+                  variant:
+                    type: string
+                  name:
+                    type: string
+                  required:
+                    type: boolean
+                  order:
+                    type: number
+                  fields:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        type:
+                          type: string
+                        label:
+                          type: string
+                        placeholder:
+                          type: string
+                        required:
+                          type: boolean
+                        validation:
+                          type: object
+        caseStudySchema:
+          type: object
+          description: Case study template schema
+        thumbnail:
+          type: string
+          description: Template preview image URL
+        previewImages:
+          type: array
+          items:
+            type: string
+          description: Additional preview images
+        demoUrl:
+          type: string
+          description: Live demo URL
+        version:
+          type: string
+          description: Semantic version (e.g., '1.0.0')
+        versionHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              version:
+                type: string
+              schema:
+                type: object
+              changelog:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+        features:
+          type: array
+          items:
+            type: string
+          description: Template features list
+        isActive:
+          type: boolean
+          default: true
+          description: Whether template is active/visible
+        isDefault:
+          type: boolean
+          default: false
+          description: Whether this is the default template
+        isPremium:
+          type: boolean
+          default: false
+          description: Whether template requires premium subscription
+        usageCount:
+          type: number
+          default: 0
+          description: Number of times template has been used
+        rating:
+          type: object
+          properties:
+            average:
+              type: number
+              minimum: 1
+              maximum: 5
+              description: Average rating (1-5)
+            count:
+              type: number
+              description: Number of ratings
+        createdBy:
+          type: string
+          description: Admin user ID who created the template
+        updatedBy:
+          type: string
+          description: Admin user ID who last updated the template
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - templateId
+        - name
+        - schema
+    
     AuthResponse:
       type: object
       properties:
@@ -401,7 +644,128 @@ components:
               type: integer
               description: Total number of case studies
     
+    # ==================== Common Response Schemas ====================
+    
+    SuccessResponse:
+      type: object
+      description: Standard success response wrapper
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: Indicates successful operation
+        message:
+          type: string
+          example: "Operation completed successfully"
+          description: Human-readable success message
+        data:
+          type: object
+          description: Response payload
+      required:
+        - success
+    
+    ErrorResponse:
+      type: object
+      description: Standard error response wrapper
+      properties:
+        success:
+          type: boolean
+          example: false
+          description: Always false for errors
+        message:
+          type: string
+          example: "An error occurred"
+          description: Human-readable error message
+        error:
+          type: string
+          example: "Detailed error information"
+          description: Technical error details
+        errors:
+          type: array
+          description: Validation errors (if applicable)
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "email"
+              message:
+                type: string
+                example: "Email is required"
+        statusCode:
+          type: integer
+          example: 400
+          description: HTTP status code
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-10-20T10:30:00Z"
+          description: Error timestamp
+      required:
+        - success
+        - message
+    
+    PaginatedResponse:
+      type: object
+      description: Paginated list response
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            type: object
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+              example: 1
+              description: Current page number
+            limit:
+              type: integer
+              example: 10
+              description: Items per page
+            total:
+              type: integer
+              example: 100
+              description: Total number of items
+            totalPages:
+              type: integer
+              example: 10
+              description: Total number of pages
+            hasNextPage:
+              type: boolean
+              example: true
+            hasPrevPage:
+              type: boolean
+              example: false
+      required:
+        - success
+        - data
+        - pagination
+    
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+                  value:
+                    type: string
+    
+    # Legacy Error Schema (deprecated - use ErrorResponse)
     Error:
+      deprecated: true
       type: object
       properties:
         success:
@@ -413,17 +777,151 @@ components:
         error:
           type: string
           description: Detailed error information
+  
+  # ==================== Common Response Objects ====================
+  
+  responses:
+    UnauthorizedError:
+      description: Authentication required or token invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: "Authentication required"
+            error: "No token provided or token is invalid"
+            statusCode: 401
+    
+    ForbiddenError:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: "Access denied"
+            error: "You don't have permission to access this resource"
+            statusCode: 403
+    
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: "Resource not found"
+            error: "The requested resource does not exist"
+            statusCode: 404
+    
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            success: false
+            message: "Validation failed"
+            statusCode: 400
+            errors:
+              - field: "email"
+                message: "Email is required"
+              - field: "password"
+                message: "Password must be at least 6 characters"
+    
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: "Internal server error"
+            error: "An unexpected error occurred"
+            statusCode: 500
+    
+    RateLimitError:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: "Rate limit exceeded"
+            error: "Too many requests from this IP, please try again later"
+            statusCode: 429
+  
+  # ==================== Common Parameters ====================
+  
+  parameters:
+    IdPathParam:
+      name: id
+      in: path
+      required: true
+      description: Resource unique identifier
+      schema:
+        type: string
+        pattern: '^[a-f\d]{24}$'
+        example: "507f1f77bcf86cd799439011"
+    
+    PageQueryParam:
+      name: page
+      in: query
+      description: Page number for pagination
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+        example: 1
+    
+    LimitQueryParam:
+      name: limit
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+        example: 10
+    
+    SortQueryParam:
+      name: sort
+      in: query
+      description: Sort field and order (prefix with - for descending)
+      schema:
+        type: string
+        example: "-createdAt"
+    
+    SearchQueryParam:
+      name: search
+      in: query
+      description: Search query string
+      schema:
+        type: string
+        example: "portfolio"
 
 paths:
   /health:
     get:
-      summary: Health check endpoint
-      description: Check if the server is running
+      summary: API Health Check
+      description: |
+        Returns the health status of the API server.
+        
+        Use this endpoint to verify the server is running and responding to requests.
+        Does not require authentication.
+      operationId: healthCheck
       tags:
         - Health
       responses:
         '200':
-          description: Server is running
+          description: Server is healthy and running
           content:
             application/json:
               schema:
@@ -438,18 +936,52 @@ paths:
                   timestamp:
                     type: string
                     format: date-time
+                    example: "2025-10-20T10:30:00Z"
                   environment:
                     type: string
+                    enum: [development, staging, production]
                     example: "development"
+                  version:
+                    type: string
+                    example: "1.0.0"
+                  uptime:
+                    type: number
+                    description: Server uptime in seconds
+                    example: 3600.5
+                required:
+                  - success
+                  - message
+                  - timestamp
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Service unavailable"
+                error: "Database connection failed"
+                statusCode: 503
 
   /api/auth/signup:
     post:
-      summary: Register a new user
-      description: Create a new user account with email and password
+      summary: Register New User
+      description: |
+        Create a new user account with email and password.
+        
+        **Validation Rules:**
+        - Name: Required, minimum 2 characters
+        - Email: Required, must be valid email format, unique
+        - Password: Required, minimum 6 characters
+        
+        Returns JWT token for immediate authentication after registration.
+      operationId: registerUser
       tags:
         - Authentication
       requestBody:
         required: true
+        description: User registration details
         content:
           application/json:
             schema:
@@ -457,47 +989,107 @@ paths:
               properties:
                 name:
                   type: string
+                  minLength: 2
+                  maxLength: 100
                   example: "John Doe"
+                  description: User's full name
                 email:
                   type: string
                   format: email
                   example: "john@example.com"
+                  description: User's email address (must be unique)
                 password:
                   type: string
-                  minimum: 6
-                  example: "securepass123"
+                  minLength: 6
+                  maxLength: 128
+                  format: password
+                  example: "SecureP@ss123"
+                  description: User's password (min 6 characters)
               required:
                 - name
                 - email
                 - password
+            examples:
+              validRegistration:
+                summary: Valid registration
+                value:
+                  name: "Jane Smith"
+                  email: "jane.smith@example.com"
+                  password: "MySecure123!"
       responses:
         '201':
-          description: User created successfully
+          description: User registered successfully
+          headers:
+            X-RateLimit-Limit:
+              description: Request limit per hour
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              description: Remaining requests
+              schema:
+                type: integer
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: '#/components/schemas/User'
+                          token:
+                            type: string
+                            description: JWT authentication token
+                            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              examples:
+                successfulRegistration:
+                  summary: Successful registration
+                  value:
+                    success: true
+                    message: "User registered successfully"
+                    data:
+                      user:
+                        _id: "507f1f77bcf86cd799439011"
+                        name: "Jane Smith"
+                        email: "jane.smith@example.com"
+                        isPremium: false
+                        createdAt: "2025-10-20T10:30:00Z"
+                      token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         '400':
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ValidationError'
         '409':
-          description: User already exists
+          description: Email already registered
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Email already exists"
+                error: "A user with this email address is already registered"
+                statusCode: 409
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/ServerError'
 
   /api/auth/login:
     post:
-      summary: User login
-      description: Authenticate user and get JWT token
+      summary: User Login
+      description: |
+        Authenticate user with email and password.
+        
+        Returns JWT token valid for 30 days (configurable).
+        Token should be included in subsequent requests as Bearer token in Authorization header.
+      operationId: loginUser
       tags:
         - Authentication
       requestBody:
         required: true
+        description: Login credentials
         content:
           application/json:
             schema:
@@ -507,12 +1099,21 @@ paths:
                   type: string
                   format: email
                   example: "john@example.com"
+                  description: User's registered email
                 password:
                   type: string
-                  example: "password123"
+                  format: password
+                  example: "MySecure123!"
+                  description: User's password
               required:
                 - email
                 - password
+            examples:
+              validLogin:
+                summary: Valid login credentials
+                value:
+                  email: "jane.smith@example.com"
+                  password: "MySecure123!"
       responses:
         '200':
           description: Login successful
@@ -3652,3 +4253,330 @@ paths:
                       library:
                         type: string
                         example: "@google/genai"
+
+  # ==================== TEMPLATE ENDPOINTS ====================
+  /api/templates:
+    get:
+      summary: Get all templates
+      description: Retrieve all available portfolio templates with optional filtering
+      tags:
+        - Templates
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+          description: Filter by template category
+        - in: query
+          name: isPremium
+          schema:
+            type: boolean
+          description: Filter by premium status
+        - in: query
+          name: isActive
+          schema:
+            type: boolean
+          description: Filter by active status
+      responses:
+        '200':
+          description: Templates retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                    example: 5
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Template'
+    post:
+      summary: Create new template (Admin only)
+      description: Create a new portfolio template
+      tags:
+        - Templates
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                templateId:
+                  type: string
+                  example: "modern-portfolio"
+                name:
+                  type: string
+                  example: "Modern Portfolio"
+                description:
+                  type: string
+                category:
+                  type: string
+                schema:
+                  type: object
+                isPremium:
+                  type: boolean
+      responses:
+        '201':
+          description: Template created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Admin access required
+
+  /api/templates/categories:
+    get:
+      summary: Get template categories
+      description: Retrieve all available template categories
+      tags:
+        - Templates
+      responses:
+        '200':
+          description: Categories retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: string
+                    example: ["modern", "minimal", "creative", "professional"]
+
+  /api/templates/default:
+    get:
+      summary: Get default template
+      description: Retrieve the default template for new portfolios
+      tags:
+        - Templates
+      responses:
+        '200':
+          description: Default template retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Template'
+
+  /api/templates/{id}:
+    get:
+      summary: Get template by ID
+      description: Retrieve a specific template by its ID
+      tags:
+        - Templates
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Template ID
+      responses:
+        '200':
+          description: Template retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Template'
+        '404':
+          description: Template not found
+    put:
+      summary: Update template (Admin only)
+      description: Update an existing template
+      tags:
+        - Templates
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Template updated successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Admin access required
+        '404':
+          description: Template not found
+    delete:
+      summary: Deactivate template (Admin only)
+      description: Deactivate a template (soft delete)
+      tags:
+        - Templates
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Template deactivated successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Admin access required
+
+  /api/templates/{id}/schema:
+    get:
+      summary: Get template schema
+      description: Retrieve the schema definition for a specific template
+      tags:
+        - Templates
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Schema retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    description: Template schema definition
+
+  /api/templates/{id}/validate:
+    post:
+      summary: Validate template content
+      description: Validate portfolio content against template schema
+      tags:
+        - Templates
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: object
+                  description: Content to validate
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  valid:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: object
+
+  /api/templates/{id}/rating:
+    post:
+      summary: Add template rating
+      description: Add or update rating for a template
+      tags:
+        - Templates
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  example: 5
+      responses:
+        '200':
+          description: Rating added successfully
+        '401':
+          description: Unauthorized
+
+  /api/templates/{id}/version:
+    post:
+      summary: Create template version (Admin only)
+      description: Create a new version of an existing template
+      tags:
+        - Templates
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: string
+                  example: "2.0.0"
+                schema:
+                  type: object
+                changelog:
+                  type: string
+      responses:
+        '201':
+          description: Version created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Admin access required

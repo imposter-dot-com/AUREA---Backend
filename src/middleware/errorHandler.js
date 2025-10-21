@@ -1,16 +1,23 @@
+import { sanitizeError, sanitizeRequest } from './logSanitizer.js';
+
 // Global error handling middleware
 const errorHandler = (err, req, res, next) => {
-  console.error('Error Stack:', err.stack);
-  console.error('Error Details:', {
-    name: err.name,
-    message: err.message,
-    code: err.code,
+  // Sanitize error and request before logging
+  const sanitizedError = sanitizeError(err);
+  const sanitizedReq = sanitizeRequest(req);
+
+  console.error('❌ Error:', {
+    ...sanitizedError,
     path: req.path,
     method: req.method,
-    body: req.body,
-    params: req.params,
-    query: req.query
+    ip: req.ip,
+    userId: sanitizedReq.userId
   });
+
+  // Only log stack in development
+  if (process.env.NODE_ENV === 'development' && err.stack) {
+    console.error('Stack:', sanitizedError.stack);
+  }
 
   let statusCode = 500;
   let errorResponse = {
