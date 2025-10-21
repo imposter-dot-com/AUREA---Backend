@@ -52,7 +52,8 @@ const DEFAULT_VIEWPORT = {
  */
 const initializeBrowser = async () => {
   try {
-    const browser = await puppeteer.launch({
+    // Production-ready configuration
+    const launchOptions = {
       headless: 'new', // Use new headless mode for better compatibility
       args: [
         '--no-sandbox',
@@ -63,16 +64,59 @@ const initializeBrowser = async () => {
         '--window-size=1920,1080',
         '--start-maximized',
         '--disable-web-security', // Allow loading external resources
-        '--disable-features=IsolateOrigins,site-per-process'
+        '--disable-features=IsolateOrigins,site-per-process',
+        // Additional production stability args
+        // NOTE: --single-process and --no-zygote disable multi-process architecture
+        // which reduces performance. Only enable if Railway/Heroku memory limits require it.
+        // '--single-process', // Use single process (Railway/Heroku compatibility) [DISABLED]
+        // '--no-zygote', // Disable zygote process [DISABLED]
+        '--disable-dev-shm-usage', // Use /tmp instead of /dev/shm
+        '--disable-software-rasterizer' // Disable software rasterizer
       ],
-      defaultViewport: DEFAULT_VIEWPORT
-    });
+      defaultViewport: DEFAULT_VIEWPORT,
+      timeout: 60000 // Increase timeout for slow production environments
+    };
+
+    // Try to use system Chrome in production (if available via nixpacks)
+    if (process.env.NODE_ENV === 'production') {
+      // Try common Chrome paths on Linux servers
+      const possiblePaths = [
+        // '/nix/store/*/bin/chromium', // Glob pattern doesn't work with fs.existsSync - removed
+        '/usr/bin/chromium',
+        '/usr/bin/chromium-browser',
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/google-chrome'
+      ];
+
+      for (const chromePath of possiblePaths) {
+        if (chromePath.includes('*')) {
+          // For nix paths, we'll let Puppeteer find it
+          continue;
+        }
+        try {
+          if (fs.existsSync(chromePath)) {
+            launchOptions.executablePath = chromePath;
+            console.log(`🔍 Using system Chrome: ${chromePath}`);
+            break;
+          }
+        } catch (err) {
+          // Continue to next path
+        }
+      }
+    }
+
+    const browser = await puppeteer.launch(launchOptions);
 
     console.log('✅ Puppeteer browser initialized successfully');
     return browser;
   } catch (error) {
     console.error('Failed to initialize Puppeteer browser:', error);
-    throw new Error('Browser initialization failed');
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      env: process.env.NODE_ENV
+    });
+    throw new Error(`Browser initialization failed: ${error.message}`);
   }
 };
 

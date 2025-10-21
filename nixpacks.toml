@@ -1,0 +1,21 @@
+# Nixpacks configuration for Railway deployment
+# This installs Chromium for Puppeteer PDF generation
+
+[phases.setup]
+# Install Chromium browser for Puppeteer
+nixPkgs = ["nodejs_20", "chromium"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm start"
+
+[variables]
+# Set environment variable for Puppeteer to skip Chromium download
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
+# Tell Puppeteer where to find Chromium (nixpacks installs it here)
+PUPPETEER_EXECUTABLE_PATH = "/nix/store/*-chromium-*/bin/chromium"
