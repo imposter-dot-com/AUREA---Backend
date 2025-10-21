@@ -1,6 +1,10 @@
 import express from 'express';
 import { auth } from '../middleware/auth.js';
 import {
+  loginBruteForceProtection,
+  signupBruteForceProtection
+} from '../middleware/bruteForcePrevention.js';
+import {
   signup,
   login,
   getCurrentUser,
@@ -10,10 +14,12 @@ import {
 const router = express.Router();
 
 // POST /api/auth/signup - Register a new user
-router.post('/signup', signup);
+// Protected against brute force signup attempts
+router.post('/signup', signupBruteForceProtection, signup);
 
 // POST /api/auth/login - Authenticate user and get access token
-router.post('/login', login);
+// Protected against brute force login attempts
+router.post('/login', loginBruteForceProtection, login);
 
 // GET /api/auth/me - Get current authenticated user information
 router.get('/me', auth, getCurrentUser);
