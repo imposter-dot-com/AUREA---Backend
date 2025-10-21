@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { resetBruteForce } from '../middleware/bruteForcePrevention.js';
 
 // Generate JWT token utility function
 const generateToken = (id) => {
@@ -47,6 +48,9 @@ export const signup = async (req, res) => {
 
     // Generate token
     const token = generateToken(user._id);
+
+    // Reset brute force counter on successful signup
+    resetBruteForce(req);
 
     res.status(201).json({
       success: true,
@@ -112,6 +116,9 @@ export const login = async (req, res) => {
 
     // Generate token
     const token = generateToken(user._id);
+
+    // Reset brute force counter on successful login
+    resetBruteForce(req);
 
     res.json({
       success: true,
