@@ -1,4 +1,5 @@
 import { sanitizeRequest, sanitizeResponse } from './logSanitizer.js';
+import logger from '../infrastructure/logging/Logger.js';
 
 export const requestLogger = (req, res, next) => {
   const start = Date.now();
@@ -54,10 +55,10 @@ export const requestLogger = (req, res, next) => {
         timestamp: logData.timestamp,
         ...(logData.userId && { userId: logData.userId })
       };
-      console.warn('⚠️  Suspicious request:', errorLog);
+      logger.warn('Suspicious request', errorLog);
     } else if (process.env.NODE_ENV === 'development') {
       // Only log full details in development (excluding undefined values)
-      console.log('✅ Request:', logData);
+      logger.debug('Request completed', logData);
     }
     // In production, reduce logging to minimize log size
   });

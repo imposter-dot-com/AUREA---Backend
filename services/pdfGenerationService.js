@@ -82,13 +82,16 @@ const initializeBrowser = async () => {
  * @param {String} userId - User ID for ownership validation
  * @returns {Promise<Object>} Complete portfolio data with case studies
  */
-const preparePortfolioData = async (portfolioId, userId) => {
+const preparePortfolioData = async (portfolioId, userId = null) => {
   try {
     // Fetch portfolio
-    const portfolio = await Portfolio.findOne({
-      _id: portfolioId,
-      userId: userId
-    });
+    // If userId is provided, validate ownership; otherwise, just find by ID (public access)
+    const query = { _id: portfolioId };
+    if (userId) {
+      query.userId = userId;
+    }
+
+    const portfolio = await Portfolio.findOne(query);
 
     if (!portfolio) {
       throw new Error('Portfolio not found or access denied');

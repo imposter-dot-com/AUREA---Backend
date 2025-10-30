@@ -5,6 +5,7 @@
  */
 
 import { redisClient } from '../utils/cache.js';
+import logger from '../infrastructure/logging/Logger.js';
 
 /**
  * Storage abstraction for brute force tracking
@@ -16,9 +17,9 @@ class BruteForceStore {
     this.prefix = 'brute:';
 
     if (this.useRedis) {
-      console.log('✅ Brute force protection using Redis store');
+      logger.info('Brute force protection using Redis store');
     } else {
-      console.log('ℹ️  Brute force protection using memory store');
+      logger.info('Brute force protection using memory store');
     }
   }
 
@@ -34,7 +35,7 @@ class BruteForceStore {
         return this.memoryStore.get(key) || null;
       }
     } catch (error) {
-      console.error('Error getting brute force data:', error);
+      logger.error('Error getting brute force data', { error: error.message });
       return null;
     }
   }
@@ -58,7 +59,7 @@ class BruteForceStore {
         }, lifetimeSeconds * 1000);
       }
     } catch (error) {
-      console.error('Error setting brute force data:', error);
+      logger.error('Error setting brute force data', { error: error.message });
     }
   }
 
@@ -73,7 +74,7 @@ class BruteForceStore {
         this.memoryStore.delete(key);
       }
     } catch (error) {
-      console.error('Error resetting brute force data:', error);
+      logger.error('Error resetting brute force data', { error: error.message });
     }
   }
 }
@@ -182,7 +183,7 @@ class BruteForceLimiter {
 
           next();
         } catch (error) {
-          console.error('Brute force middleware error:', error);
+          logger.error('Brute force middleware error', { error: error.message, stack: error.stack });
           // On error, allow request through to prevent blocking legitimate users
           next();
         }

@@ -1,135 +1,166 @@
-import { sanitizeError, sanitizeRequest } from './logSanitizer.js';
+/**
+ * Enhanced Error Handler Middleware
+ * Integrates with custom exception classes and provides consistent error responses
+ */
 
-// Global error handling middleware
+import { sanitizeError, sanitizeRequest } from './logSanitizer.js';
+import { ApplicationError } from '../shared/exceptions/ApplicationError.js';
+import { HTTP_STATUS } from '../shared/constants/httpStatus.js';
+import { ERROR_CODES } from '../shared/constants/errorCodes.js';
+import logger from '../infrastructure/logging/Logger.js';
+
+/**
+ * Global error handling middleware
+ * Handles both custom ApplicationError instances and unexpected errors
+ */
 const errorHandler = (err, req, res, next) => {
   // Sanitize error and request before logging
   const sanitizedError = sanitizeError(err);
   const sanitizedReq = sanitizeRequest(req);
 
-  console.error('❌ Error:', {
-    ...sanitizedError,
+  // Log error with context
+  logger.error('Error occurred', {
+    error: sanitizedError,
     path: req.path,
     method: req.method,
     ip: req.ip,
     userId: sanitizedReq.userId
   });
 
-  // Only log stack in development
+  // Log stack in development
   if (process.env.NODE_ENV === 'development' && err.stack) {
-    console.error('Stack:', sanitizedError.stack);
+    logger.debug('Error stack trace', { stack: sanitizedError.stack });
   }
 
-  let statusCode = 500;
-  let errorResponse = {
-    success: false,
-    error: 'Server Error',
-    code: 'SERVER_ERROR'
-  };
+  // Handle custom ApplicationError instances
+  if (err instanceof ApplicationError) {
+    return res.status(err.statusCode).json(err.toJSON());
+  }
 
-  // Mongoose bad ObjectId
+  // Handle Mongoose CastError (invalid ObjectId)
   if (err.name === 'CastError') {
-    statusCode = 404;
-    errorResponse = {
+    return res.status(HTTP_STATUS.NOT_FOUND).json({
       success: false,
-      error: 'Resource not found',
-      code: 'NOT_FOUND'
-    };
+      message: 'Resource not found',
+      code: ERROR_CODES.NOT_FOUND
+    });
   }
 
-  // Mongoose duplicate key error
+  // Handle Mongoose duplicate key error
   if (err.code === 11000) {
-    statusCode = 400;
-    const field = Object.keys(err.keyPattern)[0];
-    
+    const field = Object.keys(err.keyPattern || {})[0];
+    let message = 'Duplicate field value';
+    let code = ERROR_CODES.CONFLICT;
+
     if (field === 'slug') {
-      errorResponse = {
-        success: false,
-        error: 'This slug is already taken',
-        code: 'SLUG_TAKEN'
-      };
-    } else {
-      errorResponse = {
-        success: false,
-        error: `Duplicate field value: ${field}`,
-        code: 'CONFLICT'
-      };
+      message = 'This slug is already taken';
+      code = ERROR_CODES.SLUG_TAKEN;
+    } else if (field === 'email') {
+      message = 'Email already exists';
+      code = ERROR_CODES.RESOURCE_ALREADY_EXISTS;
+    } else if (field) {
+      message = `${field} already exists`;
     }
+
+    return res.status(HTTP_STATUS.CONFLICT).json({
+      success: false,
+      message,
+      code,
+      details: { field }
+    });
   }
 
-  // Mongoose validation error
+  // Handle Mongoose validation error
   if (err.name === 'ValidationError') {
-    statusCode = 400;
-    const messages = Object.values(err.errors).map(val => val.message);
-    
+    const details = Object.values(err.errors).map(error => ({
+      field: error.path,
+      message: error.message,
+      value: error.value
+    }));
+
+    const message = details.length > 0 ? details[0].message : 'Validation error';
+
     // Check for slug validation specifically
-    const slugError = messages.find(msg => msg.includes('slug') || msg.includes('Slug'));
-    if (slugError) {
-      errorResponse = {
-        success: false,
-        error: slugError,
-        code: 'INVALID_SLUG'
-      };
-    } else {
-      errorResponse = {
-        success: false,
-        error: messages.join(', '),
-        code: 'INVALID_INPUT',
-        details: Object.values(err.errors).map(error => ({
-          field: error.path,
-          message: error.message
-        }))
-      };
-    }
-  }
+    const slugError = details.find(d => d.field === 'slug' || d.message.toLowerCase().includes('slug'));
 
-  // JWT errors
-  if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-    statusCode = 401;
-    errorResponse = {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: 'Invalid or expired token',
-      code: 'UNAUTHORIZED'
-    };
+      message,
+      code: slugError ? ERROR_CODES.INVALID_SLUG : ERROR_CODES.VALIDATION_ERROR,
+      details
+    });
   }
 
-  // Multer errors (file upload)
+  // Handle JWT errors
+  if (err.name === 'JsonWebTokenError') {
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+      success: false,
+      message: 'Invalid token',
+      code: ERROR_CODES.TOKEN_INVALID
+    });
+  }
+
+  if (err.name === 'TokenExpiredError') {
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+      success: false,
+      message: 'Token has expired',
+      code: ERROR_CODES.TOKEN_EXPIRED
+    });
+  }
+
+  // Handle Multer errors (file upload)
   if (err.code === 'LIMIT_FILE_SIZE') {
-    statusCode = 400;
-    errorResponse = {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: 'File too large',
-      code: 'FILE_TOO_LARGE'
-    };
+      message: 'File too large',
+      code: ERROR_CODES.FILE_TOO_LARGE
+    });
   }
 
   if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-    statusCode = 400;
-    errorResponse = {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: 'Invalid file type',
-      code: 'INVALID_FILE_TYPE'
-    };
+      message: 'Invalid file type',
+      code: ERROR_CODES.INVALID_FILE_TYPE
+    });
   }
 
-  // Custom error with code already set
+  // Handle errors with statusCode already set (custom errors from old code)
   if (err.statusCode && err.code) {
-    statusCode = err.statusCode;
-    errorResponse = {
+    return res.status(err.statusCode).json({
       success: false,
-      error: err.message,
+      message: err.message,
       code: err.code
-    };
+    });
   }
 
-  res.status(statusCode).json(errorResponse);
+  // Default error response for unexpected errors
+  const statusCode = err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  const message = process.env.NODE_ENV === 'development'
+    ? err.message
+    : 'An unexpected error occurred';
+
+  return res.status(statusCode).json({
+    success: false,
+    message,
+    code: ERROR_CODES.SERVER_ERROR
+  });
 };
 
-// 404 handler
+/**
+ * 404 handler for undefined routes
+ */
 const notFound = (req, res, next) => {
-  res.status(404).json({
+  logger.warn('Route not found', {
+    method: req.method,
+    path: req.originalUrl,
+    ip: req.ip
+  });
+
+  return res.status(HTTP_STATUS.NOT_FOUND).json({
     success: false,
-    error: `Route not found: ${req.method} ${req.originalUrl}`,
-    code: 'NOT_FOUND'
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+    code: ERROR_CODES.NOT_FOUND
   });
 };
 

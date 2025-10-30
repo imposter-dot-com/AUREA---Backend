@@ -1,45 +1,27 @@
-import Template from '../models/Template.js';
+import templateService from '../core/services/TemplateService.js';
+import responseFormatter from '../shared/utils/responseFormatter.js';
+
+/**
+ * Template Controller - Thin HTTP layer
+ * Handles HTTP requests/responses for template management
+ * All business logic delegated to TemplateService
+ */
 
 /**
  * Get all active templates
  * @route GET /api/templates
  */
-export const getTemplates = async (req, res) => {
+export const getTemplates = async (req, res, next) => {
   try {
-    const { category, isPremium, tags } = req.query;
+    const templates = await templateService.getTemplates(req.query);
 
-    // Build query
-    const query = { isActive: true };
-
-    if (category) {
-      query.category = category;
-    }
-
-    if (isPremium !== undefined) {
-      query.isPremium = isPremium === 'true';
-    }
-
-    if (tags) {
-      const tagArray = tags.split(',').map(tag => tag.trim().toLowerCase());
-      query.tags = { $in: tagArray };
-    }
-
-    const templates = await Template.find(query)
-      .select('-schema -caseStudySchema') // Exclude heavy schema fields for list view
-      .sort({ usageCount: -1, createdAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      message: 'Templates retrieved successfully',
-      data: templates
-    });
+    return responseFormatter.success(
+      res,
+      templates,
+      'Templates retrieved successfully'
+    );
   } catch (error) {
-    console.error('Error fetching templates:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch templates',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
 
@@ -47,41 +29,17 @@ export const getTemplates = async (req, res) => {
  * Get a specific template by ID
  * @route GET /api/templates/:id
  */
-export const getTemplateById = async (req, res) => {
+export const getTemplateById = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const template = await templateService.getTemplateById(req.params.id);
 
-    // Support both MongoDB ObjectId and templateId
-    const query = id.match(/^[0-9a-fA-F]{24}$/)
-      ? { _id: id }
-      : { templateId: id };
-
-    const template = await Template.findOne(query);
-
-    if (!template) {
-      return res.status(404).json({
-        success: false,
-        message: 'Template not found'
-      });
-    }
-
-    // Increment usage count (non-blocking)
-    template.incrementUsage().catch(err =>
-      console.error('Failed to increment template usage:', err)
+    return responseFormatter.success(
+      res,
+      template,
+      'Template retrieved successfully'
     );
-
-    res.status(200).json({
-      success: true,
-      message: 'Template retrieved successfully',
-      data: template
-    });
   } catch (error) {
-    console.error('Error fetching template:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch template',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
 
@@ -89,42 +47,17 @@ export const getTemplateById = async (req, res) => {
  * Get template schema only (for editor)
  * @route GET /api/templates/:id/schema
  */
-export const getTemplateSchema = async (req, res) => {
+export const getTemplateSchema = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const schema = await templateService.getTemplateSchema(req.params.id);
 
-    const query = id.match(/^[0-9a-fA-F]{24}$/)
-      ? { _id: id }
-      : { templateId: id };
-
-    const template = await Template.findOne(query)
-      .select('templateId name schema caseStudySchema version');
-
-    if (!template) {
-      return res.status(404).json({
-        success: false,
-        message: 'Template not found'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Template schema retrieved successfully',
-      data: {
-        templateId: template.templateId,
-        name: template.name,
-        version: template.version,
-        schema: template.schema,
-        caseStudySchema: template.caseStudySchema
-      }
-    });
+    return responseFormatter.success(
+      res,
+      schema,
+      'Template schema retrieved successfully'
+    );
   } catch (error) {
-    console.error('Error fetching template schema:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch template schema',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
 
@@ -132,175 +65,71 @@ export const getTemplateSchema = async (req, res) => {
  * Get template categories
  * @route GET /api/templates/categories
  */
-export const getTemplateCategories = async (req, res) => {
+export const getTemplateCategories = async (req, res, next) => {
   try {
-    const categories = await Template.distinct('category', { isActive: true });
+    const categories = await templateService.getTemplateCategories();
 
-    res.status(200).json({
-      success: true,
-      message: 'Categories retrieved successfully',
-      data: categories
-    });
+    return responseFormatter.success(
+      res,
+      categories,
+      'Categories retrieved successfully'
+    );
   } catch (error) {
-    console.error('Error fetching categories:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch categories',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
 
 /**
- * Create a new template (Admin only)
+ * Create a new template
  * @route POST /api/templates
  */
-export const createTemplate = async (req, res) => {
+export const createTemplate = async (req, res, next) => {
   try {
-    // Check if user is admin
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Only admins can create templates'
-      });
-    }
+    const template = await templateService.createTemplate(req.body);
 
-    const templateData = req.body;
-
-    // Check if templateId already exists
-    const existingTemplate = await Template.findOne({
-      $or: [
-        { templateId: templateData.templateId },
-        { slug: templateData.slug }
-      ]
-    });
-
-    if (existingTemplate) {
-      return res.status(409).json({
-        success: false,
-        message: 'Template with this ID or slug already exists'
-      });
-    }
-
-    const newTemplate = new Template({
-      ...templateData,
-      createdBy: req.user._id.toString()
-    });
-
-    await newTemplate.save();
-
-    res.status(201).json({
-      success: true,
-      message: 'Template created successfully',
-      data: newTemplate
-    });
+    return responseFormatter.created(
+      res,
+      template,
+      'Template created successfully'
+    );
   } catch (error) {
-    console.error('Error creating template:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create template',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
 
 /**
- * Update a template (Admin only)
+ * Update template
  * @route PUT /api/templates/:id
  */
-export const updateTemplate = async (req, res) => {
+export const updateTemplate = async (req, res, next) => {
   try {
-    // Check if user is admin
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Only admins can update templates'
-      });
-    }
+    const updatedTemplate = await templateService.updateTemplate(req.params.id, req.body);
 
-    const { id } = req.params;
-    const updates = req.body;
-
-    // Don't allow changing templateId
-    delete updates.templateId;
-
-    const query = id.match(/^[0-9a-fA-F]{24}$/)
-      ? { _id: id }
-      : { templateId: id };
-
-    const template = await Template.findOneAndUpdate(
-      query,
-      updates,
-      { new: true, runValidators: true }
+    return responseFormatter.success(
+      res,
+      updatedTemplate,
+      'Template updated successfully'
     );
-
-    if (!template) {
-      return res.status(404).json({
-        success: false,
-        message: 'Template not found'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Template updated successfully',
-      data: template
-    });
   } catch (error) {
-    console.error('Error updating template:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update template',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
 
 /**
- * Deactivate a template (Admin only)
+ * Deactivate template
  * @route DELETE /api/templates/:id
  */
-export const deactivateTemplate = async (req, res) => {
+export const deactivateTemplate = async (req, res, next) => {
   try {
-    // Check if user is admin
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Only admins can deactivate templates'
-      });
-    }
+    const template = await templateService.deactivateTemplate(req.params.id);
 
-    const { id } = req.params;
-
-    const query = id.match(/^[0-9a-fA-F]{24}$/)
-      ? { _id: id }
-      : { templateId: id };
-
-    const template = await Template.findOneAndUpdate(
-      query,
-      { isActive: false },
-      { new: true }
+    return responseFormatter.success(
+      res,
+      template,
+      'Template deactivated successfully'
     );
-
-    if (!template) {
-      return res.status(404).json({
-        success: false,
-        message: 'Template not found'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Template deactivated successfully',
-      data: template
-    });
   } catch (error) {
-    console.error('Error deactivating template:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to deactivate template',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
 
@@ -308,148 +137,56 @@ export const deactivateTemplate = async (req, res) => {
  * Get default template
  * @route GET /api/templates/default
  */
-export const getDefaultTemplate = async (req, res) => {
+export const getDefaultTemplate = async (req, res, next) => {
   try {
-    const template = await Template.findDefault();
+    const template = await templateService.getDefaultTemplate();
 
-    if (!template) {
-      // Fallback to first active template
-      const firstTemplate = await Template.findOne({ isActive: true })
-        .sort({ createdAt: 1 });
-
-      if (!firstTemplate) {
-        return res.status(404).json({
-          success: false,
-          message: 'No templates available'
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        message: 'Default template retrieved',
-        data: firstTemplate
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Default template retrieved successfully',
-      data: template
-    });
+    return responseFormatter.success(
+      res,
+      template,
+      'Default template retrieved successfully'
+    );
   } catch (error) {
-    console.error('Error fetching default template:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch default template',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
 
 /**
- * Validate portfolio content against template schema
+ * Validate template content against schema
  * @route POST /api/templates/:id/validate
  */
-export const validateTemplateContent = async (req, res) => {
+export const validateTemplateContent = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { content } = req.body;
+    const validationResult = await templateService.validateTemplateContent(
+      req.params.id,
+      req.body.content
+    );
 
-    if (!content) {
-      return res.status(400).json({
-        success: false,
-        message: 'Content is required for validation'
-      });
-    }
-
-    // Support both MongoDB ObjectId and templateId
-    const query = id.match(/^[0-9a-fA-F]{24}$/)
-      ? { _id: id }
-      : { templateId: id };
-
-    const template = await Template.findOne(query);
-
-    if (!template) {
-      return res.status(404).json({
-        success: false,
-        message: 'Template not found'
-      });
-    }
-
-    // Validate content against template schema
-    const validation = template.validateContent(content);
-
-    return res.status(200).json({
-      success: true,
-      message: validation.valid ? 'Content is valid' : 'Content has validation errors',
-      data: validation
-    });
+    return responseFormatter.success(
+      res,
+      validationResult,
+      'Content validation completed'
+    );
   } catch (error) {
-    console.error('Error validating template content:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Validation failed',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
 
 /**
- * Create new template version (Admin only)
+ * Create template version
  * @route POST /api/templates/:id/version
  */
-export const createTemplateVersion = async (req, res) => {
+export const createTemplateVersion = async (req, res, next) => {
   try {
-    // Check if user is admin
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Only admins can create template versions'
-      });
-    }
+    const template = await templateService.createTemplateVersion(req.params.id, req.body);
 
-    const { id } = req.params;
-    const { schema, changelog } = req.body;
-
-    if (!schema) {
-      return res.status(400).json({
-        success: false,
-        message: 'New schema is required'
-      });
-    }
-
-    const query = id.match(/^[0-9a-fA-F]{24}$/)
-      ? { _id: id }
-      : { templateId: id };
-
-    const template = await Template.findOne(query);
-
-    if (!template) {
-      return res.status(404).json({
-        success: false,
-        message: 'Template not found'
-      });
-    }
-
-    // Create new version
-    await template.createNewVersion(schema, changelog);
-
-    res.status(200).json({
-      success: true,
-      message: 'Template version created successfully',
-      data: {
-        templateId: template.templateId,
-        version: template.version,
-        changelog: changelog || 'Version update'
-      }
-    });
+    return responseFormatter.success(
+      res,
+      template,
+      'Template version created successfully'
+    );
   } catch (error) {
-    console.error('Error creating template version:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create template version',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
 
@@ -457,50 +194,19 @@ export const createTemplateVersion = async (req, res) => {
  * Add rating to template
  * @route POST /api/templates/:id/rating
  */
-export const addTemplateRating = async (req, res) => {
+export const addTemplateRating = async (req, res, next) => {
   try {
-    const { id } = req.params;
     const { rating } = req.body;
+    const userId = req.user?._id || 'anonymous';
 
-    if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({
-        success: false,
-        message: 'Rating must be between 1 and 5'
-      });
-    }
+    const template = await templateService.addTemplateRating(req.params.id, rating, userId);
 
-    const query = id.match(/^[0-9a-fA-F]{24}$/)
-      ? { _id: id }
-      : { templateId: id };
-
-    const template = await Template.findOne(query);
-
-    if (!template) {
-      return res.status(404).json({
-        success: false,
-        message: 'Template not found'
-      });
-    }
-
-    await template.addRating(rating);
-
-    res.status(200).json({
-      success: true,
-      message: 'Rating added successfully',
-      data: {
-        templateId: template.templateId,
-        rating: {
-          average: template.rating.average,
-          count: template.rating.count
-        }
-      }
-    });
+    return responseFormatter.success(
+      res,
+      template,
+      'Rating added successfully'
+    );
   } catch (error) {
-    console.error('Error adding template rating:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to add rating',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
