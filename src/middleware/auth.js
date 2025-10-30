@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
+import config from '../config/index.js';
 import User from '../models/User.js';
+import logger from '../infrastructure/logging/Logger.js';
 
 const auth = async (req, res, next) => {
   try {
@@ -16,7 +18,7 @@ const auth = async (req, res, next) => {
 
     // Verify token
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, config.auth.jwtSecret);
       
       // Get user from token
       const user = await User.findById(decoded.id).select('-password');
@@ -39,7 +41,7 @@ const auth = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.error('Auth middleware error:', error);
+    logger.error('Auth middleware error', { error: error.message, stack: error.stack });
     res.status(500).json({
       success: false,
       error: 'Server error in authentication',
@@ -55,7 +57,7 @@ const optionalAuth = async (req, res, next) => {
 
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, config.auth.jwtSecret);
         const user = await User.findById(decoded.id).select('-password');
         
         if (user) {
@@ -63,13 +65,13 @@ const optionalAuth = async (req, res, next) => {
         }
       } catch (jwtError) {
         // Token invalid, but we continue without user
-        console.log('Invalid token in optional auth:', jwtError.message);
+        logger.debug('Invalid token in optional auth', { error: jwtError.message });
       }
     }
 
     next();
   } catch (error) {
-    console.error('Optional auth middleware error:', error);
+    logger.error('Optional auth middleware error', { error: error.message, stack: error.stack });
     next(); // Continue even if there's an error
   }
 };

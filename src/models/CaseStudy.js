@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import logger from '../infrastructure/logging/Logger.js';
 
 const caseStudySchema = new mongoose.Schema({
   portfolioId: {
@@ -232,7 +233,7 @@ caseStudySchema.post('save', async function(doc) {
       { $addToSet: { caseStudies: doc._id } }
     );
   } catch (error) {
-    console.error('Error updating portfolio with case study:', error);
+    logger.error('Error updating portfolio with case study', { error: error.message, caseStudyId: doc._id, portfolioId: doc.portfolioId });
   }
 });
 
@@ -245,7 +246,7 @@ caseStudySchema.post('remove', async function(doc) {
       { $pull: { caseStudies: doc._id } }
     );
   } catch (error) {
-    console.error('Error removing case study from portfolio:', error);
+    logger.error('Error removing case study from portfolio', { error: error.message, caseStudyId: doc._id, portfolioId: doc.portfolioId });
   }
 });
 

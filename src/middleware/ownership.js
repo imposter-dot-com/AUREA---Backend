@@ -1,5 +1,6 @@
 import Portfolio from '../models/Portfolio.js';
 import CaseStudy from '../models/CaseStudy.js';
+import logger from '../infrastructure/logging/Logger.js';
 
 // Middleware to check portfolio ownership
 const checkPortfolioOwnership = async (req, res, next) => {
@@ -37,7 +38,7 @@ const checkPortfolioOwnership = async (req, res, next) => {
     req.portfolio = portfolio;
     next();
   } catch (error) {
-    console.error('Portfolio ownership check error:', error);
+    logger.error('Portfolio ownership check error', { error: error.message, portfolioId: req.params.id || req.params.portfolioId });
     res.status(500).json({
       success: false,
       error: 'Server error checking portfolio ownership',
@@ -82,7 +83,7 @@ const checkCaseStudyOwnership = async (req, res, next) => {
     req.caseStudy = caseStudy;
     next();
   } catch (error) {
-    console.error('Case study ownership check error:', error);
+    logger.error('Case study ownership check error', { error: error.message, caseStudyId: req.params.id });
     res.status(500).json({
       success: false,
       error: 'Server error checking case study ownership',
@@ -127,7 +128,7 @@ const checkPortfolioOwnershipForCaseStudy = async (req, res, next) => {
     req.portfolio = portfolio;
     next();
   } catch (error) {
-    console.error('Portfolio ownership check error:', error);
+    logger.error('Portfolio ownership check error', { error: error.message, portfolioId: req.params.id || req.params.portfolioId });
     res.status(500).json({
       success: false,
       error: 'Server error checking portfolio ownership',

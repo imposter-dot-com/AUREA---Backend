@@ -1,6 +1,7 @@
 import express from 'express';
 import { auth } from '../middleware/auth.js';
 import { publishLimiter, publicViewLimiter } from '../middleware/rateLimiter.js';
+import logger from '../infrastructure/logging/Logger.js';
 import {
   debugGenerate,
   publishSite,
@@ -13,6 +14,38 @@ import {
 } from '../controllers/siteController.js';
 
 const router = express.Router();
+
+// ==========================================
+// SPECIFIC ROUTES MUST COME BEFORE /:subdomain CATCH-ALL
+// ==========================================
+
+// POST /api/sites/debug-generate - Generate HTML/CSS files for debugging
+router.post('/debug-generate', auth, publishLimiter, debugGenerate);
+
+// POST /api/sites/publish - Publish portfolio to Vercel (with rate limiting)
+router.post('/publish', auth, publishLimiter, publishSite);
+
+// POST /api/sites/sub-publish - Publish portfolio to local subdomain (with rate limiting)
+router.post('/sub-publish', auth, publishLimiter, subPublish);
+
+// DELETE /api/sites/unpublish/:portfolioId - Unpublish a site (soft delete)
+router.delete('/unpublish/:portfolioId', auth, unpublishSite);
+
+// GET /api/sites/status - Get site deployment status
+router.get('/status', getSiteStatus);
+
+// GET /api/sites/config - Get site configuration
+router.get('/config', auth, getSiteConfig);
+
+// PUT /api/sites/config - Update site configuration
+router.put('/config', auth, updateSiteConfig);
+
+// POST /api/sites/analytics/view - Record site view for analytics (with rate limiting)
+router.post('/analytics/view', publicViewLimiter, recordSiteView);
+
+// ==========================================
+// PARAMETERIZED ROUTES
+// ==========================================
 
 // GET /api/sites/:subdomain/raw-html - Get raw HTML content for frontend to serve
 router.get('/:subdomain/raw-html', async (req, res) => {
@@ -55,7 +88,7 @@ router.get('/:subdomain/raw-html', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching raw HTML:', error);
+    logger.error('Error fetching raw HTML', { error: error.message, subdomain: req.params.subdomain });
     res.status(500).json({
       success: false,
       message: 'Error fetching HTML content'
@@ -105,7 +138,7 @@ router.get('/:subdomain/case-study/:projectId/raw-html', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching case study HTML:', error);
+    logger.error('Error fetching case study HTML', { error: error.message, subdomain: req.params.subdomain, projectId: req.params.projectId });
     res.status(500).json({
       success: false,
       message: 'Error fetching case study HTML content'
@@ -162,36 +195,12 @@ router.get('/:subdomain', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching site data:', error);
+    logger.error('Error fetching site data', { error: error.message, subdomain: req.params.subdomain });
     res.status(500).json({
       success: false,
       message: 'Error fetching site data'
     });
   }
 });
-
-// POST /api/sites/debug-generate - Generate HTML/CSS files for debugging
-router.post('/debug-generate', auth, publishLimiter, debugGenerate);
-
-// POST /api/sites/publish - Publish portfolio to Vercel (with rate limiting)
-router.post('/publish', auth, publishLimiter, publishSite);
-
-// POST /api/sites/sub-publish - Publish portfolio to local subdomain (with rate limiting)
-router.post('/sub-publish', auth, publishLimiter, subPublish);
-
-// DELETE /api/sites/unpublish/:portfolioId - Unpublish a site (soft delete)
-router.delete('/unpublish/:portfolioId', auth, unpublishSite);
-
-// GET /api/sites/status - Get site deployment status
-router.get('/status', getSiteStatus);
-
-// GET /api/sites/config - Get site configuration
-router.get('/config', getSiteConfig);
-
-// PUT /api/sites/config - Update site configuration
-router.put('/config', auth, updateSiteConfig);
-
-// POST /api/sites/analytics/view - Record site view for analytics (with rate limiting)
-router.post('/analytics/view', publicViewLimiter, recordSiteView);
 
 export default router;

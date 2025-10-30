@@ -1,4 +1,5 @@
 import Template from '../models/Template.js';
+import logger from '../infrastructure/logging/Logger.js';
 
 /**
  * Validates portfolio data against template schema
@@ -97,7 +98,7 @@ export async function validateAgainstTemplate(customData, templateId) {
       deletedSections
     };
   } catch (error) {
-    console.error('Template validation error:', error);
+    logger.error('Template validation error', { error: error.message, templateId });
     return {
       isValid: false,
       errors: ['Validation error: ' + error.message],

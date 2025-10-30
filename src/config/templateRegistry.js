@@ -12,8 +12,11 @@
  * - pdfSettings: PDF-specific configuration
  */
 
+import { getEnv } from './envValidator.js';
+import logger from '../infrastructure/logging/Logger.js';
+
 // Base frontend URL (configurable via environment)
-const FRONTEND_BASE_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const FRONTEND_BASE_URL = getEnv('FRONTEND_URL', 'http://localhost:5173');
 
 /**
  * Template configurations
@@ -178,12 +181,12 @@ export function getTemplatesByCategory(category) {
  */
 export function registerTemplate(templateConfig) {
   if (!templateConfig.id) {
-    console.error('Template registration failed: id is required');
+    logger.error('Template registration failed: id is required');
     return false;
   }
 
   if (TEMPLATES[templateConfig.id]) {
-    console.warn(`Template ${templateConfig.id} already exists, overwriting...`);
+    logger.warn(`Template ${templateConfig.id} already exists, overwriting...`);
   }
 
   TEMPLATES[templateConfig.id] = {

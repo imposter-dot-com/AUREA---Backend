@@ -16,10 +16,23 @@ window.$RefreshSig$ = () => (type) => type;</script>
     <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png">
     <link rel="manifest" href="/site.webmanifest">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Google Font: Monda -->
+
+    <!-- Performance: Preconnect to critical domains -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
     <link href="https://fonts.googleapis.com/css2?family=Monda:wght@400;700&amp;display=swap" rel="stylesheet">
+
+    <!-- Backend API - Warm up connection for faster uploads -->
+    <link rel="preconnect" href="https://aurea-backend-production-8a87.up.railway.app" crossorigin="">
+    <link rel="dns-prefetch" href="https://aurea-backend-production-8a87.up.railway.app">
+
+    <!-- Cloudinary - Pre-establish connection for instant image uploads -->
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin="">
+    <link rel="preconnect" href="https://api.cloudinary.com" crossorigin="">
+    <link rel="dns-prefetch" href="https://res.cloudinary.com">
+    <link rel="dns-prefetch" href="https://api.cloudinary.com">
+
     <title>AUREA – Creative Toolkit</title>
   <style type="text/css" data-vite-dev-id="/home/long/Desktop/fullstack/Aurea-frontend/src/index.css">/*! tailwindcss v4.1.13 | MIT License | https://tailwindcss.com */
 @layer properties;
@@ -53,6 +66,8 @@ window.$RefreshSig$ = () => (type) => type;</script>
     --color-orange-900: oklch(40.8% 0.123 38.172);
     --color-yellow-50: oklch(98.7% 0.026 102.212);
     --color-yellow-100: oklch(97.3% 0.071 103.193);
+    --color-yellow-200: oklch(94.5% 0.129 101.54);
+    --color-yellow-400: oklch(85.2% 0.199 91.936);
     --color-yellow-600: oklch(68.1% 0.162 75.834);
     --color-yellow-800: oklch(47.6% 0.114 61.907);
     --color-green-50: oklch(98.2% 0.018 155.826);
@@ -63,6 +78,7 @@ window.$RefreshSig$ = () => (type) => type;</script>
     --color-green-600: oklch(62.7% 0.194 149.214);
     --color-green-700: oklch(52.7% 0.154 150.069);
     --color-green-800: oklch(44.8% 0.119 151.328);
+    --color-green-900: oklch(39.3% 0.095 152.535);
     --color-sky-500: oklch(68.5% 0.169 237.323);
     --color-blue-50: oklch(97% 0.014 254.604);
     --color-blue-100: oklch(93.2% 0.032 255.585);
@@ -73,6 +89,7 @@ window.$RefreshSig$ = () => (type) => type;</script>
     --color-blue-600: oklch(54.6% 0.245 262.881);
     --color-blue-700: oklch(48.8% 0.243 264.376);
     --color-blue-800: oklch(42.4% 0.199 265.638);
+    --color-blue-900: oklch(37.9% 0.146 265.522);
     --color-indigo-600: oklch(51.1% 0.262 276.966);
     --color-indigo-700: oklch(45.7% 0.24 277.023);
     --color-purple-50: oklch(97.7% 0.014 308.299);
@@ -152,15 +169,18 @@ window.$RefreshSig$ = () => (type) => type;</script>
     --tracking-wider: 0.05em;
     --leading-tight: 1.25;
     --leading-relaxed: 1.625;
+    --radius-sm: 0.25rem;
     --radius-md: 0.375rem;
     --radius-lg: 0.5rem;
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
     --radius-3xl: 1.5rem;
     --radius-4xl: 2rem;
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
     --ease-out: cubic-bezier(0, 0, 0.2, 1);
     --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
     --animate-spin: spin 1s linear infinite;
+    --animate-ping: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
     --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     --animate-bounce: bounce 1s infinite;
     --blur-sm: 8px;
@@ -330,6 +350,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .collapse {
     visibility: collapse;
   }
+  .invisible {
+    visibility: hidden;
+  }
   .visible {
     visibility: visible;
   }
@@ -360,9 +383,6 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .inset-y-0 {
     inset-block: calc(var(--spacing) * 0);
   }
-  .-top-2 {
-    top: calc(var(--spacing) * -2);
-  }
   .-top-4 {
     top: calc(var(--spacing) * -4);
   }
@@ -392,6 +412,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   }
   .top-6 {
     top: calc(var(--spacing) * 6);
+  }
+  .top-11 {
+    top: calc(var(--spacing) * 11);
   }
   .top-20 {
     top: calc(var(--spacing) * 20);
@@ -663,6 +686,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .mb-8 {
     margin-bottom: calc(var(--spacing) * 8);
   }
+  .mb-10 {
+    margin-bottom: calc(var(--spacing) * 10);
+  }
   .mb-12 {
     margin-bottom: calc(var(--spacing) * 12);
   }
@@ -684,11 +710,20 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .ml-4 {
     margin-left: calc(var(--spacing) * 4);
   }
+  .ml-8 {
+    margin-left: calc(var(--spacing) * 8);
+  }
   .box-border {
     box-sizing: border-box;
   }
   .box-content {
     box-sizing: content-box;
+  }
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
   .\!hidden {
     display: none !important;
@@ -716,6 +751,12 @@ window.$RefreshSig$ = () => (type) => type;</script>
   }
   .inline-grid {
     display: inline-grid;
+  }
+  .table {
+    display: table;
+  }
+  .aspect-\[4\/3\] {
+    aspect-ratio: 4/3;
   }
   .aspect-\[4\/5\] {
     aspect-ratio: 4/5;
@@ -746,6 +787,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   }
   .h-2 {
     height: calc(var(--spacing) * 2);
+  }
+  .h-2\.5 {
+    height: calc(var(--spacing) * 2.5);
   }
   .h-3 {
     height: calc(var(--spacing) * 3);
@@ -837,8 +881,14 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .max-h-60 {
     max-height: calc(var(--spacing) * 60);
   }
+  .max-h-64 {
+    max-height: calc(var(--spacing) * 64);
+  }
   .max-h-\[70vh\] {
     max-height: 70vh;
+  }
+  .max-h-\[80vh\] {
+    max-height: 80vh;
   }
   .max-h-\[90vh\] {
     max-height: 90vh;
@@ -849,11 +899,20 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .max-h-full {
     max-height: 100%;
   }
+  .min-h-\[80px\] {
+    min-height: 80px;
+  }
   .min-h-\[80vh\] {
     min-height: 80vh;
   }
+  .min-h-\[100px\] {
+    min-height: 100px;
+  }
   .min-h-\[120px\] {
     min-height: 120px;
+  }
+  .min-h-\[150px\] {
+    min-height: 150px;
   }
   .min-h-\[200px\] {
     min-height: 200px;
@@ -942,6 +1001,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .w-24 {
     width: calc(var(--spacing) * 24);
   }
+  .w-28 {
+    width: calc(var(--spacing) * 28);
+  }
   .w-32 {
     width: calc(var(--spacing) * 32);
   }
@@ -975,9 +1037,6 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .w-full {
     width: 100%;
   }
-  .w-px {
-    width: 1px;
-  }
   .max-w-2xl {
     max-width: var(--container-2xl);
   }
@@ -999,6 +1058,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .max-w-\[280px\] {
     max-width: 280px;
   }
+  .max-w-\[1400px\] {
+    max-width: 1400px;
+  }
   .max-w-\[1800px\] {
     max-width: 1800px;
   }
@@ -1010,6 +1072,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   }
   .max-w-md {
     max-width: var(--container-md);
+  }
+  .max-w-sm {
+    max-width: var(--container-sm);
   }
   .max-w-xl {
     max-width: var(--container-xl);
@@ -1082,6 +1147,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .animate-bounce {
     animation: var(--animate-bounce);
   }
+  .animate-ping {
+    animation: var(--animate-ping);
+  }
   .animate-pulse {
     animation: var(--animate-pulse);
   }
@@ -1106,8 +1174,17 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .resize-none {
     resize: none;
   }
+  .resize-y {
+    resize: vertical;
+  }
   .appearance-none {
     appearance: none;
+  }
+  .columns-2 {
+    columns: 2;
+  }
+  .break-inside-avoid {
+    break-inside: avoid;
   }
   .auto-rows-\[280px\] {
     grid-auto-rows: 280px;
@@ -1183,9 +1260,6 @@ window.$RefreshSig$ = () => (type) => type;</script>
   }
   .gap-8 {
     gap: calc(var(--spacing) * 8);
-  }
-  .gap-10 {
-    gap: calc(var(--spacing) * 10);
   }
   .gap-12 {
     gap: calc(var(--spacing) * 12);
@@ -1291,6 +1365,13 @@ window.$RefreshSig$ = () => (type) => type;</script>
       margin-inline-end: calc(calc(var(--spacing) * 8) * calc(1 - var(--tw-space-x-reverse)));
     }
   }
+  .space-x-12 {
+    :where(& > :not(:last-child)) {
+      --tw-space-x-reverse: 0;
+      margin-inline-start: calc(calc(var(--spacing) * 12) * var(--tw-space-x-reverse));
+      margin-inline-end: calc(calc(var(--spacing) * 12) * calc(1 - var(--tw-space-x-reverse)));
+    }
+  }
   .self-end {
     align-self: flex-end;
   }
@@ -1344,6 +1425,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .rounded-md {
     border-radius: var(--radius-md);
   }
+  .rounded-sm {
+    border-radius: var(--radius-sm);
+  }
   .rounded-xl {
     border-radius: var(--radius-xl);
   }
@@ -1374,6 +1458,10 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .border-2 {
     border-style: var(--tw-border-style);
     border-width: 2px;
+  }
+  .border-3 {
+    border-style: var(--tw-border-style);
+    border-width: 3px;
   }
   .border-4 {
     border-style: var(--tw-border-style);
@@ -1508,6 +1596,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .border-red-500 {
     border-color: var(--color-red-500);
   }
+  .border-transparent {
+    border-color: transparent;
+  }
   .border-white {
     border-color: var(--color-white);
   }
@@ -1523,11 +1614,32 @@ window.$RefreshSig$ = () => (type) => type;</script>
       border-color: color-mix(in oklab, var(--color-white) 30%, transparent);
     }
   }
+  .border-yellow-200 {
+    border-color: var(--color-yellow-200);
+  }
   .border-t-gray-600 {
     border-top-color: var(--color-gray-600);
   }
+  .border-t-orange-500 {
+    border-top-color: var(--color-orange-500);
+  }
   .border-t-transparent {
     border-top-color: transparent;
+  }
+  .border-t-white {
+    border-top-color: var(--color-white);
+  }
+  .border-r-orange-500 {
+    border-right-color: var(--color-orange-500);
+  }
+  .border-r-white {
+    border-right-color: var(--color-white);
+  }
+  .border-b-transparent {
+    border-bottom-color: transparent;
+  }
+  .border-l-transparent {
+    border-left-color: transparent;
   }
   .bg-\[\#1a1a1a\] {
     background-color: #1a1a1a;
@@ -1565,11 +1677,14 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .bg-\[\#ff9500\] {
     background-color: #ff9500;
   }
-  .bg-\[\#ff9500\]\/30 {
-    background-color: color-mix(in oklab, #ff9500 30%, transparent);
-  }
   .bg-black {
     background-color: var(--color-black);
+  }
+  .bg-black\/20 {
+    background-color: color-mix(in srgb, #000 20%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-black) 20%, transparent);
+    }
   }
   .bg-black\/30 {
     background-color: color-mix(in srgb, #000 30%, transparent);
@@ -1581,6 +1696,24 @@ window.$RefreshSig$ = () => (type) => type;</script>
     background-color: color-mix(in srgb, #000 50%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-black) 50%, transparent);
+    }
+  }
+  .bg-black\/60 {
+    background-color: color-mix(in srgb, #000 60%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-black) 60%, transparent);
+    }
+  }
+  .bg-black\/70 {
+    background-color: color-mix(in srgb, #000 70%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-black) 70%, transparent);
+    }
+  }
+  .bg-black\/90 {
+    background-color: color-mix(in srgb, #000 90%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-black) 90%, transparent);
     }
   }
   .bg-blue-50 {
@@ -1748,6 +1881,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
       background-color: color-mix(in oklab, var(--color-white) 95%, transparent);
     }
   }
+  .bg-yellow-50 {
+    background-color: var(--color-yellow-50);
+  }
   .bg-yellow-100 {
     background-color: var(--color-yellow-100);
   }
@@ -1832,6 +1968,10 @@ window.$RefreshSig$ = () => (type) => type;</script>
     --tw-gradient-from: var(--color-orange-100);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
+  .from-orange-500 {
+    --tw-gradient-from: var(--color-orange-500);
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
   .from-pink-500\/50 {
     --tw-gradient-from: color-mix(in srgb, oklch(65.6% 0.241 354.308) 50%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1854,6 +1994,10 @@ window.$RefreshSig$ = () => (type) => type;</script>
     --tw-gradient-from: var(--color-white);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
+  .from-yellow-400 {
+    --tw-gradient-from: var(--color-yellow-400);
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
   .via-\[\#1a1a1a\] {
     --tw-gradient-via: #1a1a1a;
     --tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position);
@@ -1869,6 +2013,11 @@ window.$RefreshSig$ = () => (type) => type;</script>
     @supports (color: color-mix(in lab, red, red)) {
       --tw-gradient-via: color-mix(in oklab, var(--color-orange-50) 20%, transparent);
     }
+    --tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-via-stops);
+  }
+  .via-orange-400 {
+    --tw-gradient-via: var(--color-orange-400);
     --tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position);
     --tw-gradient-stops: var(--tw-gradient-via-stops);
   }
@@ -1968,6 +2117,10 @@ window.$RefreshSig$ = () => (type) => type;</script>
     --tw-gradient-to: var(--color-orange-100);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
+  .to-orange-500 {
+    --tw-gradient-to: var(--color-orange-500);
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
   .to-pink-500\/10 {
     --tw-gradient-to: color-mix(in srgb, oklch(65.6% 0.241 354.308) 10%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -2014,6 +2167,10 @@ window.$RefreshSig$ = () => (type) => type;</script>
   }
   .to-yellow-100 {
     --tw-gradient-to: var(--color-yellow-100);
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
+  .to-yellow-400 {
+    --tw-gradient-to: var(--color-yellow-400);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
   .bg-cover {
@@ -2136,6 +2293,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .py-24 {
     padding-block: calc(var(--spacing) * 24);
   }
+  .py-32 {
+    padding-block: calc(var(--spacing) * 32);
+  }
   .pt-2 {
     padding-top: calc(var(--spacing) * 2);
   }
@@ -2189,6 +2349,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   }
   .pb-\[50rem\] {
     padding-bottom: 50rem;
+  }
+  .pl-12 {
+    padding-left: calc(var(--spacing) * 12);
   }
   .text-center {
     text-align: center;
@@ -2258,14 +2421,8 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .text-\[10px\] {
     font-size: 10px;
   }
-  .text-\[14px\] {
-    font-size: 14px;
-  }
-  .text-\[18px\] {
-    font-size: 18px;
-  }
-  .text-\[32px\] {
-    font-size: 32px;
+  .text-\[16px\] {
+    font-size: 16px;
   }
   .text-\[clamp\(1\.6rem\,4vw\,3rem\)\] {
     font-size: clamp(1.6rem, 4vw, 3rem);
@@ -2310,10 +2467,6 @@ window.$RefreshSig$ = () => (type) => type;</script>
     --tw-font-weight: var(--font-weight-semibold);
     font-weight: var(--font-weight-semibold);
   }
-  .tracking-\[0\.02em\] {
-    --tw-tracking: 0.02em;
-    letter-spacing: 0.02em;
-  }
   .tracking-tight {
     --tw-tracking: var(--tracking-tight);
     letter-spacing: var(--tracking-tight);
@@ -2341,9 +2494,6 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .text-\[\#1a1a1a\] {
     color: #1a1a1a;
   }
-  .text-\[\#9e9b95\] {
-    color: #9e9b95;
-  }
   .text-\[\#fb8500\] {
     color: #fb8500;
   }
@@ -2358,6 +2508,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   }
   .text-blue-800 {
     color: var(--color-blue-800);
+  }
+  .text-blue-900 {
+    color: var(--color-blue-900);
   }
   .text-gray-300 {
     color: var(--color-gray-300);
@@ -2392,6 +2545,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .text-green-800 {
     color: var(--color-green-800);
   }
+  .text-green-900 {
+    color: var(--color-green-900);
+  }
   .text-neutral-400 {
     color: var(--color-neutral-400);
   }
@@ -2412,6 +2568,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   }
   .text-orange-200 {
     color: var(--color-orange-200);
+  }
+  .text-orange-500 {
+    color: var(--color-orange-500);
   }
   .text-orange-600 {
     color: var(--color-orange-600);
@@ -2482,6 +2641,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
       color: color-mix(in oklab, var(--color-white) 90%, transparent);
     }
   }
+  .text-yellow-400 {
+    color: var(--color-yellow-400);
+  }
   .text-yellow-600 {
     color: var(--color-yellow-600);
   }
@@ -2500,8 +2662,16 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .italic {
     font-style: italic;
   }
+  .tabular-nums {
+    --tw-numeric-spacing: tabular-nums;
+    font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);
+  }
   .underline {
     text-decoration-line: underline;
+  }
+  .antialiased {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   .placeholder-gray-400 {
     &::placeholder {
@@ -2567,6 +2737,10 @@ window.$RefreshSig$ = () => (type) => type;</script>
   }
   .shadow-\[0px_10px_50px_-10px_rgba\(0\,0\,0\,0\.2\)\] {
     --tw-shadow: 0px 10px 50px -10px var(--tw-shadow-color, rgba(0,0,0,0.2));
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  .shadow-inner {
+    --tw-shadow: inset 0 2px 4px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.05));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .shadow-lg {
@@ -2692,6 +2866,10 @@ window.$RefreshSig$ = () => (type) => type;</script>
     --tw-duration: 1000ms;
     transition-duration: 1000ms;
   }
+  .ease-in {
+    --tw-ease: var(--ease-in);
+    transition-timing-function: var(--ease-in);
+  }
   .ease-in-out {
     --tw-ease: var(--ease-in-out);
     transition-timing-function: var(--ease-in-out);
@@ -2790,30 +2968,17 @@ window.$RefreshSig$ = () => (type) => type;</script>
       }
     }
   }
+  .group-hover\:bg-gray-900 {
+    &:is(:where(.group):hover *) {
+      @media (hover: hover) {
+        background-color: var(--color-gray-900);
+      }
+    }
+  }
   .group-hover\:bg-orange-100 {
     &:is(:where(.group):hover *) {
       @media (hover: hover) {
         background-color: var(--color-orange-100);
-      }
-    }
-  }
-  .group-hover\:bg-red-500\/30 {
-    &:is(:where(.group):hover *) {
-      @media (hover: hover) {
-        background-color: color-mix(in srgb, oklch(63.7% 0.237 25.331) 30%, transparent);
-        @supports (color: color-mix(in lab, red, red)) {
-          background-color: color-mix(in oklab, var(--color-red-500) 30%, transparent);
-        }
-      }
-    }
-  }
-  .group-hover\:bg-white\/20 {
-    &:is(:where(.group):hover *) {
-      @media (hover: hover) {
-        background-color: color-mix(in srgb, #fff 20%, transparent);
-        @supports (color: color-mix(in lab, red, red)) {
-          background-color: color-mix(in oklab, var(--color-white) 20%, transparent);
-        }
       }
     }
   }
@@ -2865,13 +3030,6 @@ window.$RefreshSig$ = () => (type) => type;</script>
       }
     }
   }
-  .group-hover\:text-\[\#ff9500\] {
-    &:is(:where(.group):hover *) {
-      @media (hover: hover) {
-        color: #ff9500;
-      }
-    }
-  }
   .group-hover\:text-black {
     &:is(:where(.group):hover *) {
       @media (hover: hover) {
@@ -2893,6 +3051,13 @@ window.$RefreshSig$ = () => (type) => type;</script>
       }
     }
   }
+  .group-hover\:text-orange-500 {
+    &:is(:where(.group):hover *) {
+      @media (hover: hover) {
+        color: var(--color-orange-500);
+      }
+    }
+  }
   .group-hover\:text-red-500 {
     &:is(:where(.group):hover *) {
       @media (hover: hover) {
@@ -2904,16 +3069,6 @@ window.$RefreshSig$ = () => (type) => type;</script>
     &:is(:where(.group):hover *) {
       @media (hover: hover) {
         color: var(--color-white);
-      }
-    }
-  }
-  .group-hover\:text-white\/90 {
-    &:is(:where(.group):hover *) {
-      @media (hover: hover) {
-        color: color-mix(in srgb, #fff 90%, transparent);
-        @supports (color: color-mix(in lab, red, red)) {
-          color: color-mix(in oklab, var(--color-white) 90%, transparent);
-        }
       }
     }
   }
@@ -3119,6 +3274,13 @@ window.$RefreshSig$ = () => (type) => type;</script>
       }
     }
   }
+  .hover\:border-orange-500 {
+    &:hover {
+      @media (hover: hover) {
+        border-color: var(--color-orange-500);
+      }
+    }
+  }
   .hover\:bg-\[\#1a1a1a\] {
     &:hover {
       @media (hover: hover) {
@@ -3280,16 +3442,6 @@ window.$RefreshSig$ = () => (type) => type;</script>
       }
     }
   }
-  .hover\:bg-red-500\/20 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: color-mix(in srgb, oklch(63.7% 0.237 25.331) 20%, transparent);
-        @supports (color: color-mix(in lab, red, red)) {
-          background-color: color-mix(in oklab, var(--color-red-500) 20%, transparent);
-        }
-      }
-    }
-  }
   .hover\:bg-red-600 {
     &:hover {
       @media (hover: hover) {
@@ -3345,13 +3497,6 @@ window.$RefreshSig$ = () => (type) => type;</script>
     &:hover {
       @media (hover: hover) {
         color: #1a1a1a;
-      }
-    }
-  }
-  .hover\:text-\[\#3d3d3d\] {
-    &:hover {
-      @media (hover: hover) {
-        color: #3d3d3d;
       }
     }
   }
@@ -3411,6 +3556,13 @@ window.$RefreshSig$ = () => (type) => type;</script>
       }
     }
   }
+  .hover\:text-gray-300 {
+    &:hover {
+      @media (hover: hover) {
+        color: var(--color-gray-300);
+      }
+    }
+  }
   .hover\:text-gray-600 {
     &:hover {
       @media (hover: hover) {
@@ -3446,6 +3598,20 @@ window.$RefreshSig$ = () => (type) => type;</script>
       }
     }
   }
+  .hover\:text-orange-500 {
+    &:hover {
+      @media (hover: hover) {
+        color: var(--color-orange-500);
+      }
+    }
+  }
+  .hover\:text-orange-600 {
+    &:hover {
+      @media (hover: hover) {
+        color: var(--color-orange-600);
+      }
+    }
+  }
   .hover\:text-orange-700 {
     &:hover {
       @media (hover: hover) {
@@ -3478,6 +3644,13 @@ window.$RefreshSig$ = () => (type) => type;</script>
     &:hover {
       @media (hover: hover) {
         text-decoration-line: underline;
+      }
+    }
+  }
+  .hover\:opacity-70 {
+    &:hover {
+      @media (hover: hover) {
+        opacity: 70%;
       }
     }
   }
@@ -3615,6 +3788,14 @@ window.$RefreshSig$ = () => (type) => type;</script>
       --tw-ring-color: var(--color-orange-500);
     }
   }
+  .focus\:ring-orange-500\/20 {
+    &:focus {
+      --tw-ring-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 20%, transparent);
+      @supports (color: color-mix(in lab, red, red)) {
+        --tw-ring-color: color-mix(in oklab, var(--color-orange-500) 20%, transparent);
+      }
+    }
+  }
   .focus\:ring-red-200 {
     &:focus {
       --tw-ring-color: var(--color-red-200);
@@ -3642,9 +3823,24 @@ window.$RefreshSig$ = () => (type) => type;</script>
       cursor: not-allowed;
     }
   }
+  .disabled\:bg-gray-50 {
+    &:disabled {
+      background-color: var(--color-gray-50);
+    }
+  }
+  .disabled\:text-gray-500 {
+    &:disabled {
+      color: var(--color-gray-500);
+    }
+  }
   .disabled\:opacity-50 {
     &:disabled {
       opacity: 50%;
+    }
+  }
+  .disabled\:opacity-70 {
+    &:disabled {
+      opacity: 70%;
     }
   }
   .max-\[360px\]\:hidden {
@@ -4220,6 +4416,11 @@ window.$RefreshSig$ = () => (type) => type;</script>
       grid-column: span 2 / span 2;
     }
   }
+  .md\:col-span-3 {
+    @media (width >= 48rem) {
+      grid-column: span 3 / span 3;
+    }
+  }
   .md\:mt-6 {
     @media (width >= 48rem) {
       margin-top: calc(var(--spacing) * 6);
@@ -4356,6 +4557,11 @@ window.$RefreshSig$ = () => (type) => type;</script>
       translate: var(--tw-translate-x) var(--tw-translate-y);
     }
   }
+  .md\:columns-3 {
+    @media (width >= 48rem) {
+      columns: 3;
+    }
+  }
   .md\:grid-cols-2 {
     @media (width >= 48rem) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4490,6 +4696,11 @@ window.$RefreshSig$ = () => (type) => type;</script>
   .md\:py-24 {
     @media (width >= 48rem) {
       padding-block: calc(var(--spacing) * 24);
+    }
+  }
+  .md\:py-32 {
+    @media (width >= 48rem) {
+      padding-block: calc(var(--spacing) * 32);
     }
   }
   .md\:text-left {
@@ -4664,6 +4875,11 @@ window.$RefreshSig$ = () => (type) => type;</script>
       translate: var(--tw-translate-x) var(--tw-translate-y);
     }
   }
+  .lg\:columns-4 {
+    @media (width >= 64rem) {
+      columns: 4;
+    }
+  }
   .lg\:grid-cols-2 {
     @media (width >= 64rem) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4704,11 +4920,6 @@ window.$RefreshSig$ = () => (type) => type;</script>
       gap: calc(var(--spacing) * 16);
     }
   }
-  .lg\:p-4 {
-    @media (width >= 64rem) {
-      padding: calc(var(--spacing) * 4);
-    }
-  }
   .lg\:p-6 {
     @media (width >= 64rem) {
       padding: calc(var(--spacing) * 6);
@@ -4719,9 +4930,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
       padding: calc(var(--spacing) * 8);
     }
   }
-  .lg\:px-4 {
+  .lg\:px-5 {
     @media (width >= 64rem) {
-      padding-inline: calc(var(--spacing) * 4);
+      padding-inline: calc(var(--spacing) * 5);
     }
   }
   .lg\:px-8 {
@@ -5227,6 +5438,26 @@ body:not(.template-page) {
   syntax: "*";
   inherits: false;
 }
+@property --tw-ordinal {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-slashed-zero {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-numeric-figure {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-numeric-spacing {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-numeric-fraction {
+  syntax: "*";
+  inherits: false;
+}
 @property --tw-shadow {
   syntax: "*";
   inherits: false;
@@ -5399,6 +5630,12 @@ body:not(.template-page) {
     transform: rotate(360deg);
   }
 }
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
 @keyframes pulse {
   50% {
     opacity: 0.5;
@@ -5443,6 +5680,11 @@ body:not(.template-page) {
       --tw-leading: initial;
       --tw-font-weight: initial;
       --tw-tracking: initial;
+      --tw-ordinal: initial;
+      --tw-slashed-zero: initial;
+      --tw-numeric-figure: initial;
+      --tw-numeric-spacing: initial;
+      --tw-numeric-fraction: initial;
       --tw-shadow: 0 0 #0000;
       --tw-shadow-color: initial;
       --tw-shadow-alpha: 100%;
@@ -5485,9 +5727,14 @@ body:not(.template-page) {
     }
   }
 }
-</style><style id="_goober"> @keyframes go2264125279{from{transform:scale(0) rotate(45deg);opacity:0;}to{transform:scale(1) rotate(45deg);opacity:1;}}@keyframes go3020080000{from{transform:scale(0);opacity:0;}to{transform:scale(1);opacity:1;}}@keyframes go463499852{from{transform:scale(0) rotate(90deg);opacity:0;}to{transform:scale(1) rotate(90deg);opacity:1;}}@keyframes go1268368563{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}@keyframes go1310225428{from{transform:scale(0) rotate(45deg);opacity:0;}to{transform:scale(1) rotate(45deg);opacity:1;}}@keyframes go651618207{0%{height:0;width:0;opacity:0;}40%{height:0;width:6px;opacity:1;}100%{opacity:1;height:10px;}}@keyframes go901347462{from{transform:scale(0.6);opacity:0.4;}to{transform:scale(1);opacity:1;}}.go4109123758{z-index:9999;}.go4109123758 > *{pointer-events:auto;}</style></head>
+</style><style id="_goober"> @keyframes go2264125279{from{transform:scale(0) rotate(45deg);opacity:0;}to{transform:scale(1) rotate(45deg);opacity:1;}}@keyframes go3020080000{from{transform:scale(0);opacity:0;}to{transform:scale(1);opacity:1;}}@keyframes go463499852{from{transform:scale(0) rotate(90deg);opacity:0;}to{transform:scale(1) rotate(90deg);opacity:1;}}@keyframes go1268368563{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}@keyframes go1310225428{from{transform:scale(0) rotate(45deg);opacity:0;}to{transform:scale(1) rotate(45deg);opacity:1;}}@keyframes go651618207{0%{height:0;width:0;opacity:0;}40%{height:0;width:6px;opacity:1;}100%{opacity:1;height:10px;}}@keyframes go901347462{from{transform:scale(0.6);opacity:0.4;}to{transform:scale(1);opacity:1;}}.go4109123758{z-index:9999;}.go4109123758 > *{pointer-events:auto;}</style><style>
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style><script src="https://va.vercel-scripts.com/v1/speed-insights/script.debug.js" defer="" data-sdkn="@vercel/speed-insights/react" data-sdkv="1.2.0"></script><script src="https://va.vercel-scripts.com/v1/script.debug.js" defer="" data-sdkn="@vercel/analytics/react" data-sdkv="1.5.0"></script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-white text-black font-sans"><div style="width: 100%; min-height: 100vh; background-color: rgb(255, 255, 255);"><div style="margin-top: 0px;"><div class=" template-wrapper" style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); line-height: 1.4; min-height: 100vh; position: relative; overflow-x: hidden; width: 100%;"><div style="padding-top: 80px;"><section id="hero" style="min-height: 100vh; background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); padding-top: 0px; padding-bottom: 0px; position: relative; overflow: hidden; display: flex; align-items: center;"><div class="hidden md:block"><div style="position: absolute; top: 60px; left: 80px; width: 180px; height: 180px; pointer-events: none; z-index: 1;"><svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M90 90m-80 0a80 80 0 1 1 160 0a70 70 0 1 1 -140 0a60 60 0 1 1 120 0" stroke="#000000" stroke-width="2" opacity="0.03" fill="none"></path></svg></div><div style="position: absolute; bottom: 60px; right: 80px; width: 200px; height: 200px; pointer-events: none; z-index: 1;"><svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 100m-90 0a90 90 0 1 1 180 0a80 80 0 1 1 -160 0a70 70 0 1 1 140 0" stroke="#FF0000" stroke-width="2" opacity="0.04" fill="none"></path></svg></div></div><div class="hidden lg:block" style="position: absolute; top: 30%; right: 10%; width: 500px; height: 3px; background-color: rgb(255, 0, 0); transform: rotate(-45deg); opacity: 0.12; z-index: 1; pointer-events: none;"></div><div class="hidden lg:block" style="position: absolute; top: 8%; right: 5%; width: 400px; height: 400px; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); gap: 0px; opacity: 0.12; z-index: 1; pointer-events: none;"><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div></div><div class="hidden md:flex" style="position: absolute; left: 80px; top: 20%; bottom: 20%; gap: 60px; opacity: 0.15; z-index: 1; pointer-events: none;"><div style="width: 3px; height: 100%; background-color: rgb(255, 0, 0);"></div><div style="width: 3px; height: 100%; background-color: rgb(255, 0, 0);"></div><div style="width: 3px; height: 100%; background-color: rgb(255, 0, 0);"></div></div><div class="hidden md:flex" style="position: absolute; bottom: 100px; left: 15%; gap: 30px; opacity: 0.08; z-index: 1; pointer-events: none;"><div style="width: 80px; height: 80px; border: 4px solid rgb(0, 0, 0); border-radius: 50%;"></div><div style="width: 120px; height: 120px; border: 4px solid rgb(0, 0, 0); border-radius: 50%;"></div><div style="width: 160px; height: 160px; border: 4px solid rgb(0, 0, 0); border-radius: 50%;"></div></div><div class="swiss-grid " style="max-width: 1200px; margin: 0px auto; padding: 0px clamp(20px, 5vw, 80px); display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(12px, 2vw, 24px); align-items: start;"><div class="grid-col " style="grid-column: 1 / 13;"><div style="position: relative; padding-top: 20vh; padding-bottom: 15vh; z-index: 2;"><div style="position: absolute; top: 10%; right: -5%; font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(200px, 30vw, 400px); font-weight: 900; color: rgba(0, 0, 0, 0.02); line-height: 1; z-index: 0; pointer-events: none; -webkit-text-stroke: 2px rgba(255, 0, 0, 0.05);">01</div><div style="position: relative; overflow: hidden; width: 100%;"><h1 style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(60px, 12vw, 160px); font-weight: 900; line-height: 1.05; color: rgb(0, 0, 0); text-transform: uppercase; letter-spacing: -0.03em; margin: 0px 0px 60px; position: relative; z-index: 2; max-width: 100%; word-break: break-word; overflow-wrap: break-word; hyphens: auto;">hello <div style="position: absolute; top: -40px; right: 5%; width: 300px; height: 200px; border: 3px solid rgb(255, 0, 0); opacity: 0.15; pointer-events: none; z-index: -1;"></div></h1></div></div></div><div class="grid-col " style="grid-column: 8 / 13;"><div style="border-left: 4px solid rgb(255, 0, 0); padding-left: 40px; margin-top: -60px; position: relative;"><div style="position: absolute; left: -60px; top: -20px; font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(40px, 10vw, 120px); font-weight: 900; color: rgba(0, 0, 0, 0.03); line-height: 1; z-index: 0;">01</div><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(10px, 1.2vw, 14px); font-weight: 600; color: rgb(255, 0, 0); margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.15em;">EST. 2025 — DESIGN PORTFOLIO</div><p style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(18px, 2.5vw, 28px); font-weight: 400; line-height: 1.5; color: rgb(0, 0, 0); margin: 0px; max-width: 500px; overflow-wrap: break-word;">Case studies in clarity and form</p><div style="margin-top: 40px; display: inline-grid; grid-template-columns: repeat(4, 30px); grid-template-rows: repeat(2, 30px); gap: 2px; opacity: 0.3;"><div style="border: 1px solid rgb(0, 0, 0);"></div><div style="border: 1px solid rgb(0, 0, 0);"></div><div style="border: 1px solid rgb(0, 0, 0);"></div><div style="border: 1px solid rgb(0, 0, 0);"></div><div style="border: 1px solid rgb(0, 0, 0);"></div><div style="border: 1px solid rgb(0, 0, 0);"></div><div style="border: 1px solid rgb(0, 0, 0);"></div><div style="border: 1px solid rgb(0, 0, 0);"></div></div></div></div><div class="grid-col " style="grid-column: 1 / 13;"><div style="margin-top: 100px; padding-top: 60px; border-top: 1px solid rgb(0, 0, 0); display: flex; justify-content: space-between; align-items: center;"><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(10px, 1vw, 12px); color: rgb(102, 102, 102); text-transform: uppercase; letter-spacing: 0.2em;">SCROLL TO EXPLORE</div><div style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(12px, 1.5vw, 16px); font-weight: 700; color: rgb(0, 0, 0); text-transform: uppercase; letter-spacing: 0.1em;">PORTFOLIO 2025</div></div></div></div></section><section id="about" style="background-color: rgb(0, 0, 0); color: rgb(255, 255, 255); padding-top: 200px; padding-bottom: 200px; position: relative; overflow: hidden;"><div style="position: absolute; top: 10%; left: 8%; width: 350px; height: 350px; display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(7, 1fr); gap: 0px; opacity: 0.08; z-index: 1; pointer-events: none;"><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.03);"></div></div><div style="position: absolute; right: 80px; top: 30%; bottom: 30%; display: flex; gap: 40px; opacity: 0.1; z-index: 1; pointer-events: none;"><div style="width: 2px; height: 100%; background-color: rgb(255, 255, 255);"></div><div style="width: 2px; height: 100%; background-color: rgb(255, 255, 255);"></div></div><div style="position: absolute; bottom: 25%; left: 0px; right: 40%; height: 8px; background-color: rgb(255, 0, 0); opacity: 0.15; z-index: 1; pointer-events: none;"></div><div class="swiss-grid " style="max-width: 1200px; margin: 0px auto; padding: 0px clamp(20px, 5vw, 80px); display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(12px, 2vw, 24px); align-items: start;"><div class="grid-col " style="grid-column: 1 / 13;"><div style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(150px, 20vw, 280px); font-weight: 900; line-height: 0.8; color: rgba(255, 255, 255, 0.08); margin-top: -60px; margin-bottom: 60px; letter-spacing: -0.05em; -webkit-text-stroke: 1px rgba(255, 0, 0, 0.1);">ABOUT</div></div><div class="grid-col " style="grid-column: 1 / 6;"><div style="position: relative;"><div style="aspect-ratio: 3 / 4; background-color: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center; margin-bottom: 30px; position: relative; z-index: 2; overflow: hidden; cursor: default;"><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(14px, 1.5vw, 16px); color: rgba(255, 255, 255, 0.3); text-align: center; text-transform: uppercase; letter-spacing: 0.15em;">PORTRAIT</div></div><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgb(255, 255, 255); text-transform: uppercase; letter-spacing: 0.15em; margin-top: 24px; padding-top: 20px; border-top: 2px solid rgb(255, 0, 0); display: flex; justify-content: space-between; align-items: center;"><span>PORTRAIT</span><span style="color: rgb(255, 0, 0);">2025</span></div></div></div><div class="grid-col " style="grid-column: 1 / 8;"><div style="margin-left: 60px; position: relative; z-index: 2; max-width: 100%; overflow: hidden;"><div style="display: flex; align-items: center; gap: 30px; margin-bottom: 60px;"><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(14px, 1.5vw, 16px); font-weight: 600; color: rgb(255, 0, 0); text-transform: uppercase; letter-spacing: 0.2em; border-left: 4px solid rgb(255, 0, 0); padding-left: 24px;">01 — ABOUT</div><div style="display: inline-grid; grid-template-columns: repeat(3, 20px); grid-template-rows: repeat(2, 20px); gap: 2px; opacity: 0.3;"><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div></div></div><div style="position: relative; width: 100%; overflow: hidden;"><h3 style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(42px, 7vw, 72px); font-weight: 900; line-height: 1.1; color: rgb(255, 255, 255); text-transform: uppercase; letter-spacing: -0.02em; margin: 0px 0px 30px; position: relative; z-index: 2; overflow-wrap: break-word; max-width: 100%;">DESIGNER NAME<div style="position: absolute; top: -30px; left: -30px; right: 20%; height: 3px; background-color: rgb(255, 0, 0); opacity: 0.4; z-index: -1;"></div><div style="position: absolute; bottom: -30px; left: 20%; right: -30px; height: 3px; background-color: rgb(255, 0, 0); opacity: 0.4; z-index: -1;"></div></h3></div><div style="display: inline-block; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(11px, 1.1vw, 13px); font-weight: 700; color: rgb(0, 0, 0); background-color: rgb(255, 0, 0); text-transform: uppercase; letter-spacing: 0.15em; padding: 12px 24px; margin-bottom: 60px; overflow-wrap: break-word; max-width: 100%; line-height: 1.4; transform: skew(-3deg);">CREATIVE DIRECTOR / DESIGNER</div><p style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(18px, 2.5vw, 24px); font-weight: 400; line-height: 1.6; color: rgba(255, 255, 255, 0.85); margin: 0px; max-width: 700px; overflow-wrap: break-word;">I am a designer focused on minimalism, clarity, and modernist design systems. My work emphasizes grid-based layouts, precise typography, and functional design solutions that prioritize clarity and usability above all else.</p><div style="margin-top: 80px; display: flex; align-items: center; gap: 40px;"><div style="width: 150px; height: 3px; background-color: rgb(255, 0, 0); opacity: 0.6;"></div><div style="display: inline-grid; grid-template-columns: repeat(4, 15px); grid-template-rows: repeat(2, 15px); gap: 2px; opacity: 0.4;"><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div></div></div></div></div></div></section><section id="work" style="background-color: rgb(255, 255, 255); padding-top: 200px; padding-bottom: 200px; position: relative; overflow: hidden;"><div style="position: absolute; top: 60px; right: 80px; width: 160px; height: 160px; pointer-events: none; z-index: 1;"><svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M80 80m-70 0a70 70 0 1 1 140 0a60 60 0 1 1 -120 0a50 50 0 1 1 100 0" stroke="#000000" stroke-width="2" opacity="0.025" fill="none"></path></svg></div><div style="position: absolute; bottom: 60px; left: 80px; width: 180px; height: 180px; pointer-events: none; z-index: 1;"><svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M90 90m-80 0a80 80 0 1 1 160 0a70 70 0 1 1 -140 0a60 60 0 1 1 120 0" stroke="#FF0000" stroke-width="2" opacity="0.035" fill="none"></path></svg></div><div style="position: absolute; bottom: 10%; right: 5%; width: 380px; height: 380px; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); gap: 0px; opacity: 0.06; z-index: 1; pointer-events: none;"><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div></div><div class="swiss-grid " style="max-width: 1200px; margin: 0px auto; padding: 0px clamp(20px, 5vw, 80px); display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(12px, 2vw, 24px); align-items: start;"><div class="grid-col " style="grid-column: 1 / 13;"><div style="margin-bottom: 140px; position: relative;"><div style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(150px, 20vw, 300px); font-weight: 900; line-height: 0.8; color: rgba(0, 0, 0, 0.03); text-transform: uppercase; letter-spacing: -0.05em; position: absolute; top: -60px; left: -20px; z-index: 0; white-space: nowrap; -webkit-text-stroke: 1px rgba(255, 0, 0, 0.08);">WORK</div><div style="position: relative; z-index: 2; padding-top: 60px;"><div style="display: flex; align-items: center; gap: 40px;"><div style="width: 80px; height: 80px; background-color: rgb(255, 0, 0); display: flex; align-items: center; justify-content: center; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(24px, 3.5vw, 32px); font-weight: 900; color: rgb(255, 255, 255); transform: rotate(-5deg);">02</div><h2 style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(60px, 10vw, 100px); font-weight: 900; line-height: 0.9; color: rgb(0, 0, 0); text-transform: uppercase; letter-spacing: -0.02em; margin: 0px;">SELECTED WORK</h2></div></div></div></div><div class="grid-col " style="grid-column: 1 / 13;"><div style="position: relative; margin-bottom: 200px; cursor: default; transition: transform 0.3s;"><div style="position: absolute; top: -60px; left: 0px; font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(48px, 12vw, 120px); font-weight: 900; color: rgba(0, 0, 0, 0.03); line-height: 1; z-index: 0;">01</div><div style="position: absolute; top: -30px; right: 0px; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(10px, 1vw, 12px); color: rgb(255, 0, 0); text-transform: uppercase; letter-spacing: 0.15em; z-index: 2;">PROJECT 01</div><div style="display: grid; grid-template-columns: 4fr 8fr; gap: 60px; position: relative; z-index: 1; align-items: center;"><div style="order: 1; position: relative;"><div style="aspect-ratio: 16 / 11; background-color: transparent; display: flex; align-items: center; justify-content: center; cursor: default; overflow: hidden; position: relative;"><img alt="PROJECT TITLE" src="https://res.cloudinary.com/dbacso9ht/image/upload/v1760817705/aurea/aurea/68eba9e318f10d61e0b1ffd0/general/1760817700961-ram_occupy_result.png.webp" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s;"></div></div><div style="order: 2; padding-top: 40px;"><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgb(102, 102, 102); margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em;">2025 — Category</div><h3 style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(36px, 6vw, 64px); font-weight: 900; text-transform: uppercase; letter-spacing: -0.01em; line-height: 0.95; color: rgb(0, 0, 0); margin: 0px 0px 40px; position: relative; overflow-wrap: break-word; hyphens: auto;">PROJECT TITLE<div style="width: 80px; height: 4px; background-color: rgb(255, 0, 0); margin-top: 16px;"></div></h3><p style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(16px, 1.8vw, 18px); font-weight: 400; line-height: 1.5; color: rgb(0, 0, 0); margin: 0px 0px 24px; max-width: 400px;">Brief description of your project and what it accomplishes.</p><button style="display: inline-flex; align-items: center; gap: 12px; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); font-weight: 700; color: rgb(255, 255, 255); background-color: rgb(255, 0, 0); border: 2px solid rgb(255, 0, 0); padding: 14px 28px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em; transition: 0.3s;">VIEW CASE STUDY →</button></div></div></div></div></div></section><section id="gallery" style="background-color: rgb(0, 0, 0); color: rgb(255, 255, 255); padding-top: 200px; padding-bottom: 200px; position: relative; overflow: hidden;"><div style="position: absolute; top: 8%; left: 3%; width: 320px; height: 320px; display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(6, 1fr); gap: 0px; opacity: 0.04; z-index: 1; pointer-events: none;"><div style="border: 1px solid rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.02);"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.02);"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.02);"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.02);"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.02);"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.02);"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div></div><div class="swiss-grid " style="max-width: 1200px; margin: 0px auto; padding: 0px clamp(20px, 5vw, 80px); display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(12px, 2vw, 24px); align-items: start;"><div class="grid-col " style="grid-column: 1 / 13;"><div style="margin-bottom: 120px; position: relative;"><div style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(180px, 22vw, 320px); font-weight: 900; line-height: 0.8; color: rgba(255, 255, 255, 0.05); text-transform: uppercase; letter-spacing: -0.05em; position: absolute; top: -80px; left: -20px; z-index: 0; -webkit-text-stroke: 1px rgba(255, 0, 0, 0.08);">GALLERY</div><div style="display: flex; align-items: center; gap: 40px; position: relative; z-index: 2; padding-top: 40px;"><div style="width: 60px; height: 60px; border: 4px solid rgb(255, 0, 0); transform: rotate(45deg);"></div><h2 style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(48px, 8vw, 80px); font-weight: 900; line-height: 0.9; color: rgb(255, 255, 255); text-transform: uppercase; letter-spacing: -0.02em; margin: 0px;">VISUAL STUDIES</h2></div></div></div><div class="grid-col " style="grid-column: 1 / 13;"><div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; margin-bottom: 60px;"><div style="position: relative; aspect-ratio: 4 / 5; cursor: pointer; overflow: hidden; background-color: rgba(255, 255, 255, 0.03);"><div style="display: flex; align-items: center; justify-content: center; height: 100%; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgba(255, 255, 255, 0.3); text-transform: uppercase;">IMAGE</div><div style="position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background-color: rgb(255, 0, 0); display: flex; align-items: center; justify-content: center; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(16px, 2vw, 20px); font-weight: 900; color: rgb(0, 0, 0); z-index: 2; transform: rotate(-8deg); box-shadow: rgba(255, 0, 0, 0.3) 0px 4px 12px;">01</div></div><div style="position: relative; aspect-ratio: 16 / 11; cursor: pointer; overflow: hidden; background-color: rgba(255, 255, 255, 0.03);"><div style="display: flex; align-items: center; justify-content: center; height: 100%; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgba(255, 255, 255, 0.3); text-transform: uppercase;">IMAGE</div><div style="position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background-color: rgb(255, 0, 0); display: flex; align-items: center; justify-content: center; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(16px, 2vw, 20px); font-weight: 900; color: rgb(0, 0, 0); z-index: 2; transform: rotate(-8deg); box-shadow: rgba(255, 0, 0, 0.3) 0px 4px 12px;">02</div></div><div style="position: relative; aspect-ratio: 16 / 11; cursor: pointer; overflow: hidden; background-color: rgba(255, 255, 255, 0.03);"><div style="display: flex; align-items: center; justify-content: center; height: 100%; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgba(255, 255, 255, 0.3); text-transform: uppercase;">IMAGE</div><div style="position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background-color: rgb(255, 0, 0); display: flex; align-items: center; justify-content: center; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(16px, 2vw, 20px); font-weight: 900; color: rgb(0, 0, 0); z-index: 2; transform: rotate(-8deg); box-shadow: rgba(255, 0, 0, 0.3) 0px 4px 12px;">03</div></div><div style="position: relative; aspect-ratio: 4 / 5; cursor: pointer; overflow: hidden; background-color: rgba(255, 255, 255, 0.03);"><div style="display: flex; align-items: center; justify-content: center; height: 100%; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgba(255, 255, 255, 0.3); text-transform: uppercase;">IMAGE</div><div style="position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background-color: rgb(255, 0, 0); display: flex; align-items: center; justify-content: center; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(16px, 2vw, 20px); font-weight: 900; color: rgb(0, 0, 0); z-index: 2; transform: rotate(-8deg); box-shadow: rgba(255, 0, 0, 0.3) 0px 4px 12px;">04</div></div><div style="position: relative; aspect-ratio: 16 / 11; cursor: pointer; overflow: hidden; background-color: rgba(255, 255, 255, 0.03);"><div style="display: flex; align-items: center; justify-content: center; height: 100%; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgba(255, 255, 255, 0.3); text-transform: uppercase;">IMAGE</div><div style="position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background-color: rgb(255, 0, 0); display: flex; align-items: center; justify-content: center; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(16px, 2vw, 20px); font-weight: 900; color: rgb(0, 0, 0); z-index: 2; transform: rotate(-8deg); box-shadow: rgba(255, 0, 0, 0.3) 0px 4px 12px;">05</div></div><div style="position: relative; aspect-ratio: 16 / 11; cursor: pointer; overflow: hidden; background-color: rgba(255, 255, 255, 0.03);"><div style="display: flex; align-items: center; justify-content: center; height: 100%; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgba(255, 255, 255, 0.3); text-transform: uppercase;">IMAGE</div><div style="position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background-color: rgb(255, 0, 0); display: flex; align-items: center; justify-content: center; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(16px, 2vw, 20px); font-weight: 900; color: rgb(0, 0, 0); z-index: 2; transform: rotate(-8deg); box-shadow: rgba(255, 0, 0, 0.3) 0px 4px 12px;">06</div></div></div></div></div></section><section id="contact" style="background-color: rgb(0, 0, 0); color: rgb(255, 255, 255); padding-top: 120px; padding-bottom: 120px; position: relative; overflow: hidden;"><div style="position: absolute; top: 60px; left: 80px; width: 100px; height: 100px; pointer-events: none; z-index: 1;"><svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 50m-40 0a40 40 0 1 1 80 0a30 30 0 1 1 -60 0a20 20 0 1 1 40 0" stroke="#FF0000" stroke-width="2" opacity="0.06" fill="none"></path></svg></div><div style="position: absolute; bottom: 40px; left: 0px; right: 0px; display: flex; flex-direction: column; gap: 24px; pointer-events: none; z-index: 1;"><div style="width: 100%; height: 1px; background-color: rgb(255, 0, 0); opacity: 0.08;"></div><div style="width: 100%; height: 1px; background-color: rgb(255, 0, 0); opacity: 0.08;"></div><div style="width: 100%; height: 1px; background-color: rgb(255, 0, 0); opacity: 0.08;"></div><div style="width: 100%; height: 1px; background-color: rgb(255, 0, 0); opacity: 0.08;"></div></div><div style="position: absolute; top: 20%; left: -5%; font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(120px, 18vw, 240px); font-weight: 900; color: rgba(255, 255, 255, 0.02); line-height: 1; z-index: 0; pointer-events: none; text-transform: uppercase; letter-spacing: -0.05em; -webkit-text-stroke: 1px rgba(0, 255, 65, 0.03);">CONTACT</div><div class="swiss-grid " style="max-width: 1200px; margin: 0px auto; padding: 0px clamp(20px, 5vw, 80px); display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(12px, 2vw, 24px); align-items: start;"><div class="grid-col " style="grid-column: 1 / 4;"><div style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(120px, 15vw, 200px); font-weight: 900; line-height: 0.8; color: rgb(26, 26, 26); margin-top: -40px; writing-mode: vertical-rl; text-orientation: mixed;">05</div></div><div class="grid-col " style="grid-column: 1 / 10;"><h2 style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(36px, 6vw, 80px); font-weight: 900; line-height: 0.9; color: rgb(255, 255, 255); text-transform: uppercase; letter-spacing: -0.02em; margin: 0px 0px 30px;">GET IN TOUCH</h2></div><div class="grid-col " style="grid-column: 3 / 7;"><div style="display: inline-block; background-color: rgb(0, 255, 65); color: rgb(0, 0, 0); padding: 12px 24px; margin-bottom: 60px; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; transform: rotate(-2deg);">● Available for new projects</div></div><div class="grid-col " style="grid-column: 1 / 5;"><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(10px, 1vw, 12px); color: rgb(102, 102, 102); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 40px; border-bottom: 2px solid rgb(255, 0, 0); padding-bottom: 12px;">DIRECT CONTACT</div><div style="margin-bottom: 60px;"><div style="margin-bottom: 24px;"><a href="mailto:hello@designer.com" style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(16px, 1.8vw, 18px); font-weight: 400; color: rgb(255, 255, 255); text-decoration: none; border-bottom: 1px solid rgb(102, 102, 102); padding-bottom: 2px; transition: border-bottom-color 0.3s;">hello@designer.com</a></div><div style="margin-bottom: 24px;"><a href="tel:+1 (555) 123-4567" style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(16px, 1.8vw, 18px); font-weight: 400; color: rgb(204, 204, 204); text-decoration: none;">+1 (555) 123-4567</a></div><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgb(102, 102, 102); text-transform: uppercase; letter-spacing: 0.1em;">New York, NY</div></div></div><div class="grid-col " style="grid-column: 2 / 9;"><div style="background-color: transparent; border: 3px solid rgb(255, 0, 0); padding: 50px; transform: rotate(1deg); margin-top: 80px; position: relative;"><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgb(255, 0, 0); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 30px; transform: rotate(-1deg);">START A PROJECT</div><form style="display: flex; flex-direction: column; gap: 24px; transform: rotate(-1deg);"><div style="display: flex; gap: 20px;"><input required="" placeholder="YOUR NAME" type="text" value="" style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(14px, 1.5vw, 16px); color: rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.05); border-top: none; border-right: none; border-bottom: 2px solid rgb(51, 51, 51); border-left: none; border-image: initial; padding: 16px 12px; flex: 1 1 0%; outline: none; text-transform: uppercase; letter-spacing: 0.05em; transition: 0.3s;"><input required="" placeholder="YOUR EMAIL" type="email" value="" style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(14px, 1.5vw, 16px); color: rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.05); border-top: none; border-right: none; border-bottom: 2px solid rgb(51, 51, 51); border-left: none; border-image: initial; padding: 16px 12px; flex: 1 1 0%; outline: none; text-transform: uppercase; letter-spacing: 0.05em; transition: 0.3s;"></div><div style="display: flex; gap: 20px;"><input placeholder="PROJECT TYPE" type="text" value="" style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(14px, 1.5vw, 16px); color: rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.05); border-top: none; border-right: none; border-bottom: 2px solid rgb(51, 51, 51); border-left: none; border-image: initial; padding: 16px 12px; flex: 1 1 0%; outline: none; text-transform: uppercase; letter-spacing: 0.05em; transition: 0.3s;"><select style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(14px, 1.5vw, 16px); color: rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.05); border-top: none; border-right: none; border-bottom: 2px solid rgb(51, 51, 51); border-left: none; border-image: initial; padding: 16px 12px; flex: 1 1 0%; outline: none; text-transform: uppercase; letter-spacing: 0.05em;"><option value="" style="background-color: rgb(0, 0, 0);">BUDGET RANGE</option><option value="5k-10k" style="background-color: rgb(0, 0, 0);">$5K - $10K</option><option value="10k-25k" style="background-color: rgb(0, 0, 0);">$10K - $25K</option><option value="25k-50k" style="background-color: rgb(0, 0, 0);">$25K - $50K</option><option value="50k+" style="background-color: rgb(0, 0, 0);">$50K+</option></select></div><textarea required="" rows="3" placeholder="PROJECT DETAILS..." style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(14px, 1.5vw, 16px); color: rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.05); border: 2px solid rgb(51, 51, 51); padding: 16px; width: 100%; resize: vertical; outline: none; text-transform: uppercase; letter-spacing: 0.05em; transition: 0.3s;"></textarea><div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;"><button type="submit" style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(14px, 1.5vw, 16px); font-weight: 700; color: rgb(0, 0, 0); background-color: rgb(0, 255, 65); border: 3px solid rgb(0, 255, 65); padding: 16px 40px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; transition: 0.3s; transform: skew(-5deg);">SEND BRIEF</button><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgb(0, 255, 65); text-transform: uppercase; letter-spacing: 0.15em; font-weight: 600;">→ 24H RESPONSE</div></div></form></div></div><div class="grid-col " style="grid-column: 1 / 13;"><div style="margin-top: 80px; padding-top: 40px; border-top: 1px solid rgb(51, 51, 51); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;"><div style="display: flex; gap: 40px; flex-wrap: wrap;"></div><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(10px, 1vw, 12px); color: rgb(51, 51, 51); text-transform: uppercase; letter-spacing: 0.1em;">© 2025 — ECHELON</div></div></div></div></section></div><style>
+    <div id="root"><div class="min-h-screen bg-white text-black font-sans"><div style="width: 100%; min-height: 100vh; background-color: rgb(255, 255, 255);"><div style="margin-top: 0px;"><div class=" template-wrapper" style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); line-height: 1.4; min-height: 100vh; position: relative; overflow-x: hidden; width: 100%;"><div style="padding-top: 80px;"><section id="hero" style="min-height: 100vh; background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); padding-top: 0px; padding-bottom: 0px; position: relative; overflow: hidden; display: flex; align-items: center;"><div class="hidden md:block"><div style="position: absolute; top: 60px; left: 80px; width: 180px; height: 180px; pointer-events: none; z-index: 1;"><svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M90 90m-80 0a80 80 0 1 1 160 0a70 70 0 1 1 -140 0a60 60 0 1 1 120 0" stroke="#000000" stroke-width="2" opacity="0.03" fill="none"></path></svg></div><div style="position: absolute; bottom: 60px; right: 80px; width: 200px; height: 200px; pointer-events: none; z-index: 1;"><svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 100m-90 0a90 90 0 1 1 180 0a80 80 0 1 1 -160 0a70 70 0 1 1 140 0" stroke="#FF0000" stroke-width="2" opacity="0.04" fill="none"></path></svg></div></div><div class="hidden lg:block" style="position: absolute; top: 30%; right: 10%; width: 500px; height: 3px; background-color: rgb(255, 0, 0); transform: rotate(-45deg); opacity: 0.12; z-index: 1; pointer-events: none;"></div><div class="hidden lg:block" style="position: absolute; top: 8%; right: 5%; width: 400px; height: 400px; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); gap: 0px; opacity: 0.12; z-index: 1; pointer-events: none;"><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.05);"></div></div><div class="hidden md:flex" style="position: absolute; left: 80px; top: 20%; bottom: 20%; gap: 60px; opacity: 0.15; z-index: 1; pointer-events: none;"><div style="width: 3px; height: 100%; background-color: rgb(255, 0, 0);"></div><div style="width: 3px; height: 100%; background-color: rgb(255, 0, 0);"></div><div style="width: 3px; height: 100%; background-color: rgb(255, 0, 0);"></div></div><div class="hidden md:flex" style="position: absolute; bottom: 100px; left: 15%; gap: 30px; opacity: 0.08; z-index: 1; pointer-events: none;"><div style="width: 80px; height: 80px; border: 4px solid rgb(0, 0, 0); border-radius: 50%;"></div><div style="width: 120px; height: 120px; border: 4px solid rgb(0, 0, 0); border-radius: 50%;"></div><div style="width: 160px; height: 160px; border: 4px solid rgb(0, 0, 0); border-radius: 50%;"></div></div><div class="swiss-grid " style="max-width: 1200px; margin: 0px auto; padding: 0px clamp(20px, 5vw, 80px); display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(12px, 2vw, 24px); align-items: start;"><div class="grid-col " style="grid-column: 1 / 13;"><div style="position: relative; padding-top: 20vh; padding-bottom: 15vh; z-index: 2;"><div style="position: absolute; top: 10%; right: -5%; font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(200px, 30vw, 400px); font-weight: 900; color: rgba(0, 0, 0, 0.02); line-height: 1; z-index: 0; pointer-events: none; -webkit-text-stroke: 2px rgba(255, 0, 0, 0.05);">01</div><div style="position: relative; overflow: hidden; width: 100%;"><h1 style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(60px, 12vw, 160px); font-weight: 900; line-height: 1.05; color: rgb(0, 0, 0); text-transform: uppercase; letter-spacing: -0.03em; margin: 0px 0px 60px; position: relative; z-index: 2; max-width: 100%; word-break: break-word; overflow-wrap: break-word; hyphens: auto;">longlonglong<div style="position: absolute; top: -40px; right: 5%; width: 300px; height: 200px; border: 3px solid rgb(255, 0, 0); opacity: 0.15; pointer-events: none; z-index: -1;"></div></h1></div></div></div><div class="grid-col " style="grid-column: 8 / 13;"><div style="border-left: 4px solid rgb(255, 0, 0); padding-left: 40px; margin-top: -60px; position: relative;"><div style="position: absolute; left: -60px; top: -20px; font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(40px, 10vw, 120px); font-weight: 900; color: rgba(0, 0, 0, 0.03); line-height: 1; z-index: 0;">01</div><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(10px, 1.2vw, 14px); font-weight: 600; color: rgb(255, 0, 0); margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.15em;">EST. 2025 — DESIGN PORTFOLIO</div><p style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(18px, 2.5vw, 28px); font-weight: 400; line-height: 1.5; color: rgb(0, 0, 0); margin: 0px; max-width: 500px; overflow-wrap: break-word;">Case studies in clarity and form</p><div style="margin-top: 40px; display: inline-grid; grid-template-columns: repeat(4, 30px); grid-template-rows: repeat(2, 30px); gap: 2px; opacity: 0.3;"><div style="border: 1px solid rgb(0, 0, 0);"></div><div style="border: 1px solid rgb(0, 0, 0);"></div><div style="border: 1px solid rgb(0, 0, 0);"></div><div style="border: 1px solid rgb(0, 0, 0);"></div><div style="border: 1px solid rgb(0, 0, 0);"></div><div style="border: 1px solid rgb(0, 0, 0);"></div><div style="border: 1px solid rgb(0, 0, 0);"></div><div style="border: 1px solid rgb(0, 0, 0);"></div></div></div></div><div class="grid-col " style="grid-column: 1 / 13;"><div style="margin-top: 100px; padding-top: 60px; border-top: 1px solid rgb(0, 0, 0); display: flex; justify-content: space-between; align-items: center;"><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(10px, 1vw, 12px); color: rgb(102, 102, 102); text-transform: uppercase; letter-spacing: 0.2em;">SCROLL TO EXPLORE</div><div style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(12px, 1.5vw, 16px); font-weight: 700; color: rgb(0, 0, 0); text-transform: uppercase; letter-spacing: 0.1em;">PORTFOLIO 2025</div></div></div></div></section><section id="about" style="background-color: rgb(0, 0, 0); color: rgb(255, 255, 255); padding-top: 200px; padding-bottom: 200px; position: relative; overflow: hidden;"><div style="position: absolute; top: 10%; left: 8%; width: 350px; height: 350px; display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(7, 1fr); gap: 0px; opacity: 0.08; z-index: 1; pointer-events: none;"><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 0, 0); background-color: rgba(255, 0, 0, 0.03);"></div></div><div style="position: absolute; right: 80px; top: 30%; bottom: 30%; display: flex; gap: 40px; opacity: 0.1; z-index: 1; pointer-events: none;"><div style="width: 2px; height: 100%; background-color: rgb(255, 255, 255);"></div><div style="width: 2px; height: 100%; background-color: rgb(255, 255, 255);"></div></div><div style="position: absolute; bottom: 25%; left: 0px; right: 40%; height: 8px; background-color: rgb(255, 0, 0); opacity: 0.15; z-index: 1; pointer-events: none;"></div><div class="swiss-grid " style="max-width: 1200px; margin: 0px auto; padding: 0px clamp(20px, 5vw, 80px); display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(12px, 2vw, 24px); align-items: start;"><div class="grid-col " style="grid-column: 1 / 13;"><div style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(150px, 20vw, 280px); font-weight: 900; line-height: 0.8; color: rgba(255, 255, 255, 0.08); margin-top: -60px; margin-bottom: 60px; letter-spacing: -0.05em; -webkit-text-stroke: 1px rgba(255, 0, 0, 0.1);">ABOUT</div></div><div class="grid-col " style="grid-column: 1 / 6;"><div style="position: relative;"><div style="aspect-ratio: 3 / 4; background-color: transparent; display: flex; align-items: center; justify-content: center; margin-bottom: 30px; position: relative; z-index: 2; overflow: hidden; cursor: default;"><img alt="sjdn" src="https://res.cloudinary.com/dbacso9ht/image/upload/v1761851635/aurea/aurea/68f7a35a4ace6d670c0325c2/general/1761851630123-photo_1_2025-10-24_23-41-31.jpg.webp" style="width: 100%; height: 100%; object-fit: cover;"></div><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgb(255, 255, 255); text-transform: uppercase; letter-spacing: 0.15em; margin-top: 24px; padding-top: 20px; border-top: 2px solid rgb(255, 0, 0); display: flex; justify-content: space-between; align-items: center;"><span>PORTRAIT</span><span style="color: rgb(255, 0, 0);">2025</span></div></div></div><div class="grid-col " style="grid-column: 1 / 8;"><div style="margin-left: 60px; position: relative; z-index: 2; max-width: 100%; overflow: hidden;"><div style="display: flex; align-items: center; gap: 30px; margin-bottom: 60px;"><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(14px, 1.5vw, 16px); font-weight: 600; color: rgb(255, 0, 0); text-transform: uppercase; letter-spacing: 0.2em; border-left: 4px solid rgb(255, 0, 0); padding-left: 24px;">01 — ABOUT</div><div style="display: inline-grid; grid-template-columns: repeat(3, 20px); grid-template-rows: repeat(2, 20px); gap: 2px; opacity: 0.3;"><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div></div></div><div style="position: relative; width: 100%; overflow: hidden;"><h3 style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(42px, 7vw, 72px); font-weight: 900; line-height: 1.1; color: rgb(255, 255, 255); text-transform: uppercase; letter-spacing: -0.02em; margin: 0px 0px 30px; position: relative; z-index: 2; overflow-wrap: break-word; max-width: 100%;">sjdn<div style="position: absolute; top: -30px; left: -30px; right: 20%; height: 3px; background-color: rgb(255, 0, 0); opacity: 0.4; z-index: -1;"></div><div style="position: absolute; bottom: -30px; left: 20%; right: -30px; height: 3px; background-color: rgb(255, 0, 0); opacity: 0.4; z-index: -1;"></div></h3></div><div style="display: inline-block; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(11px, 1.1vw, 13px); font-weight: 700; color: rgb(0, 0, 0); background-color: rgb(255, 0, 0); text-transform: uppercase; letter-spacing: 0.15em; padding: 12px 24px; margin-bottom: 60px; overflow-wrap: break-word; max-width: 100%; line-height: 1.4; transform: skew(-3deg);">CREATIVE DIRECTOR / DESIGNER</div><p style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(18px, 2.5vw, 24px); font-weight: 400; line-height: 1.6; color: rgba(255, 255, 255, 0.85); margin: 0px; max-width: 700px; overflow-wrap: break-word;">I am a designer focused on minimalism, clarity, and modernist design systems. My work emphasizes grid-based layouts, precise typography, and functional design solutions that prioritize clarity and usability above all else.</p><div style="margin-top: 80px; display: flex; align-items: center; gap: 40px;"><div style="width: 150px; height: 3px; background-color: rgb(255, 0, 0); opacity: 0.6;"></div><div style="display: inline-grid; grid-template-columns: repeat(4, 15px); grid-template-rows: repeat(2, 15px); gap: 2px; opacity: 0.4;"><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div><div style="border: 1px solid rgb(255, 255, 255);"></div></div></div></div></div></div></section><section id="work" style="background-color: rgb(255, 255, 255); padding-top: 200px; padding-bottom: 200px; position: relative; overflow: hidden;"><div style="position: absolute; top: 60px; right: 80px; width: 160px; height: 160px; pointer-events: none; z-index: 1;"><svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M80 80m-70 0a70 70 0 1 1 140 0a60 60 0 1 1 -120 0a50 50 0 1 1 100 0" stroke="#000000" stroke-width="2" opacity="0.025" fill="none"></path></svg></div><div style="position: absolute; bottom: 60px; left: 80px; width: 180px; height: 180px; pointer-events: none; z-index: 1;"><svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M90 90m-80 0a80 80 0 1 1 160 0a70 70 0 1 1 -140 0a60 60 0 1 1 120 0" stroke="#FF0000" stroke-width="2" opacity="0.035" fill="none"></path></svg></div><div style="position: absolute; bottom: 10%; right: 5%; width: 380px; height: 380px; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); gap: 0px; opacity: 0.06; z-index: 1; pointer-events: none;"><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: transparent;"></div><div style="border: 1px solid rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.03);"></div></div><div class="swiss-grid " style="max-width: 1200px; margin: 0px auto; padding: 0px clamp(20px, 5vw, 80px); display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(12px, 2vw, 24px); align-items: start;"><div class="grid-col " style="grid-column: 1 / 13;"><div style="margin-bottom: 140px; position: relative;"><div style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(150px, 20vw, 300px); font-weight: 900; line-height: 0.8; color: rgba(0, 0, 0, 0.03); text-transform: uppercase; letter-spacing: -0.05em; position: absolute; top: -60px; left: -20px; z-index: 0; white-space: nowrap; -webkit-text-stroke: 1px rgba(255, 0, 0, 0.08);">WORK</div><div style="position: relative; z-index: 2; padding-top: 60px;"><div style="display: flex; align-items: center; gap: 40px;"><div style="width: 80px; height: 80px; background-color: rgb(255, 0, 0); display: flex; align-items: center; justify-content: center; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(24px, 3.5vw, 32px); font-weight: 900; color: rgb(255, 255, 255); transform: rotate(-5deg);">02</div><h2 style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(60px, 10vw, 100px); font-weight: 900; line-height: 0.9; color: rgb(0, 0, 0); text-transform: uppercase; letter-spacing: -0.02em; margin: 0px;">SELECTED WORK</h2></div></div></div></div><div class="grid-col " style="grid-column: 1 / 13;"><div style="position: relative; margin-bottom: 200px; cursor: default; transition: transform 0.3s;"><div style="position: absolute; top: -60px; left: 0px; font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(48px, 12vw, 120px); font-weight: 900; color: rgba(0, 0, 0, 0.03); line-height: 1; z-index: 0;">01</div><div style="position: absolute; top: -30px; right: 0px; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(10px, 1vw, 12px); color: rgb(255, 0, 0); text-transform: uppercase; letter-spacing: 0.15em; z-index: 2;">PROJECT 01</div><div style="display: grid; grid-template-columns: 4fr 8fr; gap: 60px; position: relative; z-index: 1; align-items: center;"><div style="order: 1; position: relative;"><div style="aspect-ratio: 16 / 11; background-color: rgba(0, 0, 0, 0.03); display: flex; align-items: center; justify-content: center; cursor: default; overflow: hidden; position: relative;"><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgb(102, 102, 102); text-align: center; text-transform: uppercase;">PROJECT IMAGE</div></div></div><div style="order: 2; padding-top: 40px;"><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgb(102, 102, 102); margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em;">2025 — Category</div><h3 style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(36px, 6vw, 64px); font-weight: 900; text-transform: uppercase; letter-spacing: -0.01em; line-height: 0.95; color: rgb(0, 0, 0); margin: 0px 0px 40px; position: relative; overflow-wrap: break-word; hyphens: auto;">PROJECT TITLE<div style="width: 80px; height: 4px; background-color: rgb(255, 0, 0); margin-top: 16px;"></div></h3><p style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(16px, 1.8vw, 18px); font-weight: 400; line-height: 1.5; color: rgb(0, 0, 0); margin: 0px 0px 24px; max-width: 400px;">Brief description of your project and what it accomplishes.</p><button style="display: inline-flex; align-items: center; gap: 12px; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); font-weight: 700; color: rgb(255, 255, 255); background-color: rgb(255, 0, 0); border: 2px solid rgb(255, 0, 0); padding: 14px 28px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em; transition: 0.3s;">VIEW CASE STUDY →</button></div></div></div></div></div></section><section id="gallery" style="background-color: rgb(0, 0, 0); color: rgb(255, 255, 255); padding-top: 200px; padding-bottom: 200px; position: relative; overflow: hidden;"><div style="position: absolute; top: 8%; left: 3%; width: 320px; height: 320px; display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(6, 1fr); gap: 0px; opacity: 0.04; z-index: 1; pointer-events: none;"><div style="border: 1px solid rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.02);"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.02);"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.02);"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.02);"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.02);"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.02);"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div><div style="border: 1px solid rgb(255, 255, 255); background-color: transparent;"></div></div><div class="swiss-grid " style="max-width: 1200px; margin: 0px auto; padding: 0px clamp(20px, 5vw, 80px); display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(12px, 2vw, 24px); align-items: start;"><div class="grid-col " style="grid-column: 1 / 13;"><div style="margin-bottom: 120px; position: relative;"><div style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(180px, 22vw, 320px); font-weight: 900; line-height: 0.8; color: rgba(255, 255, 255, 0.05); text-transform: uppercase; letter-spacing: -0.05em; position: absolute; top: -80px; left: -20px; z-index: 0; -webkit-text-stroke: 1px rgba(255, 0, 0, 0.08);">GALLERY</div><div style="display: flex; align-items: center; gap: 40px; position: relative; z-index: 2; padding-top: 40px;"><div style="width: 60px; height: 60px; border: 4px solid rgb(255, 0, 0); transform: rotate(45deg);"></div><h2 style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(48px, 8vw, 80px); font-weight: 900; line-height: 0.9; color: rgb(255, 255, 255); text-transform: uppercase; letter-spacing: -0.02em; margin: 0px;">VISUAL STUDIES</h2></div></div></div><div class="grid-col " style="grid-column: 1 / 13;"><div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; margin-bottom: 60px;"><div style="position: relative; aspect-ratio: 4 / 5; cursor: pointer; overflow: hidden; background-color: rgba(255, 255, 255, 0.03);"><div style="display: flex; align-items: center; justify-content: center; height: 100%; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgba(255, 255, 255, 0.3); text-transform: uppercase;">IMAGE</div><div style="position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background-color: rgb(255, 0, 0); display: flex; align-items: center; justify-content: center; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(16px, 2vw, 20px); font-weight: 900; color: rgb(0, 0, 0); z-index: 2; transform: rotate(-8deg); box-shadow: rgba(255, 0, 0, 0.3) 0px 4px 12px;">01</div></div><div style="position: relative; aspect-ratio: 16 / 11; cursor: pointer; overflow: hidden; background-color: rgba(255, 255, 255, 0.03);"><div style="display: flex; align-items: center; justify-content: center; height: 100%; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgba(255, 255, 255, 0.3); text-transform: uppercase;">IMAGE</div><div style="position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background-color: rgb(255, 0, 0); display: flex; align-items: center; justify-content: center; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(16px, 2vw, 20px); font-weight: 900; color: rgb(0, 0, 0); z-index: 2; transform: rotate(-8deg); box-shadow: rgba(255, 0, 0, 0.3) 0px 4px 12px;">02</div></div><div style="position: relative; aspect-ratio: 16 / 11; cursor: pointer; overflow: hidden; background-color: rgba(255, 255, 255, 0.03);"><div style="display: flex; align-items: center; justify-content: center; height: 100%; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgba(255, 255, 255, 0.3); text-transform: uppercase;">IMAGE</div><div style="position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background-color: rgb(255, 0, 0); display: flex; align-items: center; justify-content: center; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(16px, 2vw, 20px); font-weight: 900; color: rgb(0, 0, 0); z-index: 2; transform: rotate(-8deg); box-shadow: rgba(255, 0, 0, 0.3) 0px 4px 12px;">03</div></div><div style="position: relative; aspect-ratio: 4 / 5; cursor: pointer; overflow: hidden; background-color: rgba(255, 255, 255, 0.03);"><div style="display: flex; align-items: center; justify-content: center; height: 100%; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgba(255, 255, 255, 0.3); text-transform: uppercase;">IMAGE</div><div style="position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background-color: rgb(255, 0, 0); display: flex; align-items: center; justify-content: center; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(16px, 2vw, 20px); font-weight: 900; color: rgb(0, 0, 0); z-index: 2; transform: rotate(-8deg); box-shadow: rgba(255, 0, 0, 0.3) 0px 4px 12px;">04</div></div><div style="position: relative; aspect-ratio: 16 / 11; cursor: pointer; overflow: hidden; background-color: rgba(255, 255, 255, 0.03);"><div style="display: flex; align-items: center; justify-content: center; height: 100%; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgba(255, 255, 255, 0.3); text-transform: uppercase;">IMAGE</div><div style="position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background-color: rgb(255, 0, 0); display: flex; align-items: center; justify-content: center; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(16px, 2vw, 20px); font-weight: 900; color: rgb(0, 0, 0); z-index: 2; transform: rotate(-8deg); box-shadow: rgba(255, 0, 0, 0.3) 0px 4px 12px;">05</div></div><div style="position: relative; aspect-ratio: 16 / 11; cursor: pointer; overflow: hidden; background-color: rgba(255, 255, 255, 0.03);"><div style="display: flex; align-items: center; justify-content: center; height: 100%; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgba(255, 255, 255, 0.3); text-transform: uppercase;">IMAGE</div><div style="position: absolute; top: 20px; right: 20px; width: 60px; height: 60px; background-color: rgb(255, 0, 0); display: flex; align-items: center; justify-content: center; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(16px, 2vw, 20px); font-weight: 900; color: rgb(0, 0, 0); z-index: 2; transform: rotate(-8deg); box-shadow: rgba(255, 0, 0, 0.3) 0px 4px 12px;">06</div></div></div></div></div></section><section id="contact" style="background-color: rgb(0, 0, 0); color: rgb(255, 255, 255); padding-top: 120px; padding-bottom: 120px; position: relative; overflow: hidden;"><div style="position: absolute; top: 60px; left: 80px; width: 100px; height: 100px; pointer-events: none; z-index: 1;"><svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 50m-40 0a40 40 0 1 1 80 0a30 30 0 1 1 -60 0a20 20 0 1 1 40 0" stroke="#FF0000" stroke-width="2" opacity="0.06" fill="none"></path></svg></div><div style="position: absolute; bottom: 40px; left: 0px; right: 0px; display: flex; flex-direction: column; gap: 24px; pointer-events: none; z-index: 1;"><div style="width: 100%; height: 1px; background-color: rgb(255, 0, 0); opacity: 0.08;"></div><div style="width: 100%; height: 1px; background-color: rgb(255, 0, 0); opacity: 0.08;"></div><div style="width: 100%; height: 1px; background-color: rgb(255, 0, 0); opacity: 0.08;"></div><div style="width: 100%; height: 1px; background-color: rgb(255, 0, 0); opacity: 0.08;"></div></div><div style="position: absolute; top: 20%; left: -5%; font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(120px, 18vw, 240px); font-weight: 900; color: rgba(255, 255, 255, 0.02); line-height: 1; z-index: 0; pointer-events: none; text-transform: uppercase; letter-spacing: -0.05em; -webkit-text-stroke: 1px rgba(0, 255, 65, 0.03);">CONTACT</div><div class="swiss-grid " style="max-width: 1200px; margin: 0px auto; padding: 0px clamp(20px, 5vw, 80px); display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(12px, 2vw, 24px); align-items: start;"><div class="grid-col " style="grid-column: 1 / 4;"><div style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(120px, 15vw, 200px); font-weight: 900; line-height: 0.8; color: rgb(26, 26, 26); margin-top: -40px; writing-mode: vertical-rl; text-orientation: mixed;">05</div></div><div class="grid-col " style="grid-column: 1 / 10;"><h2 style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(36px, 6vw, 80px); font-weight: 900; line-height: 0.9; color: rgb(255, 255, 255); text-transform: uppercase; letter-spacing: -0.02em; margin: 0px 0px 30px;">GET IN TOUCH</h2></div><div class="grid-col " style="grid-column: 3 / 7;"><div style="display: inline-block; background-color: rgb(0, 255, 65); color: rgb(0, 0, 0); padding: 12px 24px; margin-bottom: 60px; font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; transform: rotate(-2deg);">● Available for new projects</div></div><div class="grid-col " style="grid-column: 1 / 5;"><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(10px, 1vw, 12px); color: rgb(102, 102, 102); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 40px; border-bottom: 2px solid rgb(255, 0, 0); padding-bottom: 12px;">DIRECT CONTACT</div><div style="margin-bottom: 60px;"><div style="margin-bottom: 24px;"><a href="mailto:hello@designer.com" style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(16px, 1.8vw, 18px); font-weight: 400; color: rgb(255, 255, 255); text-decoration: none; border-bottom: 1px solid rgb(102, 102, 102); padding-bottom: 2px; transition: border-bottom-color 0.3s;">hello@designer.com</a></div><div style="margin-bottom: 24px;"><a href="tel:+1 (555) 123-4567" style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(16px, 1.8vw, 18px); font-weight: 400; color: rgb(204, 204, 204); text-decoration: none;">+1 (555) 123-4567</a></div><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgb(102, 102, 102); text-transform: uppercase; letter-spacing: 0.1em;">New York, NY</div></div></div><div class="grid-col " style="grid-column: 2 / 9;"><div style="background-color: transparent; border: 3px solid rgb(255, 0, 0); padding: 50px; transform: rotate(1deg); margin-top: 80px; position: relative;"><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgb(255, 0, 0); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 30px; transform: rotate(-1deg);">START A PROJECT</div><form style="display: flex; flex-direction: column; gap: 24px; transform: rotate(-1deg);"><div style="display: flex; gap: 20px;"><input required="" placeholder="YOUR NAME" type="text" value="" style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(14px, 1.5vw, 16px); color: rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.05); border-top: none; border-right: none; border-bottom: 2px solid rgb(51, 51, 51); border-left: none; border-image: initial; padding: 16px 12px; flex: 1 1 0%; outline: none; text-transform: uppercase; letter-spacing: 0.05em; transition: 0.3s;"><input required="" placeholder="YOUR EMAIL" type="email" value="" style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(14px, 1.5vw, 16px); color: rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.05); border-top: none; border-right: none; border-bottom: 2px solid rgb(51, 51, 51); border-left: none; border-image: initial; padding: 16px 12px; flex: 1 1 0%; outline: none; text-transform: uppercase; letter-spacing: 0.05em; transition: 0.3s;"></div><div style="display: flex; gap: 20px;"><input placeholder="PROJECT TYPE" type="text" value="" style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(14px, 1.5vw, 16px); color: rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.05); border-top: none; border-right: none; border-bottom: 2px solid rgb(51, 51, 51); border-left: none; border-image: initial; padding: 16px 12px; flex: 1 1 0%; outline: none; text-transform: uppercase; letter-spacing: 0.05em; transition: 0.3s;"><select style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(14px, 1.5vw, 16px); color: rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.05); border-top: none; border-right: none; border-bottom: 2px solid rgb(51, 51, 51); border-left: none; border-image: initial; padding: 16px 12px; flex: 1 1 0%; outline: none; text-transform: uppercase; letter-spacing: 0.05em;"><option value="" style="background-color: rgb(0, 0, 0);">BUDGET RANGE</option><option value="5k-10k" style="background-color: rgb(0, 0, 0);">$5K - $10K</option><option value="10k-25k" style="background-color: rgb(0, 0, 0);">$10K - $25K</option><option value="25k-50k" style="background-color: rgb(0, 0, 0);">$25K - $50K</option><option value="50k+" style="background-color: rgb(0, 0, 0);">$50K+</option></select></div><textarea required="" rows="3" placeholder="PROJECT DETAILS..." style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(14px, 1.5vw, 16px); color: rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0.05); border: 2px solid rgb(51, 51, 51); padding: 16px; width: 100%; resize: vertical; outline: none; text-transform: uppercase; letter-spacing: 0.05em; transition: 0.3s;"></textarea><div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;"><button type="submit" style="font-family: &quot;Neue Haas Grotesk&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: clamp(14px, 1.5vw, 16px); font-weight: 700; color: rgb(0, 0, 0); background-color: rgb(0, 255, 65); border: 3px solid rgb(0, 255, 65); padding: 16px 40px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; transition: 0.3s; transform: skew(-5deg);">SEND BRIEF</button><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(12px, 1.2vw, 14px); color: rgb(0, 255, 65); text-transform: uppercase; letter-spacing: 0.15em; font-weight: 600;">→ 24H RESPONSE</div></div></form></div></div><div class="grid-col " style="grid-column: 1 / 13;"><div style="margin-top: 80px; padding-top: 40px; border-top: 1px solid rgb(51, 51, 51); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;"><div style="display: flex; gap: 40px; flex-wrap: wrap;"></div><div style="font-family: &quot;IBM Plex Mono&quot;, monospace; font-size: clamp(10px, 1vw, 12px); color: rgb(51, 51, 51); text-transform: uppercase; letter-spacing: 0.1em;">© 2025 — ECHELON</div></div></div></div></section></div><style>
         /* Neue Haas Grotesk Font Import */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         
@@ -5650,7 +5897,7 @@ body:not(.template-page) {
           }
         }
       </style></div></div></div><div data-rht-toaster="" style="position: fixed; z-index: 9999; inset: 16px; pointer-events: none;"></div></div></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main.jsx?t=1761851950440"></script>
   
 
 </body></html>

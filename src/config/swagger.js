@@ -3,6 +3,7 @@ import swaggerUi from 'swagger-ui-express';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import logger from '../infrastructure/logging/Logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -103,9 +104,9 @@ export const setupSwagger = (app) => {
     }
   });
 
-  console.log('📖 Swagger UI available at: /api-docs');
-  console.log('📄 OpenAPI JSON spec at: /api-docs.json');
-  console.log('📄 OpenAPI YAML spec at: /api-docs.yaml');
+  logger.info('Swagger UI available at: /api-docs');
+  logger.info('OpenAPI JSON spec at: /api-docs.json');
+  logger.info('OpenAPI YAML spec at: /api-docs.yaml');
 };
 
 export default swaggerSpec;

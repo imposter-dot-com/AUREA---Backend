@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import logger from '../infrastructure/logging/Logger.js';
 
 /**
  * Middleware to check if user has active premium subscription
@@ -29,7 +30,7 @@ export const requirePremium = async (req, res, next) => {
     req.premiumInfo = user.getPremiumInfo();
     next();
   } catch (error) {
-    console.error('Premium check middleware error:', error);
+    logger.error('Premium check middleware error', { error: error.message, userId: req.user?._id });
     res.status(500).json({
       success: false,
       message: 'Error verifying premium status',
@@ -56,7 +57,7 @@ export const checkPremium = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error('Premium check middleware error:', error);
+    logger.error('Premium check middleware error', { error: error.message, userId: req.user?._id });
     req.isPremium = false;
     req.premiumInfo = null;
     next();

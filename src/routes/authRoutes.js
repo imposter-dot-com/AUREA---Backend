@@ -8,7 +8,7 @@ import {
   signup,
   login,
   getCurrentUser,
-  updateCurrentUser
+  updateProfile
 } from '../controllers/authController.js';
 
 const router = express.Router();
@@ -25,6 +25,6 @@ router.post('/login', loginBruteForceProtection, login);
 router.get('/me', auth, getCurrentUser);
 
 // PUT /api/auth/me - Update current user profile
-router.put('/me', auth, updateCurrentUser);
+router.put('/me', auth, updateProfile);
 
 export default router;

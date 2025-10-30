@@ -1,309 +1,137 @@
-import CaseStudy from '../models/CaseStudy.js';
-import Portfolio from '../models/Portfolio.js';
-import mongoose from 'mongoose';
+import caseStudyService from '../core/services/CaseStudyService.js';
+import responseFormatter from '../shared/utils/responseFormatter.js';
 
-// @desc    Create a new case study
-// @route   POST /api/case-studies
-// @access  Private (portfolio owner only)
-export const createCaseStudy = async (req, res) => {
+/**
+ * Case Study Controller - Thin HTTP layer
+ * Handles HTTP requests/responses for case study management
+ * All business logic delegated to CaseStudyService
+ */
+
+/**
+ * @desc    Create a new case study
+ * @route   POST /api/case-studies
+ * @access  Private (portfolio owner only)
+ */
+export const createCaseStudy = async (req, res, next) => {
   try {
-    const { portfolioId, projectId, content } = req.body;
+    const caseStudy = await caseStudyService.createCaseStudy(req.body, req.user._id);
 
-    // Check if portfolio exists and user owns it
-    const portfolio = await Portfolio.findById(portfolioId);
-    if (!portfolio) {
-      return res.status(404).json({
-        success: false,
-        error: 'Portfolio not found',
-        code: 'NOT_FOUND'
-      });
-    }
-
-    if (portfolio.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        error: 'Access denied. You do not own this portfolio',
-        code: 'FORBIDDEN'
-      });
-    }
-
-    // Check if project exists in portfolio (check both work.projects and projects arrays)
-    const workProjects = portfolio.content?.work?.projects || [];
-    const contentProjects = portfolio.content?.projects || [];
-    const allProjects = [...workProjects, ...contentProjects];
-    
-    // Use loose comparison to handle both string and number IDs
-    const projectExists = allProjects.some(project => project.id == projectId);
-    
-    if (!projectExists) {
-      return res.status(400).json({
-        success: false,
-        error: `Project ID "${projectId}" not found in portfolio. Available projects: ${allProjects.map(p => p.id).join(', ')}`,
-        code: 'INVALID_INPUT'
-      });
-    }
-
-    // Check for existing case study for this project
-    const existingCaseStudy = await CaseStudy.findOne({ portfolioId, projectId });
-    if (existingCaseStudy) {
-      return res.status(400).json({
-        success: false,
-        error: 'Case study already exists for this project',
-        code: 'CONFLICT'
-      });
-    }
-
-    // Create case study
-    const caseStudy = new CaseStudy({
-      portfolioId,
-      userId: req.user._id,
-      projectId,
-      content: content || {
-        hero: { title: '' },
-        overview: {},
-        sections: [],
-        additionalContext: {},
-        nextProject: {}
-      }
-    });
-
-    // Save case study - the post-save hook will add it to portfolio
-    await caseStudy.save();
-
-    res.status(201).json({
-      success: true,
-      message: 'Case study created successfully',
-      data: { caseStudy }
-    });
-
+    return responseFormatter.created(
+      res,
+      { caseStudy },
+      'Case study created successfully'
+    );
   } catch (error) {
-    console.error('Create case study error:', error);
-    throw error;
+    next(error);
   }
 };
 
-// @desc    Get case study by ID
-// @route   GET /api/case-studies/:id
-// @access  Private (owner only)
-export const getCaseStudyById = async (req, res) => {
+/**
+ * @desc    Get case study by ID
+ * @route   GET /api/case-studies/:id
+ * @access  Private (owner only)
+ */
+export const getCaseStudyById = async (req, res, next) => {
   try {
-    // Case study is already attached by ownership middleware
-    const caseStudy = req.caseStudy;
+    // Note: req.caseStudy is attached by ownership middleware
+    // But we still fetch with population for consistency
+    const caseStudy = await caseStudyService.getCaseStudyById(req.caseStudy._id);
 
-    // Populate portfolio info
-    const populatedCaseStudy = await CaseStudy.findById(caseStudy._id)
-      .populate('portfolioId', 'title slug isPublished')
-      .populate('userId', 'name');
-
-    res.json({
-      success: true,
-      data: { caseStudy: populatedCaseStudy }
-    });
-
+    return responseFormatter.success(
+      res,
+      { caseStudy },
+      'Case study retrieved successfully'
+    );
   } catch (error) {
-    console.error('Get case study error:', error);
-    throw error;
+    next(error);
   }
 };
 
-// @desc    Get case study by portfolio and project
-// @route   GET /api/case-studies/portfolio/:portfolioId/project/:projectId
-// @access  Private (portfolio owner only)
-export const getCaseStudyByPortfolioAndProject = async (req, res) => {
+/**
+ * @desc    Get case study by portfolio and project
+ * @route   GET /api/case-studies/portfolio/:portfolioId/project/:projectId
+ * @access  Private (portfolio owner only)
+ */
+export const getCaseStudyByPortfolioAndProject = async (req, res, next) => {
   try {
     const { portfolioId, projectId } = req.params;
 
-    // Check if portfolio exists and user owns it
-    const portfolio = await Portfolio.findById(portfolioId);
-    if (!portfolio) {
-      return res.status(404).json({
-        success: false,
-        error: 'Portfolio not found',
-        code: 'NOT_FOUND'
-      });
-    }
-
-    if (portfolio.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        error: 'Access denied. You do not own this portfolio',
-        code: 'FORBIDDEN'
-      });
-    }
-
-    const caseStudy = await CaseStudy.findOne({ portfolioId, projectId })
-      .populate('portfolioId', 'title slug isPublished')
-      .populate('userId', 'name');
-
-    if (!caseStudy) {
-      return res.status(404).json({
-        success: false,
-        error: 'Case study not found',
-        code: 'NOT_FOUND'
-      });
-    }
-
-    res.json({
-      success: true,
-      data: { caseStudy }
-    });
-
-  } catch (error) {
-    console.error('Get case study by portfolio and project error:', error);
-    throw error;
-  }
-};
-
-// @desc    Update case study
-// @route   PUT /api/case-studies/:id
-// @access  Private (owner only)
-export const updateCaseStudy = async (req, res) => {
-  try {
-    // Case study is already attached by ownership middleware
-    const caseStudy = req.caseStudy;
-    const { content } = req.body;
-
-    // Perform deep merge for content updates
-    let updatedContent = { ...caseStudy.content };
-    
-    if (content) {
-      // Merge hero section
-      if (content.hero) {
-        updatedContent.hero = { ...updatedContent.hero, ...content.hero };
-      }
-      
-      // Merge overview section
-      if (content.overview) {
-        updatedContent.overview = { ...updatedContent.overview, ...content.overview };
-      }
-      
-      // Replace sections array if provided
-      if (content.sections) {
-        updatedContent.sections = content.sections;
-      }
-      
-      // Merge additional context
-      if (content.additionalContext) {
-        updatedContent.additionalContext = { 
-          ...updatedContent.additionalContext, 
-          ...content.additionalContext 
-        };
-      }
-      
-      // Merge next project
-      if (content.nextProject) {
-        updatedContent.nextProject = { 
-          ...updatedContent.nextProject, 
-          ...content.nextProject 
-        };
-      }
-    }
-
-    const updatedCaseStudy = await CaseStudy.findByIdAndUpdate(
-      caseStudy._id,
-      { content: updatedContent },
-      { new: true, runValidators: true }
+    const caseStudy = await caseStudyService.getCaseStudyByPortfolioAndProject(
+      portfolioId,
+      projectId,
+      req.user._id
     );
 
-    res.json({
-      success: true,
-      message: 'Case study updated successfully',
-      data: { caseStudy: updatedCaseStudy }
-    });
-
+    return responseFormatter.success(
+      res,
+      { caseStudy },
+      'Case study retrieved successfully'
+    );
   } catch (error) {
-    console.error('Update case study error:', error);
-    throw error;
+    next(error);
   }
 };
 
-// @desc    Delete case study
-// @route   DELETE /api/case-studies/:id
-// @access  Private (owner only)
-export const deleteCaseStudy = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
+/**
+ * @desc    Update case study
+ * @route   PUT /api/case-studies/:id
+ * @access  Private (owner only)
+ */
+export const updateCaseStudy = async (req, res, next) => {
   try {
-    // Case study is already attached by ownership middleware
-    const caseStudy = req.caseStudy;
-
-    // Remove case study from portfolio's caseStudies array
-    await Portfolio.findByIdAndUpdate(
-      caseStudy.portfolioId,
-      { $pull: { caseStudies: caseStudy._id } },
-      { session }
+    // req.caseStudy is attached by ownership middleware
+    const updatedCaseStudy = await caseStudyService.updateCaseStudy(
+      req.caseStudy._id,
+      req.body
     );
 
-    // Delete the case study
-    await CaseStudy.findByIdAndDelete(caseStudy._id, { session });
-
-    await session.commitTransaction();
-
-    res.json({
-      success: true,
-      message: 'Case study deleted successfully'
-    });
-
+    return responseFormatter.success(
+      res,
+      { caseStudy: updatedCaseStudy },
+      'Case study updated successfully'
+    );
   } catch (error) {
-    await session.abortTransaction();
-    console.error('Delete case study error:', error);
-    throw error;
-  } finally {
-    session.endSession();
+    next(error);
   }
 };
 
-// @desc    Get public case study
-// @route   GET /api/case-studies/public/:portfolioSlug/:projectId
-// @access  Public
-export const getPublicCaseStudy = async (req, res) => {
+/**
+ * @desc    Delete case study
+ * @route   DELETE /api/case-studies/:id
+ * @access  Private (owner only)
+ */
+export const deleteCaseStudy = async (req, res, next) => {
+  try {
+    // req.caseStudy is attached by ownership middleware
+    await caseStudyService.deleteCaseStudy(req.caseStudy._id);
+
+    return responseFormatter.success(
+      res,
+      null,
+      'Case study deleted successfully'
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get public case study
+ * @route   GET /api/case-studies/public/:portfolioSlug/:projectId
+ * @access  Public
+ */
+export const getPublicCaseStudy = async (req, res, next) => {
   try {
     const { portfolioSlug, projectId } = req.params;
 
-    // First find the portfolio by slug and verify it's published
-    const portfolio = await Portfolio.findOne({ 
-      slug: portfolioSlug, 
-      isPublished: true 
-    });
+    const result = await caseStudyService.getPublicCaseStudy(portfolioSlug, projectId);
 
-    if (!portfolio) {
-      return res.status(404).json({
-        success: false,
-        error: 'Portfolio not found or not published',
-        code: 'NOT_FOUND'
-      });
-    }
-
-    // Find the case study
-    const caseStudy = await CaseStudy.findOne({ 
-      portfolioId: portfolio._id, 
-      projectId 
-    }).populate('portfolioId', 'title slug')
-     .populate('userId', 'name profileImage');
-
-    if (!caseStudy) {
-      return res.status(404).json({
-        success: false,
-        error: 'Case study not found',
-        code: 'NOT_FOUND'
-      });
-    }
-
-    res.json({
-      success: true,
-      data: { 
-        caseStudy,
-        portfolio: {
-          _id: portfolio._id,
-          title: portfolio.title,
-          slug: portfolio.slug
-        }
-      }
-    });
-
+    return responseFormatter.success(
+      res,
+      result,
+      'Case study retrieved successfully'
+    );
   } catch (error) {
-    console.error('Get public case study error:', error);
-    throw error;
+    next(error);
   }
 };

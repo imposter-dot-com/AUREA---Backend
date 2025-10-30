@@ -1,415 +1,109 @@
-/**
- * PDF Export Controller
- *
- * Handles PDF generation requests for portfolios and case studies
- */
-
-import {
-  generatePortfolioPDF,
-  generateCombinedPDF,
-  savePDFToFile,
-  cleanupOldPDFs
-} from '../../services/pdfGenerationService.js';
-import Portfolio from '../models/Portfolio.js';
-import { optionalAuth } from '../middleware/auth.js';
+import pdfExportService from '../core/services/PDFExportService.js';
+import responseFormatter from '../shared/utils/responseFormatter.js';
 
 /**
- * @desc    Export portfolio as PDF
- * @route   GET /api/pdf/portfolio/:portfolioId
- * @access  Private (owner) / Public (if portfolio is published)
+ * PDF Export Controller - Thin HTTP layer
+ * Handles HTTP requests/responses for PDF generation
+ * All business logic delegated to PDFExportService
  */
-export const exportPortfolioPDF = async (req, res) => {
+
+/**
+ * @desc    Export portfolio as PDF (view inline)
+ * @route   GET /api/pdf/portfolio/:id
+ * @access  Public
+ */
+export const exportPortfolioPDF = async (req, res, next) => {
   try {
-    const { portfolioId } = req.params;
-    const { pageType = 'portfolio', save = 'false', templateId } = req.query;
-
-    // Validate portfolio ID
-    if (!portfolioId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Portfolio ID is required'
-      });
-    }
-
-    // Find portfolio
-    const portfolio = await Portfolio.findById(portfolioId);
-
-    if (!portfolio) {
-      return res.status(404).json({
-        success: false,
-        message: 'Portfolio not found'
-      });
-    }
-
-    // Check access permissions
-    const isOwner = req.user && portfolio.userId.toString() === req.user._id.toString();
-    const isPublished = portfolio.isPublished;
-
-    if (!isOwner && !isPublished) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. Portfolio is not published.'
-      });
-    }
-
-    console.log(`📄 Generating PDF for portfolio: ${portfolio.title} with template: ${templateId || portfolio.templateId || 'default'}`);
-
-    // Generate PDF with template support
-    const pdfResult = await generatePortfolioPDF(
-      portfolioId,
-      portfolio.userId,
-      pageType,
-      {
-        // Custom PDF options can be passed here
-        format: req.query.format || 'A4',
-        landscape: req.query.landscape === 'true'
-      },
-      templateId // Pass template ID (optional - will use portfolio's templateId if not provided)
-    );
-
-    // Save to file system if requested (for debugging or caching)
-    if (save === 'true' && isOwner) {
-      const filepath = await savePDFToFile(
-        pdfResult.buffer,
-        pdfResult.filename
-      );
-      console.log(`PDF saved to: ${filepath}`);
-    }
-
-    // Set response headers
-    res.set({
-      'Content-Type': pdfResult.contentType,
-      'Content-Disposition': `inline; filename="${pdfResult.filename}"`,
-      'Content-Length': pdfResult.buffer.length,
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
+    const pdfResult = await pdfExportService.exportPortfolioPDF(req.params.portfolioId, {
+      templateId: req.query.templateId,
+      inline: true
     });
 
-    // Send PDF buffer
+    // pdfResult is an object with { buffer, filename, contentType }
+    res.contentType('application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${pdfResult.filename || 'portfolio.pdf'}"`);
     res.send(pdfResult.buffer);
-
   } catch (error) {
-    console.error('Export portfolio PDF error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to generate PDF',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
 
 /**
- * @desc    Export combined portfolio and case studies as PDF
- * @route   GET /api/pdf/portfolio/:portfolioId/complete
- * @access  Private (owner) / Public (if portfolio is published)
+ * @desc    Export complete portfolio with case studies
+ * @route   GET /api/pdf/portfolio/:id/complete
+ * @access  Public
  */
-export const exportCompletePDF = async (req, res) => {
+export const exportCompletePDF = async (req, res, next) => {
   try {
-    const { portfolioId } = req.params;
-    const { save = 'false', templateId } = req.query;
-
-    // Validate portfolio ID
-    if (!portfolioId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Portfolio ID is required'
-      });
-    }
-
-    // Find portfolio
-    const portfolio = await Portfolio.findById(portfolioId);
-
-    if (!portfolio) {
-      return res.status(404).json({
-        success: false,
-        message: 'Portfolio not found'
-      });
-    }
-
-    // Check access permissions
-    const isOwner = req.user && portfolio.userId.toString() === req.user._id.toString();
-    const isPublished = portfolio.isPublished;
-
-    if (!isOwner && !isPublished) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. Portfolio is not published.'
-      });
-    }
-
-    console.log(`📄 Generating complete PDF for portfolio: ${portfolio.title} with template: ${templateId || portfolio.templateId || 'default'}`);
-
-    // Generate combined PDF with template support
-    const pdfResult = await generateCombinedPDF(
-      portfolioId,
-      portfolio.userId,
-      {
-        format: req.query.format || 'A4',
-        landscape: req.query.landscape === 'true'
-      },
-      templateId // Pass template ID (optional)
-    );
-
-    // Save to file system if requested
-    if (save === 'true' && isOwner) {
-      const filepath = await savePDFToFile(
-        pdfResult.buffer,
-        pdfResult.filename
-      );
-      console.log(`Complete PDF saved to: ${filepath}`);
-    }
-
-    // Set response headers
-    res.set({
-      'Content-Type': pdfResult.contentType,
-      'Content-Disposition': `inline; filename="${pdfResult.filename}"`,
-      'Content-Length': pdfResult.buffer.length,
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
+    const pdfResult = await pdfExportService.exportCompletePDF(req.params.portfolioId, {
+      templateId: req.query.templateId,
+      includeCaseStudies: true
     });
 
-    // Send PDF buffer
+    // pdfResult is an object with { buffer, filename, contentType }
+    res.contentType('application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${pdfResult.filename || 'portfolio-complete.pdf'}"`);
     res.send(pdfResult.buffer);
-
   } catch (error) {
-    console.error('Export complete PDF error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to generate complete PDF',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
 
 /**
- * @desc    Download portfolio PDF (forces download instead of inline view)
- * @route   GET /api/pdf/portfolio/:portfolioId/download
- * @access  Private (owner) / Public (if portfolio is published)
+ * @desc    Download portfolio PDF
+ * @route   GET /api/pdf/portfolio/:id/download
+ * @access  Public
  */
-export const downloadPortfolioPDF = async (req, res) => {
+export const downloadPortfolioPDF = async (req, res, next) => {
   try {
-    const { portfolioId } = req.params;
-    const { pageType = 'portfolio', templateId } = req.query;
-
-    // Validate portfolio ID
-    if (!portfolioId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Portfolio ID is required'
-      });
-    }
-
-    // Find portfolio
-    const portfolio = await Portfolio.findById(portfolioId);
-
-    if (!portfolio) {
-      return res.status(404).json({
-        success: false,
-        message: 'Portfolio not found'
-      });
-    }
-
-    // Check access permissions
-    const isOwner = req.user && portfolio.userId.toString() === req.user._id.toString();
-    const isPublished = portfolio.isPublished;
-
-    if (!isOwner && !isPublished) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. Portfolio is not published.'
-      });
-    }
-
-    console.log(`⬇️ Downloading PDF for portfolio: ${portfolio.title} with template: ${templateId || portfolio.templateId || 'default'}`);
-
-    // Generate PDF with template support
-    const pdfResult = await generatePortfolioPDF(
-      portfolioId,
-      portfolio.userId,
-      pageType,
-      {
-        format: req.query.format || 'A4',
-        landscape: req.query.landscape === 'true'
-      },
-      templateId // Pass template ID (optional)
-    );
-
-    // Set response headers for download
-    res.set({
-      'Content-Type': pdfResult.contentType,
-      'Content-Disposition': `attachment; filename="${pdfResult.filename}"`, // attachment forces download
-      'Content-Length': pdfResult.buffer.length
+    const pdfResult = await pdfExportService.exportPortfolioPDF(req.params.portfolioId, {
+      templateId: req.query.templateId,
+      download: true
     });
 
-    // Send PDF buffer
+    // pdfResult is an object with { buffer, filename, contentType }
+    res.contentType('application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${pdfResult.filename || 'portfolio.pdf'}"`);
     res.send(pdfResult.buffer);
-
   } catch (error) {
-    console.error('Download portfolio PDF error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to download PDF',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
 
 /**
- * @desc    Get PDF export status/information
- * @route   GET /api/pdf/portfolio/:portfolioId/info
- * @access  Private (owner) / Public (if portfolio is published)
+ * @desc    Get PDF generation info
+ * @route   GET /api/pdf/portfolio/:id/info
+ * @access  Public
  */
-export const getPDFInfo = async (req, res) => {
+export const getPDFInfo = async (req, res, next) => {
   try {
-    const { portfolioId } = req.params;
+    const info = await pdfExportService.getPDFInfo(req.params.portfolioId);
 
-    // Validate portfolio ID
-    if (!portfolioId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Portfolio ID is required'
-      });
-    }
-
-    // Find portfolio with case studies
-    const portfolio = await Portfolio.findById(portfolioId)
-      .populate('caseStudies');
-
-    if (!portfolio) {
-      return res.status(404).json({
-        success: false,
-        message: 'Portfolio not found'
-      });
-    }
-
-    // Check access permissions
-    const isOwner = req.user && portfolio.userId.toString() === req.user._id.toString();
-    const isPublished = portfolio.isPublished;
-
-    if (!isOwner && !isPublished) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. Portfolio is not published.'
-      });
-    }
-
-    // Calculate estimated file sizes
-    const projectCount = portfolio.content?.work?.projects?.length || 0;
-    const caseStudyCount = portfolio.caseStudies?.length || 0;
-
-    // Rough estimates based on typical content
-    const estimatedMainSize = 500000 + (projectCount * 50000); // 500KB base + 50KB per project
-    const estimatedCaseStudySize = caseStudyCount * 200000; // 200KB per case study
-    const estimatedTotalSize = estimatedMainSize + estimatedCaseStudySize;
-
-    // Available export options
-    const exportOptions = {
-      formats: ['A4', 'A3', 'Letter', 'Legal'],
-      orientations: ['portrait', 'landscape'],
-      pageTypes: ['portfolio', 'all']
-    };
-
-    // Add specific case study page types
-    if (caseStudyCount > 0) {
-      portfolio.caseStudies.forEach(cs => {
-        if (cs.projectId) {
-          exportOptions.pageTypes.push(`case-study-${cs.projectId}`);
-        }
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'PDF export information retrieved',
-      data: {
-        portfolio: {
-          id: portfolio._id,
-          title: portfolio.title,
-          isPublished: portfolio.isPublished,
-          projectCount,
-          caseStudyCount
-        },
-        exportInfo: {
-          estimatedSize: {
-            mainPortfolio: `~${Math.round(estimatedMainSize / 1024)}KB`,
-            caseStudies: `~${Math.round(estimatedCaseStudySize / 1024)}KB`,
-            total: `~${Math.round(estimatedTotalSize / 1024)}KB`
-          },
-          availableExports: [
-            {
-              type: 'portfolio',
-              description: 'Main portfolio page only',
-              endpoint: `/api/pdf/portfolio/${portfolioId}`
-            },
-            {
-              type: 'complete',
-              description: 'Portfolio with all case studies',
-              endpoint: `/api/pdf/portfolio/${portfolioId}/complete`
-            },
-            {
-              type: 'download',
-              description: 'Force download instead of inline view',
-              endpoint: `/api/pdf/portfolio/${portfolioId}/download`
-            }
-          ],
-          options: exportOptions
-        }
-      }
-    });
-
+    return responseFormatter.success(
+      res,
+      info,
+      'PDF info retrieved successfully'
+    );
   } catch (error) {
-    console.error('Get PDF info error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to get PDF information',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
 };
 
 /**
- * @desc    Clean up old generated PDFs (maintenance endpoint)
+ * @desc    Cleanup old PDF files
  * @route   POST /api/pdf/cleanup
- * @access  Private (admin only)
+ * @access  Private (Admin)
  */
-export const cleanupPDFs = async (req, res) => {
+export const cleanupPDFs = async (req, res, next) => {
   try {
-    // Check if user is admin
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. Admin only.'
-      });
-    }
+    const result = await pdfExportService.cleanupPDFs();
 
-    const { maxAgeInDays = 7 } = req.body;
-
-    console.log(`🧹 Starting PDF cleanup (files older than ${maxAgeInDays} days)`);
-
-    // Run cleanup
-    await cleanupOldPDFs(maxAgeInDays);
-
-    res.json({
-      success: true,
-      message: `PDF cleanup completed. Removed files older than ${maxAgeInDays} days.`
-    });
-
+    return responseFormatter.success(
+      res,
+      result,
+      'PDF cleanup completed'
+    );
   } catch (error) {
-    console.error('PDF cleanup error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to cleanup PDFs',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+    next(error);
   }
-};
-
-export default {
-  exportPortfolioPDF,
-  exportCompletePDF,
-  downloadPortfolioPDF,
-  getPDFInfo,
-  cleanupPDFs
 };

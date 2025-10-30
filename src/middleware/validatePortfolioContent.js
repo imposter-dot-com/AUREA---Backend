@@ -1,4 +1,5 @@
 import Template from '../models/Template.js';
+import logger from '../infrastructure/logging/Logger.js';
 
 /**
  * Middleware to validate portfolio content against template schema
@@ -67,7 +68,7 @@ async function validatePortfolioContent(req, res, next) {
 
     next();
   } catch (error) {
-    console.error('Portfolio content validation error:', error);
+    logger.error('Portfolio content validation error', { error: error.message, template: req.body.template });
     return res.status(500).json({
       success: false,
       message: 'Content validation error',

@@ -44,9 +44,26 @@ curl http://localhost:5000/health
 
 ### Core Architecture Pattern
 
-The codebase follows a classic MVC pattern with ES6 modules:
+**Status:** **80% Refactored to Clean Architecture** ✅ (October 31, 2025)
 
-**Request Flow**: `Route → Middleware (auth, validation, ownership, rate limiting) → Controller → Model → Database`
+The codebase has been substantially refactored from MVC to **Clean Architecture** with clear separation of concerns:
+
+**Request Flow**: `Route → Middleware → Thin Controller → Service (Business Logic) → Repository (Data Access) → Model → Database`
+
+**Key Improvements:**
+- ✅ **10/10 Controllers** refactored to thin pattern (< 360 lines each)
+- ✅ **11 Services** created with all business logic
+- ✅ **5 Repositories** for data access abstraction
+- ✅ **100% Centralized Configuration** (no scattered process.env)
+- ✅ **99% Structured Logging** (replaced console.log)
+- ✅ **Consistent Error Handling** with custom exceptions
+- ✅ **Standardized Responses** with responseFormatter
+
+**See comprehensive documentation:**
+- `NEW_ARCHITECTURE_WALKTHROUGH.md` - Complete architecture guide
+- `NEW_DEVELOPER_ONBOARDING.md` - Developer onboarding (40 pages)
+- `REFACTORING_BEFORE_AFTER_COMPARISON.md` - Before/after analysis
+- `REFACTORING_PROGRESS.md` - Detailed progress tracking
 
 **Key Architectural Components**:
 

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import config from '../config/index.js';
 
 const portfolioSchema = new mongoose.Schema({
   userId: {
@@ -135,7 +136,7 @@ portfolioSchema.virtual('url').get(function() {
 
 // Virtual for public URL
 portfolioSchema.virtual('publicUrl').get(function() {
-  return this.slug ? `${process.env.FRONTEND_URL}/portfolio/${this.slug}` : null;
+  return this.slug ? `${config.cors.origins[3] || 'http://localhost:5173'}/portfolio/${this.slug}` : null;
 });
 
 // Instance method to increment view count

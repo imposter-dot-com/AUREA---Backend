@@ -1,4 +1,7 @@
+// CRITICAL: Load environment variables FIRST before any other imports
 import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -30,8 +33,6 @@ import siteRoutes from './src/routes/siteRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
 import pdfRoutes from './src/routes/pdfRoutes.js';
 import templateRoutes from './src/routes/templateRoutes.js';
-
-dotenv.config();
 
 // Initialize services after environment variables are loaded
 initCloudinary();

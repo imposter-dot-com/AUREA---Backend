@@ -1,4 +1,5 @@
 import Portfolio from '../models/Portfolio.js';
+import logger from '../infrastructure/logging/Logger.js';
 
 // Reserved slugs that cannot be used
 const reservedSlugs = [
@@ -102,7 +103,7 @@ const checkSlugAvailability = async (slug, excludePortfolioId = null) => {
       slug: slug.toLowerCase()
     };
   } catch (error) {
-    console.error('Error checking slug availability:', error);
+    logger.error('Error checking slug availability', { error: error.message, slug });
     return {
       isAvailable: false,
       error: 'Error checking slug availability',
@@ -151,7 +152,7 @@ const generateSlugSuggestions = async (baseSlug) => {
     // Return up to 3 suggestions
     return suggestions.slice(0, 3);
   } catch (error) {
-    console.error('Error generating slug suggestions:', error);
+    logger.error('Error generating slug suggestions', { error: error.message, baseSlug });
     return [];
   }
 };

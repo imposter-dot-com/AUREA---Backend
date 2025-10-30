@@ -12,20 +12,23 @@
  */
 
 import puppeteer from 'puppeteer';
+import logger from '../infrastructure/logging/Logger.js';
+// config module removed to avoid circular dependency - using process.env directly
 import { getTemplate, templateExists, DEFAULT_TEMPLATE_ID } from '../config/templateRegistry.js';
 import { generateAllPortfolioFiles } from '../../services/templateConvert.js';
 
 /**
  * Template Engine Configuration
+ * Note: fastMode and saveDebugFiles are loaded lazily to avoid circular dependency
  */
-const CONFIG = {
+const getConfig = () => ({
   puppeteerTimeout: 30000, // 30 seconds timeout
   maxRetries: 2,
   retryDelay: 1000, // 1 second between retries
   enableFallback: true,
-  fastMode: process.env.PDF_FAST_MODE === 'true', // Skip some waits for faster generation
-  saveDebugFiles: process.env.PDF_DEBUG === 'true' // Only save debug files when explicitly enabled
-};
+  fastMode: process.env.PDF_FAST_MODE === 'true' || false, // Skip some waits for faster generation
+  saveDebugFiles: process.env.PDF_DEBUG === 'true' || false // Only save debug files when explicitly enabled
+});
 
 /**
  * Browser instance cache for reuse (performance optimization)
@@ -45,7 +48,7 @@ async function getBrowser() {
       await browserInstance.close();
       browserInstance = null;
     } catch (error) {
-      console.error('Error closing idle browser:', error);
+      logger.error('Error closing idle browser', { error: error.message });
       browserInstance = null;
     }
   }
@@ -76,7 +79,7 @@ export async function closeBrowser() {
       await browserInstance.close();
       browserInstance = null;
     } catch (error) {
-      console.error('Error closing browser:', error);
+      logger.error('Error closing browser', { error: error.message });
     }
   }
 }
@@ -89,6 +92,7 @@ export async function closeBrowser() {
  * @returns {Promise<string>} Rendered HTML
  */
 async function fetchHTMLFromFrontend(previewUrl, portfolioData, puppeteerSettings) {
+  const CONFIG = getConfig(); // Initialize config at function level
   const browser = await getBrowser();
   const page = await browser.newPage();
 
@@ -102,14 +106,13 @@ async function fetchHTMLFromFrontend(previewUrl, portfolioData, puppeteerSetting
     const portfolioId = portfolioData._id || portfolioData.id;
     const urlWithData = `${previewUrl}?pdfMode=true`;
 
-    console.log(`Fetching HTML from: ${urlWithData}`);
-    console.log(`Injecting portfolio data for ID: ${portfolioId}`);
+    logger.debug('Fetching HTML from frontend', { url: urlWithData, portfolioId });
 
     // Inject portfolio data BEFORE page loads so React can access it immediately
     await page.evaluateOnNewDocument((data) => {
       window.__PORTFOLIO_DATA__ = data;
       window.__PDF_MODE__ = true;
-      console.log('✓ Portfolio data injected:', data._id || data.id);
+      logger.debug('Portfolio data injected', { portfolioId: data._id || data.id });
     }, portfolioData);
 
     // Navigate and wait for content - use 'load' instead of 'networkidle0' for React apps
@@ -118,7 +121,7 @@ async function fetchHTMLFromFrontend(previewUrl, portfolioData, puppeteerSetting
       timeout: CONFIG.puppeteerTimeout
     });
 
-    console.log('Page loaded, waiting for React to render...');
+    logger.debug('Page loaded, waiting for React to render');
 
     // Enable console logging from the page for debugging
     page.on('console', msg => {
@@ -126,13 +129,13 @@ async function fetchHTMLFromFrontend(previewUrl, portfolioData, puppeteerSetting
       const text = msg.text();
       // Show all logs except verbose ones
       if (type === 'error' || type === 'warning' || type === 'log') {
-        console.log(`[Browser ${type}]`, text);
+        logger.debug(`Browser ${type}`, { message: text });
       }
     });
 
     // Check for errors
     page.on('pageerror', error => {
-      console.error('Browser page error:', error.message);
+      logger.error('Browser page error', { error: error.message });
     });
 
     // Wait for React to mount and render
@@ -141,7 +144,7 @@ async function fetchHTMLFromFrontend(previewUrl, portfolioData, puppeteerSetting
 
     // Quick check if page has content
     const bodyText = await page.evaluate(() => document.body.innerText);
-    console.log(`Page text length: ${bodyText.length} characters`);
+    logger.debug('Page loaded', { textLength: bodyText.length });
 
     // Wait for key selectors to appear (reduced timeout for speed)
     let foundContent = false;
@@ -149,7 +152,7 @@ async function fetchHTMLFromFrontend(previewUrl, portfolioData, puppeteerSetting
       for (const selector of puppeteerSettings.waitForSelectors) {
         try {
           await page.waitForSelector(selector, { timeout: 3000 }); // Reduced from 10s to 3s
-          console.log(`✓ Found selector: ${selector}`);
+          logger.debug('Found selector', { selector });
           foundContent = true;
           break; // If we find at least one selector, we're good
         } catch (error) {
@@ -165,9 +168,9 @@ async function fetchHTMLFromFrontend(previewUrl, portfolioData, puppeteerSetting
           () => document.body && document.body.innerText.length > 100,
           { timeout: 2000 } // Reduced from 10s to 2s
         );
-        console.log('✓ Found body content');
+        logger.debug('Found body content');
       } catch (error) {
-        console.warn('⚠️ No selectors found, but proceeding (data may be injected)');
+        logger.warn('No selectors found, but proceeding', { message: 'Data may be injected' });
       }
     }
 
@@ -177,9 +180,9 @@ async function fetchHTMLFromFrontend(previewUrl, portfolioData, puppeteerSetting
         page.evaluateHandle('document.fonts.ready'),
         new Promise(resolve => setTimeout(resolve, 1000)) // Max 1s wait for fonts
       ]);
-      console.log('✓ Fonts loaded');
+      logger.debug('Fonts loaded');
     } catch (error) {
-      console.warn('Font loading timeout, proceeding...');
+      logger.warn('Font loading timeout, proceeding');
     }
 
     // Scroll through page to trigger lazy loading (skip in fast mode)
@@ -199,9 +202,9 @@ async function fetchHTMLFromFrontend(previewUrl, portfolioData, puppeteerSetting
             }))
         );
       });
-      console.log('✓ Images loaded');
+      logger.debug('Images loaded');
     } else {
-      console.log('⚡ Fast mode: Skipping scroll and image wait');
+      logger.debug('Fast mode enabled', { message: 'Skipping scroll and image wait' });
     }
 
     // Final wait for any animations (reduced from 1.5s to 500ms)
@@ -210,7 +213,7 @@ async function fetchHTMLFromFrontend(previewUrl, portfolioData, puppeteerSetting
     // Get the full HTML
     const html = await page.content();
 
-    console.log(`Successfully fetched HTML (${html.length} characters)`);
+    logger.info('Successfully fetched HTML', { htmlLength: html.length });
 
     // Debug: Save screenshot and HTML for troubleshooting (only if enabled)
     if (CONFIG.saveDebugFiles) {
@@ -238,16 +241,16 @@ async function fetchHTMLFromFrontend(previewUrl, portfolioData, puppeteerSetting
           html
         );
 
-        console.log(`✓ Debug files saved to ${debugDir}/`);
+        logger.debug('Debug files saved', { directory: debugDir });
       } catch (debugError) {
-        console.warn('Failed to save debug files:', debugError.message);
+        logger.warn('Failed to save debug files', { error: debugError.message });
       }
     }
 
     return html;
 
   } catch (error) {
-    console.error('Error fetching HTML from frontend:', error);
+    logger.error('Error fetching HTML from frontend', { error: error.message, stack: error.stack });
     throw error;
   } finally {
     await page.close();
@@ -286,7 +289,7 @@ async function autoScroll(page, delay = 500) {
  * @returns {string} Generated HTML
  */
 function generateFallbackHTML(portfolioData, options = {}) {
-  console.log('Using fallback: templateConvert.js');
+  logger.info('Using fallback: templateConvert.js');
 
   try {
     const files = generateAllPortfolioFiles(portfolioData, {
@@ -296,7 +299,7 @@ function generateFallbackHTML(portfolioData, options = {}) {
 
     return files['index.html'] || '';
   } catch (error) {
-    console.error('Fallback HTML generation failed:', error);
+    logger.error('Fallback HTML generation failed', { error });
     throw error;
   }
 }
@@ -307,7 +310,7 @@ function generateFallbackHTML(portfolioData, options = {}) {
  * @returns {string} Minimal HTML
  */
 function generateMinimalHTML(portfolioData) {
-  console.log('Using minimal HTML fallback');
+  logger.info('Using minimal HTML fallback');
 
   const name = portfolioData.content?.about?.name || 'Portfolio';
   const title = portfolioData.title || name;
@@ -367,19 +370,20 @@ function generateMinimalHTML(portfolioData) {
  * @returns {Promise<string>} Generated HTML
  */
 export async function getTemplateHTML(portfolioData, templateId = null, options = {}) {
+  const CONFIG = getConfig(); // Initialize config at function level
   // Determine which template to use
   const effectiveTemplateId = templateId ||
                                portfolioData.templateId ||
                                portfolioData.template ||
                                DEFAULT_TEMPLATE_ID;
 
-  console.log(`Generating HTML for template: ${effectiveTemplateId}`);
+  logger.info('Generating HTML for template', { templateId: effectiveTemplateId });
 
   // Get template configuration
   const template = getTemplate(effectiveTemplateId);
 
   if (!template) {
-    console.warn(`Template ${effectiveTemplateId} not found, using fallback`);
+    logger.warn('Template not found, using fallback', { templateId: effectiveTemplateId });
     return generateFallbackHTML(portfolioData, options);
   }
 
@@ -392,7 +396,7 @@ export async function getTemplateHTML(portfolioData, templateId = null, options 
   let lastError = null;
   for (let attempt = 1; attempt <= CONFIG.maxRetries; attempt++) {
     try {
-      console.log(`Attempt ${attempt}/${CONFIG.maxRetries} to fetch from frontend`);
+      logger.info('Attempting to fetch from frontend', { attempt, maxRetries: CONFIG.maxRetries });
 
       const html = await fetchHTMLFromFrontend(
         template.previewUrl,
@@ -404,7 +408,7 @@ export async function getTemplateHTML(portfolioData, templateId = null, options 
 
     } catch (error) {
       lastError = error;
-      console.error(`Attempt ${attempt} failed:`, error.message);
+      logger.error('Fetch attempt failed', { attempt, error: error.message });
 
       // Wait before retry (except on last attempt)
       if (attempt < CONFIG.maxRetries) {
@@ -414,14 +418,14 @@ export async function getTemplateHTML(portfolioData, templateId = null, options 
   }
 
   // All attempts failed, use fallback
-  console.warn(`Failed to fetch from frontend after ${CONFIG.maxRetries} attempts, using fallback`);
-  console.error('Last error:', lastError);
+  logger.warn('Failed to fetch from frontend, using fallback', { attempts: CONFIG.maxRetries });
+  logger.error('Last error', { error: lastError });
 
   if (CONFIG.enableFallback) {
     try {
       return generateFallbackHTML(portfolioData, options);
     } catch (fallbackError) {
-      console.error('Fallback generation failed:', fallbackError);
+      logger.error('Fallback generation failed', { error: fallbackError });
       // Last resort: minimal HTML
       return generateMinimalHTML(portfolioData);
     }
@@ -438,7 +442,7 @@ export async function getTemplateHTML(portfolioData, templateId = null, options 
  * @returns {string} Case study HTML
  */
 export function getCaseStudyHTML(portfolioData, projectId, options = {}) {
-  console.log(`Generating case study HTML for project: ${projectId}`);
+  logger.info('Generating case study HTML', { projectId });
 
   try {
     const files = generateAllPortfolioFiles(portfolioData, {
@@ -456,7 +460,7 @@ export function getCaseStudyHTML(portfolioData, projectId, options = {}) {
     return html;
 
   } catch (error) {
-    console.error('Case study generation failed:', error);
+    logger.error('Case study generation failed', { error, projectId });
     throw error;
   }
 }
@@ -482,9 +486,14 @@ export function isTemplateAvailable(templateId) {
 /**
  * Configure template engine
  * @param {Object} config - Configuration options
+ * @deprecated Configuration is now read from environment variables
  */
 export function configure(config) {
-  Object.assign(CONFIG, config);
+  // This function is deprecated as CONFIG is now dynamically generated
+  // To configure PDF settings, use environment variables:
+  // PDF_FAST_MODE=true
+  // PDF_DEBUG=true
+  logger.warn('configure() is deprecated. Use environment variables instead.', { config });
 }
 
 // Cleanup on process exit

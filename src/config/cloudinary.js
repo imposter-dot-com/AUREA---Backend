@@ -2,6 +2,8 @@ import { v2 as cloudinary } from 'cloudinary';
 
 // Initialize Cloudinary configuration
 const initCloudinary = () => {
+  // Access environment variables directly to avoid circular dependency
+  // Config module is imported too early in server.js before dotenv runs
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,

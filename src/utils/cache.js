@@ -1,36 +1,41 @@
 import { createClient } from 'redis';
+import logger from '../infrastructure/logging/Logger.js';
 
 let redisClient = null;
 
 // Initialize Redis client
 const initRedis = async () => {
-  if (!process.env.REDIS_URL) {
-    console.log('Redis URL not provided, caching will be disabled');
+  // Access environment variables directly to avoid circular dependency
+  // Config module is imported too early in server.js before dotenv runs
+  const redisUrl = process.env.REDIS_URL;
+
+  if (!redisUrl) {
+    logger.info('Redis URL not provided, caching will be disabled');
     return null;
   }
 
   try {
     redisClient = createClient({
-      url: process.env.REDIS_URL
+      url: redisUrl
     });
 
     redisClient.on('error', (err) => {
-      console.error('Redis Client Error:', err);
+      logger.error('Redis Client Error', { error: err });
       redisClient = null;
     });
 
     redisClient.on('connect', () => {
-      console.log('✅ Redis client connected');
+      logger.info('Redis client connected');
     });
 
     redisClient.on('disconnect', () => {
-      console.log('❌ Redis client disconnected');
+      logger.warn('Redis client disconnected');
     });
 
     await redisClient.connect();
     return redisClient;
   } catch (error) {
-    console.error('Failed to initialize Redis:', error);
+    logger.error('Failed to initialize Redis', { error });
     redisClient = null;
     return null;
   }
@@ -39,12 +44,12 @@ const initRedis = async () => {
 // Get cached data
 const getCache = async (key) => {
   if (!redisClient) return null;
-  
+
   try {
     const data = await redisClient.get(key);
     return data ? JSON.parse(data) : null;
   } catch (error) {
-    console.error('Cache get error:', error);
+    logger.error('Cache get error', { error, key });
     return null;
   }
 };
@@ -52,12 +57,12 @@ const getCache = async (key) => {
 // Set cached data
 const setCache = async (key, data, ttlSeconds = 300) => {
   if (!redisClient) return false;
-  
+
   try {
     await redisClient.setEx(key, ttlSeconds, JSON.stringify(data));
     return true;
   } catch (error) {
-    console.error('Cache set error:', error);
+    logger.error('Cache set error', { error, key });
     return false;
   }
 };
@@ -65,12 +70,12 @@ const setCache = async (key, data, ttlSeconds = 300) => {
 // Delete cached data
 const deleteCache = async (key) => {
   if (!redisClient) return false;
-  
+
   try {
     await redisClient.del(key);
     return true;
   } catch (error) {
-    console.error('Cache delete error:', error);
+    logger.error('Cache delete error', { error, key });
     return false;
   }
 };
@@ -78,7 +83,7 @@ const deleteCache = async (key) => {
 // Delete multiple cached keys by pattern
 const deleteCachePattern = async (pattern) => {
   if (!redisClient) return false;
-  
+
   try {
     const keys = await redisClient.keys(pattern);
     if (keys.length > 0) {
@@ -86,7 +91,7 @@ const deleteCachePattern = async (pattern) => {
     }
     return true;
   } catch (error) {
-    console.error('Cache delete pattern error:', error);
+    logger.error('Cache delete pattern error', { error, pattern });
     return false;
   }
 };
@@ -114,7 +119,7 @@ const cachePublicPortfolio = (ttlSeconds = 300) => {
       
       next();
     } catch (error) {
-      console.error('Cache middleware error:', error);
+      logger.error('Cache middleware error', { error });
       next();
     }
   };
@@ -123,17 +128,17 @@ const cachePublicPortfolio = (ttlSeconds = 300) => {
 // Invalidate portfolio caches when portfolio is updated
 const invalidatePortfolioCache = async (slug) => {
   if (!slug) return;
-  
+
   try {
     // Delete specific portfolio cache
     await deleteCache(`portfolio:public:${slug}`);
-    
+
     // Delete public portfolio list caches
     await deleteCachePattern('portfolios:public:*');
-    
-    console.log(`Cache invalidated for portfolio: ${slug}`);
+
+    logger.info('Cache invalidated for portfolio', { slug });
   } catch (error) {
-    console.error('Error invalidating portfolio cache:', error);
+    logger.error('Error invalidating portfolio cache', { error, slug });
   }
 };
 
