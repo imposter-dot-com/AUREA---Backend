@@ -28,6 +28,8 @@ export const TEMPLATES = {
     description: 'Swiss/International Typographic Style - clean, precise, grid-driven design',
     category: 'swiss',
     previewUrl: `${FRONTEND_BASE_URL}/template-preview/echelon`,
+    caseStudyUrl: `${FRONTEND_BASE_URL}/template-preview/echelon/case-study`,
+    hasCaseStudySupport: true, // Echelon has case study page support
     pdfSettings: {
       format: 'A4',
       printBackground: true,
@@ -66,6 +68,8 @@ export const TEMPLATES = {
     description: 'Botanical and elegant portfolio template with soft, organic design',
     category: 'creative',
     previewUrl: `${FRONTEND_BASE_URL}/template-preview/serene`,
+    caseStudyUrl: null, // No case study page yet
+    hasCaseStudySupport: false, // Serene doesn't have case study support yet
     pdfSettings: {
       format: 'A4',
       printBackground: true,

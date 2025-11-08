@@ -543,7 +543,7 @@ function createHTMLFromData(data) {
 
                   <!-- Case Study Button -->
                   ${project.hasCaseStudy ? `
-                  <a href="case-study-${project.id}.html" style="display: inline-flex; align-items: center; gap: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 700; color: #FFFFFF; background-color: #FF0000; border: 2px solid #FF0000; padding: 14px 28px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.3s ease; text-decoration: none;" onmouseover="this.style.backgroundColor='#CC0000'; this.style.borderColor='#CC0000'; this.style.transform='translateY(-2px)';" onmouseout="this.style.backgroundColor='#FF0000'; this.style.borderColor='#FF0000'; this.style.transform='translateY(0)';">
+                  <a href="./case-study-${project.id}.html" style="display: inline-flex; align-items: center; gap: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 700; color: #FFFFFF; background-color: #FF0000; border: 2px solid #FF0000; padding: 14px 28px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.3s ease; text-decoration: none;" onmouseover="this.style.backgroundColor='#CC0000'; this.style.borderColor='#CC0000'; this.style.transform='translateY(-2px)';" onmouseout="this.style.backgroundColor='#FF0000'; this.style.borderColor='#FF0000'; this.style.transform='translateY(0)';">
                     VIEW CASE STUDY →
                   </a>
                   ` : ''}
@@ -897,7 +897,7 @@ function generateCaseStudyHTML(projectId, caseStudy, data, options = {}) {
   ${!forPDF ? `
   <!-- Fixed Header -->
   <header style="position: fixed; top: 0; left: 0; right: 0; background-color: #000000; color: #FFFFFF; padding: 24px 60px; z-index: 1000; border-bottom: 3px solid #FF0000; display: flex; justify-content: space-between; align-items: center;">
-    <a href="index.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #FFFFFF; background-color: transparent; border: 2px solid #FFFFFF; padding: 12px 24px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.3s ease; text-decoration: none; display: inline-block;" onmouseover="this.style.backgroundColor='#FFFFFF'; this.style.color='#000000';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#FFFFFF';">
+    <a href="./html" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #FFFFFF; background-color: transparent; border: 2px solid #FFFFFF; padding: 12px 24px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.3s ease; text-decoration: none; display: inline-block;" onmouseover="this.style.backgroundColor='#FFFFFF'; this.style.color='#000000';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#FFFFFF';">
       ← BACK
     </a>
 

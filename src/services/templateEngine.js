@@ -435,15 +435,137 @@ export async function getTemplateHTML(portfolioData, templateId = null, options 
 }
 
 /**
- * Get case study HTML (always uses templateConvert.js for uniform design)
+ * Get case study HTML
+ * Uses frontend preview page for templates with case study support,
+ * falls back to templateConvert.js for uniform design
  * @param {Object} portfolioData - Portfolio data with case studies
  * @param {string} projectId - Project ID for the case study
  * @param {Object} options - Generation options
- * @returns {string} Case study HTML
+ * @returns {Promise<string>} Case study HTML
  */
-export function getCaseStudyHTML(portfolioData, projectId, options = {}) {
+export async function getCaseStudyHTML(portfolioData, projectId, options = {}) {
+  const CONFIG = getConfig();
   logger.info('Generating case study HTML', { projectId });
 
+  // Determine template
+  const effectiveTemplateId = portfolioData.templateId ||
+                              portfolioData.template ||
+                              DEFAULT_TEMPLATE_ID;
+
+  // Get template configuration
+  const template = getTemplate(effectiveTemplateId);
+
+  // Check if template has case study support and URL
+  if (template && template.hasCaseStudySupport && template.caseStudyUrl && !options.forceFallback) {
+    logger.info('Template has case study support, fetching from frontend', {
+      templateId: effectiveTemplateId,
+      caseStudyUrl: template.caseStudyUrl
+    });
+
+    // Try to fetch from frontend with retries
+    let lastError = null;
+    for (let attempt = 1; attempt <= CONFIG.maxRetries; attempt++) {
+      try {
+        logger.info('Attempting to fetch case study from frontend', {
+          attempt,
+          maxRetries: CONFIG.maxRetries,
+          projectId
+        });
+
+        // Construct case study preview URL with parameters
+        const caseStudyPreviewUrl = `${template.caseStudyUrl}?portfolioId=${portfolioData._id || portfolioData.id}&projectId=${projectId}&pdfMode=true`;
+
+        // Fetch HTML using the same Puppeteer logic
+        const browser = await getBrowser();
+        const page = await browser.newPage();
+
+        try {
+          // Set viewport
+          if (template.puppeteerSettings?.viewport) {
+            await page.setViewport(template.puppeteerSettings.viewport);
+          }
+
+          // Inject portfolio data before navigation
+          await page.evaluateOnNewDocument((data, pId) => {
+            window.__PORTFOLIO_DATA__ = data;
+            window.__PROJECT_ID__ = pId;
+            window.__PDF_MODE__ = true;
+          }, portfolioData, projectId);
+
+          // Navigate to case study preview page
+          await page.goto(caseStudyPreviewUrl, {
+            waitUntil: ['load', 'domcontentloaded'],
+            timeout: CONFIG.puppeteerTimeout
+          });
+
+          logger.debug('Case study page loaded, waiting for content');
+
+          // Wait for React to render
+          await new Promise(resolve => setTimeout(resolve, 1500));
+
+          // Wait for case study content selectors
+          const caseStudySelectors = ['h1', 'h2', 'section', 'main', '[class*="case-study"]'];
+          for (const selector of caseStudySelectors) {
+            try {
+              await page.waitForSelector(selector, { timeout: 3000 });
+              logger.debug('Found case study selector', { selector });
+              break;
+            } catch (error) {
+              // Silent - try next selector
+            }
+          }
+
+          // Wait for fonts (quick timeout)
+          try {
+            await Promise.race([
+              page.evaluateHandle('document.fonts.ready'),
+              new Promise(resolve => setTimeout(resolve, 1000))
+            ]);
+          } catch (error) {
+            logger.debug('Font loading timeout, proceeding');
+          }
+
+          // Get the HTML
+          const html = await page.content();
+          logger.info('Successfully fetched case study HTML from frontend', {
+            htmlLength: html.length,
+            projectId
+          });
+
+          return html;
+
+        } finally {
+          await page.close();
+        }
+
+      } catch (error) {
+        lastError = error;
+        logger.error('Case study fetch attempt failed', {
+          attempt,
+          error: error.message,
+          projectId
+        });
+
+        // Wait before retry (except on last attempt)
+        if (attempt < CONFIG.maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, CONFIG.retryDelay));
+        }
+      }
+    }
+
+    // Frontend fetch failed, fall back to templateConvert
+    logger.warn('Failed to fetch case study from frontend, using templateConvert fallback', {
+      projectId,
+      lastError: lastError?.message
+    });
+  } else {
+    logger.info('Using templateConvert for case study (no frontend support)', {
+      templateId: effectiveTemplateId,
+      hasCaseStudySupport: template?.hasCaseStudySupport
+    });
+  }
+
+  // Fallback to templateConvert.js
   try {
     const files = generateAllPortfolioFiles(portfolioData, {
       forPDF: true,

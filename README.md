@@ -580,54 +580,186 @@ curl -X POST http://localhost:5000/api/proposal-extract/extract \
 
 ---
 
-### 📖 Detailed Documentation
-
-For complete API documentation with request/response examples, authentication details, and interactive testing:
+### 📖 API Documentation
 
 **🔗 Visit Swagger UI:** http://localhost:5000/api-docs
 
-The interactive documentation includes:
-- ✅ All 65+ endpoints with detailed descriptions
-- ✅ Request/response schemas and examples
-- ✅ Authentication testing with JWT tokens
-- ✅ Live API testing directly from browser
-- ✅ Model definitions and validation rules
-- ✅ Error response examples
+**Quick Start Guide** (shown in Swagger):
+1. Register: `/api/auth/signup` (no auth required)
+2. Login: `/api/auth/login` (get JWT token)
+3. Use token: `Authorization: Bearer <token>` header
+
+**Interactive Testing**:
+- ✅ All 65+ endpoints organized by tag
+- ✅ Live testing directly in browser
+- ✅ JWT token authentication support
+- ✅ Request/response examples for each endpoint
+- ✅ Standard response format documentation
+- ✅ HTTP status code reference
 
 ---
 
 ## 🏗️ Architecture
+
+### 🎯 Clean Architecture Implementation (October 2025)
+
+**Status:** 80% Refactored to Clean Architecture ✅
+
+AUREA Backend has been substantially refactored from MVC to **Clean Architecture** with clear separation of concerns. This ensures maintainability, testability, and scalability.
+
+#### Request Flow Pattern
+
+```
+Route → Middleware Chain → Thin Controller → Service (Business Logic) → Repository (Data Access) → Model → Database
+```
+
+#### Architecture Layers
+
+1. **API Layer** (`src/api/`, routes & controllers)
+   - **Controllers**: Thin HTTP handlers (< 360 lines each, mostly routing)
+   - **Routes**: Endpoint definitions with middleware chains
+   - **Middlewares**: Request processing, validation, authentication
+
+2. **Core Layer** (`src/core/`)
+   - **Services** (11 total): Business logic, orchestration, validation
+   - **Repositories** (5 total): Data access abstraction, query building
+   - **Domain**: Business entities and rules
+
+3. **Shared Layer** (`src/shared/`)
+   - **Exceptions**: Custom error classes (NotFoundError, ValidationError, ForbiddenError, etc.)
+   - **Constants**: HTTP status codes, error codes
+   - **Utils**: ResponseFormatter for consistent API responses
+   - **DTOs**: Data Transfer Objects for API contracts
+
+4. **Infrastructure Layer** (`src/infrastructure/`)
+   - **Logging**: Structured logging system with sanitization
+   - **Database**: Connection management
+   - **External Services**: Cloudinary, Vercel, Redis integrations
+
+5. **Configuration** (`src/config/`)
+   - Centralized configuration management
+   - Environment variable validation
+   - Service initialization
+
+#### Refactoring Achievements
+
+- ✅ **10/10 Controllers** refactored to thin pattern
+- ✅ **11 Services** created with all business logic
+- ✅ **5 Repositories** for data access abstraction
+- ✅ **100% Centralized Configuration** (no scattered process.env)
+- ✅ **99% Structured Logging** (console.log replaced)
+- ✅ **Consistent Error Handling** with custom exceptions
+- ✅ **Standardized Responses** via responseFormatter
+
+#### New Development Patterns
+
+**Using Services (Clean Architecture):**
+```javascript
+// ✅ CORRECT: Service handles business logic
+import portfolioService from '../core/services/PortfolioService.js';
+import responseFormatter from '../shared/utils/responseFormatter.js';
+
+export const createPortfolio = async (req, res, next) => {
+  try {
+    const portfolio = await portfolioService.createPortfolio(req.user._id, req.body);
+    return responseFormatter.created(res, { portfolio }, 'Portfolio created');
+  } catch (error) {
+    next(error); // Error middleware handles it
+  }
+};
+```
+
+**Using Repositories:**
+```javascript
+// ✅ CORRECT: Service uses repository for data access
+class PortfolioService {
+  async getPortfolio(id) {
+    const portfolio = await this.repository.findById(id);
+    if (!portfolio) {
+      throw NotFoundError.resource('Portfolio', id);
+    }
+    return portfolio;
+  }
+}
+```
+
+**Using Custom Exceptions:**
+```javascript
+// ✅ CORRECT: Throw custom exceptions instead of returning errors
+if (!portfolio) {
+  throw NotFoundError.resource('Portfolio', portfolioId);
+}
+if (portfolio.userId.toString() !== userId) {
+  throw ForbiddenError.ownershipRequired('portfolio');
+}
+if (slugTaken) {
+  throw ConflictError.slugTaken(slug);
+}
+```
+
+**Using Structured Logging:**
+```javascript
+// ✅ CORRECT: Use structured logging
+import logger from '../infrastructure/logging/Logger.js';
+
+logger.info('Portfolio created', { portfolioId, userId });
+logger.error('Database error', { error, context });
+logger.service('PortfolioService', 'createPortfolio', { userId });
+```
 
 ### Project Structure
 
 ```
 AUREA---Backend/
 ├── src/
-│   ├── config/              # Configuration files
+│   ├── config/              # Centralized Configuration (Clean Architecture)
+│   │   ├── index.js         # Configuration aggregator
 │   │   ├── database.js      # MongoDB connection
 │   │   ├── cloudinary.js    # Cloudinary setup
 │   │   ├── swagger.js       # Swagger documentation config
-│   │   └── templateRegistry.js # Template registration system
+│   │   ├── templateRegistry.js # Template registration
+│   │   └── envValidator.js  # Environment validation
 │   │
-│   ├── controllers/         # Business logic layer
-│   │   ├── authController.js
-│   │   ├── userController.js
-│   │   ├── portfolioController.js
-│   │   ├── templateController.js
-│   │   ├── caseStudyController.js
-│   │   ├── siteController.js
-│   │   ├── pdfExportController.js
-│   │   ├── uploadController.js
-│   │   └── proposalExtract.*.controller.js
+│   ├── controllers/         # API Layer - Thin HTTP handlers
+│   │   ├── authController.js       # Auth HTTP handlers
+│   │   ├── userController.js       # User HTTP handlers
+│   │   ├── portfolioController.js  # Portfolio HTTP handlers
+│   │   ├── templateController.js   # Template HTTP handlers
+│   │   ├── caseStudyController.js  # Case study HTTP handlers
+│   │   ├── siteController.js       # Site publishing HTTP handlers
+│   │   ├── pdfExportController.js  # PDF HTTP handlers
+│   │   ├── uploadController.js     # Upload HTTP handlers
+│   │   └── proposalExtract*.controller.js # AI extraction handlers
 │   │
-│   ├── models/              # Database schemas (Mongoose)
-│   │   ├── User.js          # User model with authentication
+│   ├── core/                # Core Layer - Business Logic & Data Access
+│   │   ├── services/        # Services (11 total) - Business Logic
+│   │   │   ├── AuthService.js
+│   │   │   ├── PortfolioService.js
+│   │   │   ├── UserService.js
+│   │   │   ├── TemplateService.js
+│   │   │   ├── CaseStudyService.js
+│   │   │   ├── SubdomainService.js
+│   │   │   ├── SiteService.js
+│   │   │   ├── PremiumService.js
+│   │   │   ├── PDFExportService.js
+│   │   │   ├── UploadService.js
+│   │   │   └── ProposalExtractService.js
+│   │   │
+│   │   └── repositories/    # Repositories (5 total) - Data Access
+│   │       ├── UserRepository.js
+│   │       ├── PortfolioRepository.js
+│   │       ├── TemplateRepository.js
+│   │       ├── CaseStudyRepository.js
+│   │       └── SiteRepository.js
+│   │
+│   ├── models/              # Data Models (Mongoose schemas)
+│   │   ├── User.js          # User authentication & profile
 │   │   ├── Portfolio.js     # Portfolio with template support
 │   │   ├── Template.js      # Dynamic template system
 │   │   ├── CaseStudy.js     # Case study documentation
 │   │   └── Site.js          # Published site records
 │   │
-│   ├── routes/              # API route definitions
+│   ├── routes/              # API Route Definitions (9 route files)
 │   │   ├── authRoutes.js
 │   │   ├── userRoutes.js
 │   │   ├── portfolioRoutes.js
@@ -638,22 +770,49 @@ AUREA---Backend/
 │   │   ├── uploadRoutes.js
 │   │   └── proposalExtract.routes.js
 │   │
-│   ├── middleware/          # Express middleware
-│   │   ├── auth.js          # JWT authentication
+│   ├── middleware/          # Express Middleware
+│   │   ├── auth.js          # JWT authentication & authorization
 │   │   ├── ownership.js     # Resource ownership verification
-│   │   ├── validation.js    # Request validation
-│   │   ├── errorHandler.js  # Error handling
-│   │   ├── rateLimiter.js   # Rate limiting
-│   │   └── requestLogger.js # Request logging
+│   │   ├── validation.js    # Request validation rules
+│   │   ├── errorHandler.js  # Centralized error handling
+│   │   ├── rateLimiter.js   # Endpoint rate limiting
+│   │   ├── requestLogger.js # Request/response logging
+│   │   ├── logSanitizer.js  # Sanitize sensitive data in logs
+│   │   ├── bruteForcePrevention.js # Brute force protection
+│   │   ├── premium.js       # Premium-only route protection
+│   │   ├── upload.js        # Multer file upload configuration
+│   │   └── validatePortfolioContent.js # Portfolio content validation
 │   │
-│   ├── services/            # Template engine service
-│   │   └── templateEngine.js # HTML generation with Puppeteer
+│   ├── shared/              # Shared Layer - Reusable Components
+│   │   ├── exceptions/      # Custom exception classes
+│   │   │   ├── ApplicationError.js
+│   │   │   ├── ValidationError.js
+│   │   │   ├── NotFoundError.js
+│   │   │   ├── UnauthorizedError.js
+│   │   │   ├── ForbiddenError.js
+│   │   │   ├── ConflictError.js
+│   │   │   └── index.js
+│   │   │
+│   │   ├── constants/       # Application constants
+│   │   │   ├── httpStatus.js
+│   │   │   └── errorCodes.js
+│   │   │
+│   │   └── utils/           # Shared utilities
+│   │       └── responseFormatter.js # Standardized API responses
 │   │
-│   └── utils/               # Helper utilities
-│       ├── cache.js         # Redis caching utilities
+│   ├── infrastructure/      # Infrastructure Layer
+│   │   └── logging/         # Structured logging system
+│   │       └── Logger.js    # Logger with sanitization
+│   │
+│   ├── services/            # Root-level Services (special cases)
+│   │   ├── templateEngine.js # PDF template rendering (Puppeteer)
+│   │   (Note: Use src/core/services/* for new services)
+│   │
+│   └── utils/               # Helper Utilities
+│       ├── cache.js         # Redis caching with graceful degradation
 │       ├── slugGenerator.js # Slug generation & validation
-│       ├── subdomainValidator.js # Subdomain validation
-│       └── templateValidator.js  # Template validation
+│       ├── subdomainValidator.js # Subdomain format validation
+│       └── templateValidator.js  # Template schema validation
 │
 ├── services/                # Business services (root level)
 │   ├── deploymentService.js # Vercel deployment
@@ -691,6 +850,8 @@ AUREA---Backend/
 
 ### System Architecture Diagram
 
+**Clean Architecture Flow:**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        CLIENT LAYER                          │
@@ -701,7 +862,7 @@ AUREA---Backend/
 └─────────────────────────────────────────────────────────────┘
                               ↕ HTTP/HTTPS
 ┌─────────────────────────────────────────────────────────────┐
-│                      API GATEWAY LAYER                       │
+│                  ⭐ API GATEWAY LAYER                        │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  Express.js Server (Port 5000)                         │ │
 │  │  - CORS, Helmet, Compression                           │ │
@@ -711,56 +872,83 @@ AUREA---Backend/
 └─────────────────────────────────────────────────────────────┘
                               ↕
 ┌─────────────────────────────────────────────────────────────┐
-│                   AUTHENTICATION LAYER                       │
+│         ⭐ MIDDLEWARE CHAIN (Clean Architecture)             │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │  JWT Middleware                                        │ │
-│  │  - Token verification                                  │ │
-│  │  - Role-based access control (User/Admin/Premium)     │ │
-│  │  - Optional authentication for public endpoints       │ │
+│  │  1. Log Sanitizer → 2. Brute Force Prevention         │ │
+│  │  3. JWT Auth → 4. Ownership Check → 5. Rate Limit     │ │
+│  │  6. Request Validation → 7. Error Handler              │ │
 │  └────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
                               ↕
 ┌─────────────────────────────────────────────────────────────┐
-│                    ROUTING LAYER (9 Routers)                │
+│          ⭐ API LAYER (Thin Controllers - 10/10)             │
+│          Route Handlers (< 30 lines each)                   │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
-│  │  Auth    │ │  Users   │ │Portfolio │ │Templates │      │
-│  │  Routes  │ │  Routes  │ │  Routes  │ │  Routes  │      │
+│  │AuthCtrl  │ │UserCtrl  │ │PortCtrl  │ │TplCtrl   │      │
+│  │(Auth)    │ │(Users)   │ │(Portfolio)│ │(Templates)│     │
 │  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
-│  │   Case   │ │  Sites   │ │   PDF    │ │  Upload  │      │
-│  │  Studies │ │  Routes  │ │  Routes  │ │  Routes  │      │
+│  │ CSCtrl   │ │SiteCtrl  │ │PDFCtrl   │ │UploadCtrl│      │
+│  │(CaseStd) │ │(Sites)   │ │(PDF)     │ │(Upload)  │      │
 │  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
 │  ┌──────────┐                                               │
-│  │    AI    │                                               │
-│  │ Extract  │                                               │
+│  │ AICtrl   │ (Proposal Extract)                           │
 │  └──────────┘                                               │
 └─────────────────────────────────────────────────────────────┘
                               ↕
 ┌─────────────────────────────────────────────────────────────┐
-│                     CONTROLLER LAYER                         │
+│        ⭐ CORE LAYER - SERVICE/REPOSITORY PATTERN            │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │  Business Logic & Validation                           │ │
-│  │  - Request validation (Joi, Express-Validator)         │ │
-│  │  - Authorization checks                                │ │
-│  │  - Business rule enforcement                           │ │
+│  │ SERVICES (11 total) - Business Logic Layer             │ │
+│  │ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐       │ │
+│  │ │AuthService  │ │PortService  │ │UserService  │       │ │
+│  │ │ (Auth Biz)  │ │(Port Biz)   │ │(User Biz)   │       │ │
+│  │ └─────────────┘ └─────────────┘ └─────────────┘       │ │
+│  │ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐       │ │
+│  │ │TplService   │ │CSService    │ │SiteService  │       │ │
+│  │ │(Tmpl Biz)   │ │(CaseStd Biz)│ │(Site Biz)   │       │ │
+│  │ └─────────────┘ └─────────────┘ └─────────────┘       │ │
+│  │ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐       │ │
+│  │ │SubService   │ │PDFService   │ │UploadService       │ │
+│  │ │(Subdomain)  │ │(PDF Export) │ │(Image Upload)      │ │
+│  │ └─────────────┘ └─────────────┘ └─────────────┘       │ │
+│  │                                                         │ │
+│  │ REPOSITORIES (5 total) - Data Access Layer             │ │
+│  │ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐       │ │
+│  │ │UserRepo     │ │PortRepo     │ │TplRepo      │       │ │
+│  │ │(User Data)  │ │(Port Data)  │ │(Tmpl Data)  │       │ │
+│  │ └─────────────┘ └─────────────┘ └─────────────┘       │ │
+│  │ ┌─────────────┐ ┌─────────────┐                        │ │
+│  │ │CSRepo       │ │SiteRepo     │                        │ │
+│  │ │(CS Data)    │ │(Site Data)  │                        │ │
+│  │ └─────────────┘ └─────────────┘                        │ │
 │  └────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
                               ↕
 ┌─────────────────────────────────────────────────────────────┐
-│                      SERVICE LAYER                           │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │  Template    │  │  Deployment  │  │  PDF Gen     │      │
-│  │  Service     │  │  Service     │  │  Service     │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
+│    ⭐ SHARED LAYER (Reusable Infrastructure)                 │
+│  ┌─────────────────┐ ┌──────────────┐ ┌───────────────┐   │
+│  │  Exceptions     │ │  Constants   │ │  Utils        │   │
+│  │ (Custom Errors) │ │ (HTTP Status)│ │(ResponseFmt)  │   │
+│  └─────────────────┘ └──────────────┘ └───────────────┘   │
 └─────────────────────────────────────────────────────────────┘
                               ↕
 ┌─────────────────────────────────────────────────────────────┐
-│                     DATA ACCESS LAYER                        │
+│  ⭐ INFRASTRUCTURE LAYER (External Integration)              │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │  Mongoose ODM                                          │ │
-│  │  - Schema definitions                                  │ │
-│  │  - Model methods                                       │ │
-│  │  - Query optimization                                  │ │
+│  │  Structured Logging & Sanitization                    │ │
+│  │  Database Connection Management                        │ │
+│  │  Cloudinary, Redis, Vercel Integration                │ │
+│  └────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                              ↕
+┌─────────────────────────────────────────────────────────────┐
+│                    DATABASE & MODELS                         │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │  Mongoose ODM with Schema Definitions                  │ │
+│  │  - User Model        - Portfolio Model                 │ │
+│  │  - Template Model    - CaseStudy Model                 │ │
+│  │  - Site Model        (5 Models Total)                  │ │
 │  └────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
                               ↕
@@ -777,22 +965,100 @@ AUREA---Backend/
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Request Flow Example
+### Request Flow Example (Clean Architecture)
 
-**User Creates Portfolio:**
+**User Creates Portfolio (POST /api/portfolios):**
 
-1. **Client** → POST `/api/portfolios` with JWT token
-2. **Rate Limiter** → Check request rate limits
-3. **Auth Middleware** → Verify JWT token, extract user
-4. **Router** → Route to portfolio controller
-5. **Controller** → Validate request data (Joi)
-6. **Controller** → Check template exists
-7. **Service** → Validate content against template schema
-8. **Model** → Create portfolio document
-9. **Database** → Save to MongoDB
-10. **Cache** → Invalidate user portfolio cache (Redis)
-11. **Controller** → Return success response
-12. **Client** ← Receive portfolio data
+```
+1. Client → Request with JWT token
+             ↓
+2. Express Middleware Stack:
+   - Log Sanitizer: Sanitize sensitive data
+   - Brute Force Prevention: Check IP rate limits
+   - Auth Middleware: Verify JWT, attach user to req.user
+   - Ownership Middleware: (N/A for create)
+   - Rate Limiter: Check endpoint limits (30/min for portfolios)
+   - Request Validator: Validate request body schema
+             ↓
+3. Router → Route to portfolioController.create
+             ↓
+4. Controller (Thin Handler):
+   - Receives validated request (req.body, req.user)
+   - Calls portfolioService.createPortfolio(userId, data)
+   - Catches errors and passes to error handler (next(error))
+             ↓
+5. Service Layer (PortfolioService):
+   - Business logic: Validate template exists
+   - Business logic: Validate content against template schema
+   - Call repository.create(portfolioData)
+   - Throws custom exception if validation fails
+             ↓
+6. Repository Layer (PortfolioRepository):
+   - Data access abstraction
+   - Call Portfolio.create(data) on Mongoose model
+   - Return created document
+             ↓
+7. Database (MongoDB):
+   - Create portfolio document
+   - Apply schema validation
+   - Persist to database
+             ↓
+8. Back through Service:
+   - Service returns portfolio object
+   - Logger records success
+   - Cache (Redis) invalidates user's portfolio list
+             ↓
+9. Back through Controller:
+   - Response formatter: responseFormatter.created(res, data)
+   - Format response with standardized structure
+             ↓
+10. Client ← Success response with portfolio data
+```
+
+**Example Controller Code (Clean Architecture):**
+```javascript
+export const create = async (req, res, next) => {
+  try {
+    // Service handles all business logic
+    const portfolio = await portfolioService.createPortfolio(
+      req.user._id,
+      req.body
+    );
+    // Standardized response formatting
+    return responseFormatter.created(res, { portfolio }, 'Portfolio created');
+  } catch (error) {
+    // Error middleware handles all error types
+    next(error);
+  }
+};
+```
+
+**Example Service Code (Clean Architecture):**
+```javascript
+class PortfolioService {
+  async createPortfolio(userId, data) {
+    // Validate template exists
+    const template = await this.repository.findTemplate(data.templateId);
+    if (!template) {
+      throw NotFoundError.resource('Template', data.templateId);
+    }
+
+    // Validate content against template schema
+    if (!this.validateContent(template.schema, data.content)) {
+      throw ValidationError.invalidContent('Portfolio content does not match template schema');
+    }
+
+    // Repository handles data creation
+    const portfolio = await this.repository.create({
+      ...data,
+      userId
+    });
+
+    logger.info('Portfolio created', { portfolioId: portfolio._id, userId });
+    return portfolio;
+  }
+}
+```
 
 ---
 

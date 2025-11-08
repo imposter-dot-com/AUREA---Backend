@@ -4,20 +4,29 @@
  * This service generates PDF files from portfolio HTML templates
  * using Puppeteer to ensure the exported PDF looks identical to the HTML design
  *
- * UPDATED: Now supports template-specific PDF generation using templateEngine
+ * OPTIMIZED: Now uses browser pool, caching, and clean architecture patterns
  */
 
-import puppeteer from 'puppeteer';
 import { generateAllPortfolioFiles } from './templateConvert.js';
 import { getTemplateHTML, getCaseStudyHTML } from '../src/services/templateEngine.js';
-import Portfolio from '../src/models/Portfolio.js';
-import CaseStudy from '../src/models/CaseStudy.js';
+import browserPool from '../src/infrastructure/pdf/BrowserPool.js';
+import pdfCache from '../src/infrastructure/cache/PDFCache.js';
+import pdfRepository from '../src/core/repositories/PDFRepository.js';
+import logger from '../src/infrastructure/logging/Logger.js';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Configuration
+const PDF_CONFIG = {
+  fastMode: process.env.PDF_FAST_MODE === 'true',
+  maxTimeout: parseInt(process.env.PDF_MAX_TIMEOUT || '10000', 10),
+  skipImages: process.env.PDF_SKIP_IMAGE_WAIT === 'true',
+  enableCache: process.env.PDF_CACHE_ENABLED !== 'false'
+};
 
 // PDF generation options for optimal quality
 const DEFAULT_PDF_OPTIONS = {
@@ -47,99 +56,34 @@ const DEFAULT_VIEWPORT = {
 };
 
 /**
- * Initialize Puppeteer browser instance
- * @returns {Promise<Browser>} Puppeteer browser instance
- */
-const initializeBrowser = async () => {
-  try {
-    const browser = await puppeteer.launch({
-      headless: 'new', // Use new headless mode for better compatibility
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu',
-        '--window-size=1920,1080',
-        '--start-maximized',
-        '--disable-web-security', // Allow loading external resources
-        '--disable-features=IsolateOrigins,site-per-process'
-      ],
-      defaultViewport: DEFAULT_VIEWPORT
-    });
-
-    console.log('✅ Puppeteer browser initialized successfully');
-    return browser;
-  } catch (error) {
-    console.error('Failed to initialize Puppeteer browser:', error);
-    throw new Error('Browser initialization failed');
-  }
-};
-
-/**
  * Prepare portfolio data with case studies
+ * Now uses repository pattern for data access
  * @param {String} portfolioId - Portfolio ID
  * @param {String} userId - User ID for ownership validation
  * @returns {Promise<Object>} Complete portfolio data with case studies
  */
 const preparePortfolioData = async (portfolioId, userId = null) => {
   try {
-    // Fetch portfolio
-    // If userId is provided, validate ownership; otherwise, just find by ID (public access)
-    const query = { _id: portfolioId };
-    if (userId) {
-      query.userId = userId;
-    }
+    // Use repository for optimized data access
+    const portfolioData = await pdfRepository.getPortfolioForPDF(portfolioId, userId);
 
-    const portfolio = await Portfolio.findOne(query);
-
-    if (!portfolio) {
+    if (!portfolioData) {
       throw new Error('Portfolio not found or access denied');
     }
 
-    // Fetch case studies
-    const caseStudies = await CaseStudy.find({ portfolioId: portfolioId });
-
-    // Prepare portfolio data with case studies
-    const portfolioWithCaseStudies = portfolio.toObject();
-
-    // Convert case studies array to object keyed by projectId
-    if (caseStudies && caseStudies.length > 0) {
-      portfolioWithCaseStudies.caseStudies = {};
-
-      caseStudies.forEach(cs => {
-        portfolioWithCaseStudies.caseStudies[cs.projectId] = cs.toObject();
-      });
-
-      // Mark projects that have case studies
-      const caseStudyProjectIds = caseStudies.map(cs => String(cs.projectId));
-
-      // Update projects in content.work.projects array
-      if (portfolioWithCaseStudies.content?.work?.projects) {
-        portfolioWithCaseStudies.content.work.projects = portfolioWithCaseStudies.content.work.projects.map(project => ({
-          ...project,
-          hasCaseStudy: caseStudyProjectIds.includes(String(project.id))
-        }));
-      }
-
-      // Also update content.projects array if it exists
-      if (portfolioWithCaseStudies.content?.projects) {
-        portfolioWithCaseStudies.content.projects = portfolioWithCaseStudies.content.projects.map(project => ({
-          ...project,
-          hasCaseStudy: caseStudyProjectIds.includes(String(project.id))
-        }));
-      }
-    }
-
-    return portfolioWithCaseStudies;
+    return portfolioData;
   } catch (error) {
-    console.error('Error preparing portfolio data:', error);
+    logger.error('Error preparing portfolio data', {
+      portfolioId,
+      error: error.message
+    });
     throw error;
   }
 };
 
 /**
  * Generate PDF from portfolio HTML
+ * OPTIMIZED: Now uses browser pool and fast mode options
  * @param {String} htmlContent - HTML content to convert
  * @param {Object} options - PDF generation options
  * @returns {Promise<Buffer>} PDF buffer
@@ -149,8 +93,8 @@ const generatePDFFromHTML = async (htmlContent, options = {}) => {
   let page = null;
 
   try {
-    // Initialize browser
-    browser = await initializeBrowser();
+    // Get browser from pool instead of creating new one
+    browser = await browserPool.acquire();
     page = await browser.newPage();
 
     // Set viewport for consistent rendering
@@ -159,36 +103,39 @@ const generatePDFFromHTML = async (htmlContent, options = {}) => {
     // Enable JavaScript execution
     await page.setJavaScriptEnabled(true);
 
-    // Set content with waitUntil options for full page load
+    // Set content with optimized waitUntil options
+    const waitOptions = PDF_CONFIG.fastMode
+      ? ['domcontentloaded'] // Fast mode: just wait for DOM
+      : ['domcontentloaded', 'load']; // Normal: wait for more
+
     await page.setContent(htmlContent, {
-      waitUntil: ['networkidle0', 'domcontentloaded', 'load'],
-      timeout: 30000 // 30 seconds timeout
+      waitUntil: waitOptions,
+      timeout: PDF_CONFIG.maxTimeout
     });
 
-    // Wait for fonts to load
-    await page.evaluateHandle('document.fonts.ready');
+    // Wait for fonts (with timeout in fast mode)
+    if (!PDF_CONFIG.fastMode) {
+      await Promise.race([
+        page.evaluateHandle('document.fonts.ready'),
+        new Promise(resolve => setTimeout(resolve, 500)) // Max 500ms wait
+      ]);
+    }
 
-    // Additional wait for any lazy-loaded images
-    await page.evaluate(() => {
-      return new Promise((resolve) => {
-        const images = document.querySelectorAll('img');
-        const imagePromises = [];
-
-        images.forEach((img) => {
-          if (!img.complete) {
-            imagePromises.push(new Promise((imgResolve) => {
-              img.addEventListener('load', imgResolve);
-              img.addEventListener('error', imgResolve); // Resolve even on error
-            }));
-          }
-        });
-
-        Promise.all(imagePromises).then(resolve);
-
-        // Fallback timeout to prevent infinite waiting
-        setTimeout(resolve, 5000);
+    // Wait for images (skip in fast mode)
+    if (!PDF_CONFIG.fastMode && !PDF_CONFIG.skipImages) {
+      await page.evaluate(() => {
+        return Promise.race([
+          Promise.all(
+            Array.from(document.images)
+              .filter(img => !img.complete)
+              .map(img => new Promise(resolve => {
+                img.onload = img.onerror = resolve;
+              }))
+          ),
+          new Promise(resolve => setTimeout(resolve, 2000)) // Max 2s wait
+        ]);
       });
-    });
+    }
 
     // Add print media styles for better PDF rendering
     await page.addStyleTag({
@@ -220,24 +167,17 @@ const generatePDFFromHTML = async (htmlContent, options = {}) => {
       `
     });
 
-    // Scroll to bottom to ensure all content is loaded
-    await page.evaluate(() => {
-      return new Promise((resolve) => {
-        let totalHeight = 0;
-        const distance = 100;
-        const timer = setInterval(() => {
-          const scrollHeight = document.body.scrollHeight;
-          window.scrollBy(0, distance);
-          totalHeight += distance;
-
-          if (totalHeight >= scrollHeight) {
-            clearInterval(timer);
-            window.scrollTo(0, 0); // Scroll back to top
-            resolve();
-          }
-        }, 50);
+    // Skip scrolling in fast mode
+    if (!PDF_CONFIG.fastMode) {
+      // Quick scroll to trigger lazy loading
+      await page.evaluate(() => {
+        window.scrollTo(0, document.body.scrollHeight);
+        window.scrollTo(0, 0);
       });
-    });
+
+      // Small wait for any animations
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
 
     // Generate PDF with merged options
     const pdfOptions = {
@@ -247,25 +187,34 @@ const generatePDFFromHTML = async (htmlContent, options = {}) => {
 
     const pdfBuffer = await page.pdf(pdfOptions);
 
-    console.log('✅ PDF generated successfully');
+    logger.info('PDF generated successfully', {
+      sizeKB: Math.round(pdfBuffer.length / 1024),
+      fastMode: PDF_CONFIG.fastMode
+    });
+
     return pdfBuffer;
 
   } catch (error) {
-    console.error('Error generating PDF:', error);
+    logger.error('Error generating PDF', { error: error.message });
     throw new Error(`PDF generation failed: ${error.message}`);
   } finally {
-    // Clean up resources
+    // Clean up page
     if (page) {
-      await page.close().catch(console.error);
+      await page.close().catch(err =>
+        logger.warn('Error closing page', { error: err.message })
+      );
     }
+
+    // Release browser back to pool (NOT close it)
     if (browser) {
-      await browser.close().catch(console.error);
+      await browserPool.release(browser);
     }
   }
 };
 
 /**
  * Generate PDF for a specific portfolio page
+ * OPTIMIZED: Now includes caching and performance improvements
  * @param {String} portfolioId - Portfolio ID
  * @param {String} userId - User ID
  * @param {String} pageType - Type of page ('portfolio' or specific case study ID)
@@ -274,25 +223,63 @@ const generatePDFFromHTML = async (htmlContent, options = {}) => {
  * @returns {Promise<Buffer>} PDF buffer
  */
 export const generatePortfolioPDF = async (portfolioId, userId, pageType = 'portfolio', options = {}, templateId = null) => {
+  const startTime = Date.now();
+
   try {
-    console.log(`🚀 Starting PDF generation for portfolio: ${portfolioId}, page: ${pageType}, template: ${templateId || 'default'}`);
+    logger.info('Starting PDF generation', {
+      portfolioId,
+      pageType,
+      templateId: templateId || 'default',
+      fastMode: PDF_CONFIG.fastMode
+    });
 
     // Prepare portfolio data
     const portfolioData = await preparePortfolioData(portfolioId, userId);
+
+    // Generate content hash for cache key
+    const contentHash = pdfCache.generateContentHash(portfolioData);
+
+    // Check cache first
+    const cacheKey = pdfCache.generateKey(portfolioId, templateId || portfolioData.templateId, {
+      pageType,
+      ...options,
+      contentHash
+    });
+
+    if (PDF_CONFIG.enableCache) {
+      const cachedPDF = await pdfCache.get(cacheKey);
+      if (cachedPDF) {
+        logger.info('PDF served from cache', {
+          portfolioId,
+          timeSaved: Date.now() - startTime
+        });
+
+        const filename = pageType === 'portfolio'
+          ? `${portfolioData.title || 'portfolio'}.pdf`
+          : `${pageType}.pdf`;
+
+        return {
+          buffer: cachedPDF,
+          filename: filename.replace(/[^a-z0-9.-]/gi, '_'),
+          contentType: 'application/pdf',
+          cached: true
+        };
+      }
+    }
 
     let htmlContent;
     let filename;
 
     if (pageType === 'portfolio' || pageType === 'all') {
       // Main portfolio page - USE TEMPLATE ENGINE for template-specific HTML
-      console.log('📄 Generating template-specific portfolio HTML...');
+      logger.debug('Generating template-specific portfolio HTML');
 
       try {
         // Try to use template engine (fetches from frontend)
         htmlContent = await getTemplateHTML(portfolioData, templateId, { forPDF: true });
-        console.log('✅ Template HTML generated successfully');
+        logger.debug('Template HTML generated successfully');
       } catch (templateError) {
-        console.warn('⚠️ Template engine failed, using fallback:', templateError.message);
+        logger.warn('Template engine failed, using fallback', { error: templateError.message });
         // Fallback to traditional method
         const allFiles = generateAllPortfolioFiles(portfolioData, { forPDF: true });
         htmlContent = allFiles['index.html'];
@@ -302,16 +289,16 @@ export const generatePortfolioPDF = async (portfolioId, userId, pageType = 'port
 
     } else if (pageType.startsWith('case-study-')) {
       // Case study page - USE UNIFORM DESIGN (templateConvert.js)
-      console.log('📄 Generating case study HTML (uniform design)...');
+      logger.debug('Generating case study HTML');
 
       const projectId = pageType.replace('case-study-', '');
 
       try {
         // Use templateEngine's case study method (uses templateConvert.js internally)
         htmlContent = getCaseStudyHTML(portfolioData, projectId, { forPDF: true });
-        console.log('✅ Case study HTML generated successfully');
+        logger.debug('Case study HTML generated successfully');
       } catch (caseStudyError) {
-        console.warn('⚠️ Case study generation failed:', caseStudyError.message);
+        logger.warn('Case study generation failed', { error: caseStudyError.message });
         // Fallback to direct templateConvert call
         const allFiles = generateAllPortfolioFiles(portfolioData, { forPDF: true });
         const caseStudyFile = `${pageType}.html`;
@@ -331,20 +318,49 @@ export const generatePortfolioPDF = async (portfolioId, userId, pageType = 'port
     // Generate PDF from HTML
     const pdfBuffer = await generatePDFFromHTML(htmlContent, options);
 
+    // Cache the generated PDF
+    if (PDF_CONFIG.enableCache && pdfBuffer) {
+      await pdfCache.set(cacheKey, pdfBuffer, {
+        portfolioId,
+        templateId: templateId || portfolioData.templateId,
+        filename,
+        pageType
+      });
+    }
+
+    // Update repository stats (non-blocking)
+    pdfRepository.updatePDFGenerationTime(portfolioId).catch(err =>
+      logger.warn('Failed to update PDF stats', { error: err.message })
+    );
+
+    const generationTime = Date.now() - startTime;
+    logger.info('PDF generation completed', {
+      portfolioId,
+      pageType,
+      generationTimeMs: generationTime,
+      sizeKB: Math.round(pdfBuffer.length / 1024)
+    });
+
     return {
       buffer: pdfBuffer,
       filename: filename.replace(/[^a-z0-9.-]/gi, '_'), // Sanitize filename
-      contentType: 'application/pdf'
+      contentType: 'application/pdf',
+      generationTime
     };
 
   } catch (error) {
-    console.error('Error in generatePortfolioPDF:', error);
+    logger.error('Error in generatePortfolioPDF', {
+      portfolioId,
+      pageType,
+      error: error.message
+    });
     throw error;
   }
 };
 
 /**
  * Generate combined PDF with portfolio and all case studies
+ * OPTIMIZED: Now uses caching and browser pool
  * @param {String} portfolioId - Portfolio ID
  * @param {String} userId - User ID
  * @param {Object} options - PDF generation options
@@ -352,25 +368,55 @@ export const generatePortfolioPDF = async (portfolioId, userId, pageType = 'port
  * @returns {Promise<Buffer>} Combined PDF buffer
  */
 export const generateCombinedPDF = async (portfolioId, userId, options = {}, templateId = null) => {
-  let browser = null;
-  let page = null;
+  const startTime = Date.now();
 
   try {
-    console.log(`🚀 Starting combined PDF generation for portfolio: ${portfolioId}, template: ${templateId || 'default'}`);
+    logger.info('Starting combined PDF generation', {
+      portfolioId,
+      templateId: templateId || 'default',
+      fastMode: PDF_CONFIG.fastMode
+    });
 
     // Prepare portfolio data
     const portfolioData = await preparePortfolioData(portfolioId, userId);
 
+    // Check cache first for combined PDF
+    const contentHash = pdfCache.generateContentHash(portfolioData);
+    const cacheKey = pdfCache.generateKey(portfolioId, templateId || portfolioData.templateId, {
+      pageType: 'combined',
+      includeCaseStudies: true,
+      ...options,
+      contentHash
+    });
+
+    if (PDF_CONFIG.enableCache) {
+      const cachedPDF = await pdfCache.get(cacheKey);
+      if (cachedPDF) {
+        logger.info('Combined PDF served from cache', {
+          portfolioId,
+          timeSaved: Date.now() - startTime
+        });
+
+        const filename = `${portfolioData.title || 'portfolio'}_complete.pdf`;
+        return {
+          buffer: cachedPDF,
+          filename: filename.replace(/[^a-z0-9.-]/gi, '_'),
+          contentType: 'application/pdf',
+          cached: true
+        };
+      }
+    }
+
     const htmlParts = [];
 
     // Add main portfolio page - USE TEMPLATE ENGINE for template-specific HTML
-    console.log('📄 Generating template-specific portfolio HTML...');
+    logger.debug('Generating template-specific portfolio HTML');
     try {
       const portfolioHTML = await getTemplateHTML(portfolioData, templateId, { forPDF: true });
       htmlParts.push(portfolioHTML);
-      console.log('✅ Portfolio HTML generated with template engine');
+      logger.debug('Portfolio HTML generated with template engine');
     } catch (templateError) {
-      console.warn('⚠️ Template engine failed, using fallback:', templateError.message);
+      logger.warn('Template engine failed, using fallback', { error: templateError.message });
       // Fallback to traditional method
       const allFiles = generateAllPortfolioFiles(portfolioData, { forPDF: true });
       if (allFiles['index.html']) {
@@ -379,7 +425,7 @@ export const generateCombinedPDF = async (portfolioId, userId, options = {}, tem
     }
 
     // Add all case study pages - USE UNIFORM DESIGN (templateConvert.js)
-    console.log('📄 Generating case study pages (uniform design)...');
+    logger.debug('Generating case study pages');
 
     // Generate all case study HTML files
     const allFiles = generateAllPortfolioFiles(portfolioData, { forPDF: true });
@@ -429,25 +475,44 @@ export const generateCombinedPDF = async (portfolioId, userId, options = {}, tem
       pageRanges: '' // Ensure all pages are included
     });
 
+    // Cache the combined PDF
+    if (PDF_CONFIG.enableCache && pdfBuffer) {
+      await pdfCache.set(cacheKey, pdfBuffer, {
+        portfolioId,
+        templateId: templateId || portfolioData.templateId,
+        filename: `${portfolioData.title || 'portfolio'}_complete.pdf`,
+        pageType: 'combined'
+      });
+    }
+
+    // Update repository stats (non-blocking)
+    pdfRepository.updatePDFGenerationTime(portfolioId).catch(err =>
+      logger.warn('Failed to update PDF stats', { error: err.message })
+    );
+
     const filename = `${portfolioData.title || 'portfolio'}_complete.pdf`;
+    const generationTime = Date.now() - startTime;
+
+    logger.info('Combined PDF generation completed', {
+      portfolioId,
+      generationTimeMs: generationTime,
+      sizeKB: Math.round(pdfBuffer.length / 1024),
+      caseStudiesCount: Object.keys(portfolioData.caseStudies || {}).length
+    });
 
     return {
       buffer: pdfBuffer,
       filename: filename.replace(/[^a-z0-9.-]/gi, '_'),
-      contentType: 'application/pdf'
+      contentType: 'application/pdf',
+      generationTime
     };
 
   } catch (error) {
-    console.error('Error in generateCombinedPDF:', error);
+    logger.error('Error in generateCombinedPDF', {
+      portfolioId,
+      error: error.message
+    });
     throw error;
-  } finally {
-    // Clean up resources
-    if (page) {
-      await page.close().catch(console.error);
-    }
-    if (browser) {
-      await browser.close().catch(console.error);
-    }
   }
 };
 

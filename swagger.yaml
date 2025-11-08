@@ -2,47 +2,26 @@ openapi: 3.0.3
 info:
   title: AUREA Portfolio Management API
   description: |
-    # AUREA Backend API
-    
-    Professional portfolio creation and deployment platform with dynamic templates,
-    intelligent case study management, and one-click publishing.
-    
-    ## Core Capabilities
-    
-    - 🔐 **Authentication & Authorization** - JWT-based secure authentication
-    - 👤 **User Management** - Complete profile and subscription management
-    - 📁 **Portfolio System** - Dynamic template-based portfolio creation
-    - 🎨 **Template Engine** - Schema-driven template system with validation
-    - 📝 **Case Studies** - Smart content transformation and management
-    - 🚀 **Publishing** - Local and Vercel deployment with custom subdomains
-    - 🖼️ **Media Management** - Cloudinary integration for image uploads
-    - 📄 **PDF Export** - High-quality PDF generation with Puppeteer
-    - 🤖 **AI Extraction** - Optional AI-powered proposal extraction
-    
-    ## API Standards
-    
-    - RESTful architecture following OpenAPI 3.0.3 specification
-    - JSON request/response format
-    - JWT Bearer token authentication
-    - Comprehensive error responses with standard HTTP status codes
-    - Rate limiting and security middleware
-    - CORS enabled for cross-origin requests
-    
-    ## Base URL
-    
-    **Development**: `http://localhost:5000`  
-    **Production**: `https://api.aurea.com`
-    
-    ## Authentication
-    
-    Most endpoints require authentication using JWT Bearer tokens.
-    Include the token in the Authorization header:
-    
+    Professional portfolio creation and deployment platform with templates, case studies, and one-click publishing.
+
+    **Quick Start**:
+    1. Register via `/api/auth/signup` (no auth required)
+    2. Login via `/api/auth/login` to get JWT token
+    3. Use token in `Authorization: Bearer <token>` header for protected endpoints
+
+    **Response Format**:
+    ```json
+    {
+      "success": true,
+      "message": "Description",
+      "data": { /* endpoint-specific data */ }
+    }
     ```
-    Authorization: Bearer <your_jwt_token>
-    ```
-    
-    Obtain tokens through the `/api/auth/login` or `/api/auth/signup` endpoints.
+
+    **HTTP Status Codes**:
+    - 200 OK | 201 Created | 204 No Content
+    - 400 Bad Request | 401 Unauthorized | 403 Forbidden | 404 Not Found | 409 Conflict
+    - 429 Too Many Requests | 500 Server Error
     
   version: 1.0.0
   termsOfService: https://aurea.com/terms
@@ -59,122 +38,42 @@ info:
 
 servers:
   - url: http://localhost:5000
-    description: Local Development Server
-    variables:
-      port:
-        default: '5000'
-        description: Server port number
+    description: Development
   - url: https://api.aurea.com
-    description: Production API Server
+    description: Production
   - url: https://staging-api.aurea.com
-    description: Staging API Server (for testing)
+    description: Staging
 
 tags:
   - name: Health
-    description: API health and status monitoring
-    externalDocs:
-      description: Learn more about health checks
-      url: https://docs.aurea.com/health
-      
+    description: Server status and health checks
+
   - name: Authentication
-    description: |
-      User authentication and session management
-      
-      **Endpoints**: 4  
-      **Authentication**: Not required (except `/me` endpoints)
-    externalDocs:
-      description: Authentication Guide
-      url: https://docs.aurea.com/auth
-      
+    description: User signup, login, profile management
+
   - name: User Management
-    description: |
-      User profile, account settings, and subscription management
-      
-      **Endpoints**: 14  
-      **Authentication**: Required
-    externalDocs:
-      description: User Management Guide
-      url: https://docs.aurea.com/users
-      
+    description: User profile, account settings, subscriptions
+
   - name: Portfolios
-    description: |
-      Portfolio creation, management, and publishing
-      
-      **Endpoints**: 10  
-      **Authentication**: Required (except public endpoints)
-    externalDocs:
-      description: Portfolio Guide
-      url: https://docs.aurea.com/portfolios
-      
+    description: Portfolio CRUD, publishing, slug management
+
   - name: Templates
-    description: |
-      Template discovery, validation, and management
-      
-      **Endpoints**: 11  
-      **Authentication**: Mixed (some require admin)
-      
-      Provides schema-driven templates with validation, versioning, and rating system.
-    externalDocs:
-      description: Template System Guide
-      url: https://docs.aurea.com/templates
-      
-  - name: Site Publishing
-    description: |
-      Portfolio publishing and deployment services
-      
-      **Endpoints**: 11  
-      **Authentication**: Required (except public views)
-      
-      Supports local HTML generation and Vercel deployment with custom subdomains.
-    externalDocs:
-      description: Publishing Guide
-      url: https://docs.aurea.com/publishing
-      
+    description: Template discovery, validation, versioning
+
   - name: Case Studies
-    description: |
-      Case study creation and management
-      
-      **Endpoints**: 6  
-      **Authentication**: Required (except public endpoints)
-      
-      Features intelligent content transformation and responsive HTML generation.
-    externalDocs:
-      description: Case Study Guide
-      url: https://docs.aurea.com/case-studies
-      
+    description: Case study creation and management
+
+  - name: Site Publishing
+    description: Deploy to Vercel or custom subdomains
+
   - name: Image Upload
-    description: |
-      Image upload and management via Cloudinary
-      
-      **Endpoints**: 2  
-      **Authentication**: Required
-    externalDocs:
-      description: Media Upload Guide
-      url: https://docs.aurea.com/uploads
-      
+    description: Upload images to Cloudinary
+
   - name: PDF Export
-    description: |
-      PDF generation and export services
-      
-      **Endpoints**: 5  
-      **Authentication**: Optional (public for published portfolios)
-      
-      Supports customizable formats, orientations, and styling preservation.
-    externalDocs:
-      description: PDF Export Guide
-      url: https://docs.aurea.com/pdf-export
-      
+    description: Generate and download portfolio PDFs
+
   - name: Proposal Extraction
-    description: |
-      AI-powered proposal extraction (Optional Feature)
-      
-      **Endpoints**: 3  
-      **Authentication**: Required
-      
-      Uses Google Gemini AI for intelligent PDF content extraction.
-    externalDocs:
-      description: AI Extraction Guide
-      url: https://docs.aurea.com/ai-extraction
+    description: AI-powered PDF content extraction
 
 components:
   securitySchemes:
