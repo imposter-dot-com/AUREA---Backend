@@ -19,7 +19,7 @@ import { requestLogger } from './src/middleware/requestLogger.js';
 import { generalApiLimiter } from './src/middleware/rateLimiter.js';
 import { initCloudinary } from './src/config/cloudinary.js';
 import { initRedis } from './src/utils/cache.js';
-import { setupSwagger } from './src/config/swagger.js';
+// Swagger import moved to dynamic import below for production check
 import Template from './src/models/Template.js';
 import Site from './src/models/Site.js';
 
@@ -196,13 +196,9 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl requests, Swagger UI)
-    // But only in development mode
+    // Allow requests with no origin (like mobile apps, curl requests, Swagger UI, server-to-server)
+    // This includes API calls, CLI tools, mobile apps, etc.
     if (!origin) {
-      if (process.env.NODE_ENV === 'production') {
-        console.warn('⚠️  CORS: Blocked request with no origin in production');
-        return callback(new Error("Not allowed by CORS"));
-      }
       return callback(null, true);
     }
 
@@ -297,13 +293,20 @@ app.use('/api/sites', siteRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/pdf', pdfRoutes);
 
-// Setup Swagger documentation
-setupSwagger(app);
+// Setup Swagger documentation (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  const { setupSwagger } = await import('./src/config/swagger.js');
+  setupSwagger(app);
+  console.log('📚 Swagger documentation available at http://localhost:5000/api-docs');
+} else {
+  // Swagger documentation completely disabled in production
+  console.log('🔒 API documentation disabled in production mode');
+}
 
-// Root route
+// Root route - Minimal response for security
 app.get('/', (req, res) => {
-  res.json({
-    success: true,
+  res.status(200).json({
+    success: true
   });
 });
 
@@ -426,12 +429,14 @@ app.use(errorHandler);
 // Start server
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  const baseUrl = isDevelopment ? `http://localhost:${PORT}` : `Port ${PORT}`;
+
   console.log(`
 🚀 AUREA Backend Server running on port ${PORT}
 📊 Environment: ${process.env.NODE_ENV || 'development'}
-🌐 API Base URL: http://localhost:${PORT}
-📖 Health Check: http://localhost:${PORT}/health
-📚 API Documentation: http://localhost:${PORT}/api-docs
+🌐 API Base: ${baseUrl}${isDevelopment ? '\n📚 API Docs: http://localhost:' + PORT + '/api-docs' : ''}
+
   `);
 });
 
@@ -452,3 +457,4 @@ process.on('uncaughtException', (err) => {
 });
 
 export default app;
+
