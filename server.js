@@ -75,12 +75,6 @@ app.use(compression());
 
 // CORS configuration
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://aurea-frontend.vercel.app",
-  "http://localhost:3000",
-  "https://localhost:5173",
-  "https://localhost:5000",
-  "https://www.aurea.tools",
   process.env.FRONTEND_URL
 ];
 
@@ -108,6 +102,7 @@ const corsOptions = {
     const cleanAllowedOrigins = allowedOrigins
       .filter(o => o) // Remove null/undefined
       .map(o => o.replace(/\/$/, '')); // Remove trailing slashes
+// CORS configuration
 
     if (cleanAllowedOrigins.includes(cleanOrigin)) {
       return callback(null, true);
@@ -190,28 +185,28 @@ app.use('/api/pdf', pdfRoutes);
 setupSwagger(app);
 
 // Root route
-app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Welcome to AUREA Backend API',
-    version: '1.0.0',
-    endpoints: {
-      auth: '/api/auth',
-      portfolios: '/api/portfolios',
-      caseStudies: '/api/case-studies',
-      templates: '/api/templates',
-      upload: '/api/upload',
-      proposals: '/api/proposals',
-      sites: '/api/sites',
-      users: '/api/users',
-      pdf: '/api/pdf',
-      health: '/health',
-      docs: '/api-docs',
-      'portfolio-html': '/:subdomain/html',
-      'case-study-html': '/:subdomain/case-study-:projectId.html'
-    }
-  });
-});
+// app.get('/', (req, res) => {
+//   res.json({
+//     success: true,
+//     message: 'Welcome to AUREA Backend API',
+//     version: '1.0.0',
+//     endpoints: {
+//       auth: '/api/auth',
+//       portfolios: '/api/portfolios',
+//       caseStudies: '/api/case-studies',
+//       templates: '/api/templates',
+//       upload: '/api/upload',
+//       proposals: '/api/proposals',
+//       sites: '/api/sites',
+//       users: '/api/users',
+//       pdf: '/api/pdf',
+//       health: '/health',
+//       docs: '/api-docs',
+//       'portfolio-html': '/:subdomain/html',
+//       'case-study-html': '/:subdomain/case-study-:projectId.html'
+//     }
+//   });
+// });
 
 // Portfolio HTML serving routes - MUST come after API routes
 // This serves the static HTML files generated during publish
