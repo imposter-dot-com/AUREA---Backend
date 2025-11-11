@@ -435,6 +435,9 @@ export class SiteService {
         { forPDF: false }
       );
 
+      // CRITICAL: Clean development scripts from the HTML
+      portfolioHTML = this.cleanDevelopmentScripts(portfolioHTML);
+
       // Generate case study pages using templateConvert.js
       const caseStudyFiles = generateAllPortfolioFiles(portfolioWithCaseStudies);
       allFiles = caseStudyFiles;
@@ -453,7 +456,7 @@ export class SiteService {
         template: templateType
       });
 
-      // Fallback to templateConvert.js
+      // Fallback to templateConvert.js (already generates clean HTML)
       allFiles = generateAllPortfolioFiles(portfolioWithCaseStudies);
       portfolioHTML = allFiles['index.html'];
     }
@@ -687,6 +690,51 @@ export class SiteService {
     logger.service('SiteService', 'getDeploymentHistory', { userId });
 
     return await this.siteRepository.getDeploymentHistory(userId, options);
+  }
+  /**
+   * Clean development scripts from HTML
+   * Removes Vite HMR, React refresh, and other development-only scripts
+   * @param {string} html - HTML string to clean
+   * @returns {string} Cleaned HTML
+   * @private
+   */
+  cleanDevelopmentScripts(html) {
+    if (!html) return html;
+
+    logger.info('Cleaning development scripts from HTML');
+
+    // Remove Vite client scripts
+    html = html.replace(/<script[^>]*src="[^"]*\/@vite\/client"[^>]*><\/script>/gi, '');
+    html = html.replace(/<script[^>]*src="[^"]*\/@react-refresh"[^>]*><\/script>/gi, '');
+
+    // Remove Vite HMR inline scripts
+    html = html.replace(/<script[^>]*>[\s\S]*?import\s*{\s*injectIntoGlobalHook\s*}\s*from[\s\S]*?<\/script>/gi, '');
+    html = html.replace(/<script[^>]*>[\s\S]*?window\.__vite[\s\S]*?<\/script>/gi, '');
+
+    // Remove React DevTools scripts
+    html = html.replace(/<script[^>]*>[\s\S]*?__REACT_DEVTOOLS[\s\S]*?<\/script>/gi, '');
+
+    // Remove development mode indicators
+    html = html.replace(/<script[^>]*>[\s\S]*?process\.env\.NODE_ENV[\s\S]*?<\/script>/gi, '');
+
+    // Remove Vite preload modules
+    html = html.replace(/<link[^>]*rel="modulepreload"[^>]*href="[^"]*\/@vite[^"]*"[^>]*>/gi, '');
+
+    // Remove localhost references (common in development)
+    html = html.replace(/http:\/\/localhost:\d+/gi, '');
+
+    // Remove source map comments
+    html = html.replace(/\/\/# sourceMappingURL=.*/gi, '');
+    html = html.replace(/\/\*# sourceMappingURL=.*\*\//gi, '');
+
+    // Validate that dev scripts are removed
+    if (html.includes('@vite/client') || html.includes('@react-refresh')) {
+      logger.warn('Development scripts may still be present after cleaning');
+    } else {
+      logger.info('Development scripts successfully removed from HTML');
+    }
+
+    return html;
   }
 }
 

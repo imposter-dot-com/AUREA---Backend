@@ -100,6 +100,86 @@ export const TEMPLATES = {
       scrollDelay: 300,
       fontLoadDelay: 800 // Reduced for speed
     }
+  },
+
+  chic: {
+    id: 'chic',
+    name: 'Chic',
+    description: 'Editorial/Magazine-inspired portfolio with sophisticated typography',
+    category: 'modern',
+    previewUrl: `${FRONTEND_BASE_URL}/template-preview/chic`,
+    caseStudyUrl: null, // No case study page yet
+    hasCaseStudySupport: false, // Chic doesn't have case study support yet
+    pdfSettings: {
+      format: 'A4',
+      printBackground: true,
+      preferCSSPageSize: true,
+      displayHeaderFooter: false,
+      margin: {
+        top: '0',
+        right: '0',
+        bottom: '0',
+        left: '0'
+      }
+    },
+    puppeteerSettings: {
+      viewport: {
+        width: 1200,
+        height: 1600,
+        deviceScaleFactor: 2
+      },
+      waitForSelectors: [
+        'h1',
+        'h2',
+        '.section',
+        'section',
+        'main',
+        '[class*="hero"]',
+        '[class*="about"]'
+      ],
+      scrollDelay: 300,
+      fontLoadDelay: 800 // Reduced for speed
+    }
+  },
+
+  boldfolio: {
+    id: 'boldfolio',
+    name: 'BoldFolio',
+    description: 'Bold statement design with impactful visuals and strong typography',
+    category: 'creative',
+    previewUrl: `${FRONTEND_BASE_URL}/template-preview/boldfolio`,
+    caseStudyUrl: null, // No case study page yet
+    hasCaseStudySupport: false, // BoldFolio doesn't have case study support yet
+    pdfSettings: {
+      format: 'A4',
+      printBackground: true,
+      preferCSSPageSize: true,
+      displayHeaderFooter: false,
+      margin: {
+        top: '0',
+        right: '0',
+        bottom: '0',
+        left: '0'
+      }
+    },
+    puppeteerSettings: {
+      viewport: {
+        width: 1200,
+        height: 1600,
+        deviceScaleFactor: 2
+      },
+      waitForSelectors: [
+        'h1',
+        'h2',
+        '.section',
+        'section',
+        'main',
+        '[class*="hero"]',
+        '[class*="about"]'
+      ],
+      scrollDelay: 300,
+      fontLoadDelay: 800 // Reduced for speed
+    }
   }
 };
 
@@ -118,7 +198,11 @@ export const LEGACY_TEMPLATE_MAP = {
   'swiss': 'echolon',
   'echelon': 'echolon', // Handle correct spelling
   'botanical': 'serene',
-  'creative': 'serene'
+  'creative': 'serene',
+  'editorial': 'chic',
+  'magazine': 'chic',
+  'bold': 'boldfolio',
+  'statement': 'boldfolio'
 };
 
 /**

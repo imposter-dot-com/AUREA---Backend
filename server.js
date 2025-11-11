@@ -67,8 +67,21 @@ setTimeout(() => {
   initializeTemplates();
 }, 2000);
 
-// Security and performance middleware
+// Security and performance middleware with portfolio-friendly CSP
 app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      imgSrc: ["'self'", "data:", "https:", "http:", "blob:"],
+      scriptSrc: ["'self'", "'unsafe-inline'"], // Allow inline scripts for static HTML
+      frameSrc: ["'self'"],
+      connectSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  },
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(compression());
@@ -417,8 +430,19 @@ const renderErrorPage = (title, message) => `
 </body>
 </html>`;
 
+// Middleware to relax CSP for portfolio pages (they're static HTML)
+const relaxCSPForPortfolios = (req, res, next) => {
+  // Set a more permissive CSP for portfolio pages
+  res.setHeader('Content-Security-Policy',
+    "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; " +
+    "script-src * 'unsafe-inline' 'unsafe-eval'; " +
+    "style-src * 'unsafe-inline';"
+  );
+  next();
+};
+
 // Serve case study HTML files
-app.get('/:subdomain/case-study-:projectId.html', async (req, res) => {
+app.get('/:subdomain/case-study-:projectId.html', relaxCSPForPortfolios, async (req, res) => {
   try {
     const { subdomain, projectId } = req.params;
     const site = await Site.findBySubdomain(subdomain, false);
@@ -451,7 +475,7 @@ app.get('/:subdomain/case-study-:projectId.html', async (req, res) => {
 });
 
 // Serve main portfolio HTML
-app.get('/:subdomain/html', async (req, res) => {
+app.get('/:subdomain/html', relaxCSPForPortfolios, async (req, res) => {
   try {
     const { subdomain } = req.params;
     const site = await Site.findBySubdomain(subdomain, false);
