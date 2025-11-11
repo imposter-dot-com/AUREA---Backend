@@ -43,9 +43,200 @@ router.put('/config', auth, updateSiteConfig);
 // POST /api/sites/analytics/view - Record site view for analytics (with rate limiting)
 router.post('/analytics/view', publicViewLimiter, recordSiteView);
 
+// POST /api/sites/:portfolioId/regenerate - Force regeneration of portfolio HTML files
+router.post('/:portfolioId/regenerate', auth, publishLimiter, async (req, res, next) => {
+  try {
+    const { portfolioId } = req.params;
+
+    // Import required models and services
+    const { default: Portfolio } = await import('../models/Portfolio.js');
+    const { default: Site } = await import('../models/Site.js');
+    const { default: SiteService } = await import('../core/services/SiteService.js');
+
+    // Find the portfolio and verify ownership
+    const portfolio = await Portfolio.findOne({
+      _id: portfolioId,
+      userId: req.user._id
+    });
+
+    if (!portfolio) {
+      return res.status(404).json({
+        success: false,
+        message: 'Portfolio not found or access denied'
+      });
+    }
+
+    // Find the associated site
+    const site = await Site.findOne({ portfolioId });
+
+    if (!site) {
+      return res.status(404).json({
+        success: false,
+        message: 'Site not found for this portfolio. Please publish the portfolio first.'
+      });
+    }
+
+    // Initialize SiteService
+    const siteService = new SiteService();
+
+    // Regenerate HTML files
+    logger.info('Regenerating HTML files for portfolio', {
+      portfolioId,
+      subdomain: site.subdomain
+    });
+
+    const { allFiles, portfolioHTML } = await siteService.generatePortfolioHTML(portfolio);
+
+    // Save the regenerated files
+    const saveResult = await siteService.saveFilesToSubdomain(
+      site.subdomain,
+      allFiles,
+      null // No old subdomain to cleanup
+    );
+
+    if (!saveResult.success) {
+      throw new Error(saveResult.message || 'Failed to save regenerated files');
+    }
+
+    // Update the site's lastDeployedAt timestamp
+    site.lastDeployedAt = new Date();
+    await site.save();
+
+    logger.info('Successfully regenerated portfolio HTML', {
+      portfolioId,
+      subdomain: site.subdomain,
+      filesGenerated: Object.keys(allFiles).length
+    });
+
+    res.json({
+      success: true,
+      message: 'Portfolio HTML files regenerated successfully',
+      data: {
+        portfolioId,
+        subdomain: site.subdomain,
+        filesGenerated: Object.keys(allFiles).length,
+        url: `/${site.subdomain}/html`
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error regenerating portfolio HTML', { error: error.message });
+    next(error);
+  }
+});
+
 // ==========================================
 // PARAMETERIZED ROUTES
 // ==========================================
+
+// GET /api/sites/:subdomain/debug - Debug portfolio data structure (protected)
+router.get('/:subdomain/debug', auth, async (req, res, next) => {
+  try {
+    const { subdomain } = req.params;
+
+    // Import required models and services
+    const { default: Site } = await import('../models/Site.js');
+    const { default: Portfolio } = await import('../models/Portfolio.js');
+    const { default: CaseStudy } = await import('../models/CaseStudy.js');
+
+    // Find the site by subdomain
+    const site = await Site.findOne({ subdomain }).populate('portfolioId');
+
+    if (!site) {
+      return res.status(404).json({
+        success: false,
+        message: 'Site not found',
+        subdomain
+      });
+    }
+
+    // Check ownership
+    if (site.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+
+    // Get the portfolio
+    const portfolio = site.portfolioId;
+    if (!portfolio) {
+      return res.status(404).json({
+        success: false,
+        message: 'Portfolio not found for this site'
+      });
+    }
+
+    // Get case studies
+    const caseStudies = await CaseStudy.find({ portfolioId: portfolio._id });
+
+    // Prepare debug information
+    const debugInfo = {
+      site: {
+        subdomain: site.subdomain,
+        isActive: site.isActive,
+        published: site.published,
+        lastDeployedAt: site.lastDeployedAt,
+        createdAt: site.createdAt
+      },
+      portfolio: {
+        _id: portfolio._id,
+        title: portfolio.title,
+        description: portfolio.description,
+        hasContent: !!portfolio.content,
+        contentKeys: portfolio.content ? Object.keys(portfolio.content) : [],
+        contentStructure: portfolio.content ? {
+          hasHero: !!portfolio.content.hero,
+          hasAbout: !!portfolio.content.about,
+          hasWork: !!portfolio.content.work,
+          projectCount: portfolio.content.work?.projects?.length || 0,
+          hasGallery: !!portfolio.content.gallery,
+          hasContact: !!portfolio.content.contact
+        } : null,
+        hasSections: !!portfolio.sections,
+        sectionCount: portfolio.sections?.length || 0,
+        availableFields: Object.keys(portfolio.toObject()),
+        isPublished: portfolio.isPublished,
+        publishedAt: portfolio.publishedAt,
+        updatedAt: portfolio.updatedAt
+      },
+      caseStudies: {
+        count: caseStudies.length,
+        projectIds: caseStudies.map(cs => cs.projectId)
+      },
+      dataValidation: {
+        hasValidStructure: !!(portfolio.content || portfolio.sections),
+        recommendation: ''
+      }
+    };
+
+    // Add recommendations
+    if (!portfolio.content && !portfolio.sections) {
+      debugInfo.dataValidation.recommendation = 'Portfolio needs content structure. Re-save the portfolio with all required fields.';
+    } else if (portfolio.content && (!portfolio.content.work || !portfolio.content.work.projects)) {
+      debugInfo.dataValidation.recommendation = 'Portfolio content exists but missing work/projects. Add projects to the portfolio.';
+    } else if (portfolio.updatedAt > site.lastDeployedAt) {
+      debugInfo.dataValidation.recommendation = 'Portfolio was updated after last deployment. Re-publish to update the site.';
+    } else {
+      debugInfo.dataValidation.recommendation = 'Structure looks valid. If still seeing template data, try re-publishing.';
+    }
+
+    // If verbose mode requested, include full portfolio data
+    if (req.query.verbose === 'true') {
+      debugInfo.fullPortfolioData = portfolio.toObject();
+    }
+
+    res.json({
+      success: true,
+      message: 'Debug information retrieved',
+      data: debugInfo
+    });
+
+  } catch (error) {
+    logger.error('Error in portfolio debug endpoint', { error: error.message });
+    next(error);
+  }
+});
 
 // GET /api/sites/:subdomain/raw-html - Get raw HTML content for frontend to serve
 router.get('/:subdomain/raw-html', async (req, res) => {

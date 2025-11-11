@@ -1348,6 +1348,35 @@ export function generateAllPortfolioFiles(portfolioData, options = {}) {
 }
 
 /**
+ * Validates that HTML content doesn't contain template placeholder data
+ * @param {string} html - The HTML content to validate
+ * @returns {boolean} - Returns true if valid (no placeholder data), false if placeholders found
+ */
+function validateNoPlaceholderData(html) {
+  // List of known placeholder/template strings that should NOT appear in production
+  const placeholders = [
+    'JOHN DESIGNER',
+    'BRAND IDENTITY SYSTEM',
+    'DESIGNING WITH PRECISION',
+    'Case studies in clarity and form',
+    'I am a designer focused on minimalism',
+    'Comprehensive brand identity and guidelines for a tech startup',
+    'LOGO DESIGN\\nPROCESS',
+    'In this article I will share my logo design process'
+  ];
+
+  // Check if any placeholder appears in the HTML
+  for (const placeholder of placeholders) {
+    if (html && html.includes(placeholder)) {
+      console.error(`⚠️  Warning: Generated HTML contains template placeholder: "${placeholder}"`);
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
  * Process portfolio data from database format to template format
  */
 function processPortfolioData(inputData) {
@@ -1424,29 +1453,52 @@ function processPortfolioData(inputData) {
     };
   }
   
-  // Fallback: create default structure from portfolio metadata
-  return {
-    hero: { 
-      title: data.title || 'PORTFOLIO', 
-      subtitle: data.description || 'Creative Work' 
+  // Production validation: throw error if no valid portfolio structure found
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  // Log the issue for debugging
+  console.error(`\n❌ Portfolio data validation failed:`);
+  console.error(`  - No 'sections' array found`);
+  console.error(`  - No valid 'content' object found`);
+  console.error(`  - Portfolio ID: ${data._id || 'unknown'}`);
+  console.error(`  - Available keys: ${Object.keys(data).join(', ')}`);
+
+  if (isProduction) {
+    // In production, throw an error to prevent publishing with template data
+    throw new Error('Portfolio data structure invalid. Portfolio must have either "sections" or "content" field with proper structure.');
+  }
+
+  // In development only: attempt to construct from available fields
+  console.warn(`⚠️  Development mode: Attempting to construct portfolio structure from available fields`);
+
+  // Try to build a valid structure from whatever fields we have
+  const constructedData = {
+    hero: {
+      title: data.title || data.name || 'PORTFOLIO',
+      subtitle: data.description || data.tagline || 'Creative Work'
     },
-    about: { 
-      name: 'Designer', 
-      bio: 'Creative professional' 
+    about: {
+      name: data.name || data.userName || 'Designer',
+      bio: data.bio || data.description || 'Creative professional',
+      email: data.email || '',
+      phone: data.phone || ''
     },
     work: {
       heading: "My Work",
-      projects: []
+      projects: data.projects || []
     },
     caseStudies: data.caseStudies || {},
-    gallery: { heading: 'VISUAL STUDIES', images: [] },
-    contact: {},
+    gallery: data.gallery || { heading: 'VISUAL STUDIES', images: [] },
+    contact: data.contact || {},
     styling: data.styling || {}
   };
+
+  console.log(`✅ Constructed portfolio structure with ${constructedData.work.projects.length} projects`);
+  return constructedData;
 }
 
 // Export functions for use in controllers
-export { generateHTML, createHTMLFromData, processPortfolioData };
+export { generateHTML, createHTMLFromData, processPortfolioData, validateNoPlaceholderData };
 
 // Run export (commented out for API use - uncomment to run as script)
 // exportPortfolio();

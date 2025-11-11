@@ -365,6 +365,26 @@ export class SiteService {
     // Prepare portfolio data with case studies
     const portfolioWithCaseStudies = portfolio.toObject();
 
+    // CRITICAL: Ensure portfolio has proper content structure
+    if (!portfolioWithCaseStudies.content || typeof portfolioWithCaseStudies.content !== 'object') {
+      logger.warn('Portfolio missing content structure, attempting to construct from available fields', {
+        portfolioId: portfolio._id,
+        hasTitle: !!portfolioWithCaseStudies.title,
+        hasDescription: !!portfolioWithCaseStudies.description,
+        fieldsAvailable: Object.keys(portfolioWithCaseStudies).join(', ')
+      });
+
+      // Construct content structure from available portfolio fields
+      portfolioWithCaseStudies.content = this.constructContentFromPortfolio(portfolioWithCaseStudies);
+
+      logger.info('Constructed content structure', {
+        portfolioId: portfolio._id,
+        hasHero: !!portfolioWithCaseStudies.content.hero,
+        hasAbout: !!portfolioWithCaseStudies.content.about,
+        projectCount: portfolioWithCaseStudies.content.work?.projects?.length || 0
+      });
+    }
+
     // Convert case studies array to object keyed by projectId
     if (caseStudies && caseStudies.length > 0) {
       portfolioWithCaseStudies.caseStudies = {};
@@ -438,7 +458,94 @@ export class SiteService {
       portfolioHTML = allFiles['index.html'];
     }
 
+    // Import validation function
+    const { validateNoPlaceholderData } = await import('../../../services/templateConvert.js');
+
+    // Validate that generated HTML doesn't contain placeholder data
+    const isValid = validateNoPlaceholderData(portfolioHTML);
+
+    if (!isValid && process.env.NODE_ENV === 'production') {
+      logger.error('Generated HTML contains template placeholder data', {
+        portfolioId: portfolio._id,
+        template: templateType
+      });
+      throw new Error('Failed to generate portfolio HTML: template placeholder data detected. Please ensure your portfolio has all required fields filled.');
+    }
+
     return { allFiles, portfolioHTML };
+  }
+
+  /**
+   * Construct content structure from portfolio fields (migration helper)
+   * @param {Object} portfolio - Portfolio object
+   * @returns {Object} Constructed content structure
+   * @private
+   */
+  constructContentFromPortfolio(portfolio) {
+    // Try to find user info from different possible locations
+    const userName = portfolio.userName || portfolio.name || portfolio.user?.name || 'Portfolio Owner';
+    const userEmail = portfolio.email || portfolio.user?.email || '';
+    const userBio = portfolio.bio || portfolio.description || '';
+
+    // Construct a valid content structure from available fields
+    const content = {
+      hero: {
+        title: portfolio.title || userName + "'s Portfolio",
+        subtitle: portfolio.subtitle || portfolio.tagline || portfolio.description || 'Creative Portfolio'
+      },
+      about: {
+        name: userName,
+        bio: userBio || 'Creative professional showcasing my work',
+        email: userEmail,
+        phone: portfolio.phone || '',
+        image: portfolio.profileImage || portfolio.image || ''
+      },
+      work: {
+        heading: 'My Work',
+        projects: []
+      },
+      gallery: portfolio.gallery || { heading: 'Gallery', images: [] },
+      contact: portfolio.contact || {
+        heading: 'Contact',
+        email: userEmail
+      },
+      social: portfolio.social || {}
+    };
+
+    // Try to extract projects from various possible locations
+    if (portfolio.projects && Array.isArray(portfolio.projects)) {
+      content.work.projects = portfolio.projects.map((project, index) => ({
+        id: project.id || project._id || index,
+        title: project.title || project.name || `Project ${index + 1}`,
+        meta: project.meta || project.category || 'PROJECT',
+        description: project.description || '',
+        image: project.image || project.thumbnail || project.coverImage || '',
+        tags: project.tags || [],
+        hasCaseStudy: false // Will be updated later if case studies exist
+      }));
+    }
+
+    // Also check if there's a works array (alternative naming)
+    if (!content.work.projects.length && portfolio.works && Array.isArray(portfolio.works)) {
+      content.work.projects = portfolio.works.map((work, index) => ({
+        id: work.id || work._id || index,
+        title: work.title || work.name || `Work ${index + 1}`,
+        meta: work.meta || work.type || 'WORK',
+        description: work.description || '',
+        image: work.image || work.thumbnail || '',
+        tags: work.tags || [],
+        hasCaseStudy: false
+      }));
+    }
+
+    logger.info('Constructed portfolio content structure', {
+      portfolioId: portfolio._id,
+      projectCount: content.work.projects.length,
+      hasAboutInfo: !!content.about.name,
+      hasHeroContent: !!content.hero.title
+    });
+
+    return content;
   }
 
   /**
