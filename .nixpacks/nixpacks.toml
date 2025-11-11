@@ -1,0 +1,40 @@
+# Nixpacks configuration for Railway deployment
+# This file ensures Chromium and its dependencies are installed for Puppeteer
+
+[phases.setup]
+# Install Chromium and required dependencies
+nixPkgs = [
+    "chromium",
+    "fontconfig",
+    "freetype",
+    "harfbuzz",
+    "ca-certificates",
+    "nss",
+    "nspr",
+    "atk",
+    "cups",
+    "libdrm",
+    "expat",
+    "libXcomposite",
+    "libXdamage",
+    "libXfixes",
+    "libXrandr",
+    "mesa",
+    "libxcb",
+    "libxkbcommon",
+    "pango",
+    "alsa-lib"
+]
+
+[phases.build]
+# Skip Puppeteer's automatic Chromium download since we're using system Chromium
+cmds = [
+    "npm ci --omit=dev"
+]
+
+[variables]
+# Point Puppeteer to system Chromium
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
+PUPPETEER_EXECUTABLE_PATH = "/nix/store/chromium"
+# Increase Node.js memory limit for PDF generation
+NODE_OPTIONS = "--max-old-space-size=1024"

@@ -21,11 +21,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Configuration
+const isProduction = process.env.NODE_ENV === 'production';
+const isRailway = process.env.RAILWAY_ENVIRONMENT !== undefined;
+
 const PDF_CONFIG = {
-  fastMode: process.env.PDF_FAST_MODE === 'true',
-  maxTimeout: parseInt(process.env.PDF_MAX_TIMEOUT || '10000', 10),
-  skipImages: process.env.PDF_SKIP_IMAGE_WAIT === 'true',
-  enableCache: process.env.PDF_CACHE_ENABLED !== 'false'
+  fastMode: process.env.PDF_FAST_MODE === 'true' || isRailway, // Default fast mode on Railway
+  maxTimeout: parseInt(process.env.PDF_MAX_TIMEOUT || (isProduction ? '30000' : '10000'), 10), // 30s in prod, 10s in dev
+  skipImages: process.env.PDF_SKIP_IMAGE_WAIT === 'true' || isRailway, // Skip image wait on Railway
+  enableCache: process.env.PDF_CACHE_ENABLED !== 'false',
+  // Production-specific optimizations
+  reduceMemory: isRailway || process.env.PDF_REDUCE_MEMORY === 'true'
 };
 
 // PDF generation options for optimal quality
@@ -52,7 +57,7 @@ const DEFAULT_PDF_OPTIONS = {
 const DEFAULT_VIEWPORT = {
   width: 1200,
   height: 1600,
-  deviceScaleFactor: 2 // Higher quality for retina displays
+  deviceScaleFactor: PDF_CONFIG.reduceMemory ? 1 : 2 // Lower quality in memory-constrained environments
 };
 
 /**
@@ -195,7 +200,21 @@ const generatePDFFromHTML = async (htmlContent, options = {}) => {
     return pdfBuffer;
 
   } catch (error) {
-    logger.error('Error generating PDF', { error: error.message });
+    logger.error('Error generating PDF', {
+      error: error.message,
+      stack: error.stack,
+      config: PDF_CONFIG,
+      isProduction,
+      isRailway
+    });
+
+    // Provide more helpful error messages for common issues
+    if (error.message.includes('timeout') || error.message.includes('Timeout')) {
+      throw new Error(`PDF generation timeout (${PDF_CONFIG.maxTimeout}ms). Try increasing PDF_MAX_TIMEOUT environment variable.`);
+    } else if (error.message.includes('memory') || error.message.includes('ENOMEM')) {
+      throw new Error('PDF generation failed due to memory constraints. Try setting PDF_REDUCE_MEMORY=true and PDF_BROWSER_POOL_SIZE=1.');
+    }
+
     throw new Error(`PDF generation failed: ${error.message}`);
   } finally {
     // Clean up page

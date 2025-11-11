@@ -271,6 +271,67 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Puppeteer health check route - Tests if Chrome can launch successfully
+app.get('/health/puppeteer', async (req, res) => {
+  try {
+    // Import browser pool
+    const { default: browserPool } = await import('./src/infrastructure/pdf/BrowserPool.js');
+
+    // Try to acquire and release a browser
+    const startTime = Date.now();
+    const browser = await browserPool.acquire();
+
+    // Get browser version
+    const version = await browser.version();
+
+    // Get pool stats
+    const stats = browserPool.getStats();
+
+    // Release browser back to pool
+    await browserPool.release(browser);
+
+    const duration = Date.now() - startTime;
+
+    res.status(200).json({
+      success: true,
+      message: 'Puppeteer is working correctly',
+      details: {
+        browserVersion: version,
+        poolStats: stats,
+        testDurationMs: duration,
+        environment: {
+          nodeEnv: process.env.NODE_ENV,
+          isRailway: process.env.RAILWAY_ENVIRONMENT !== undefined,
+          pdfConfig: {
+            browserPoolSize: process.env.PDF_BROWSER_POOL_SIZE || '3',
+            fastMode: process.env.PDF_FAST_MODE || 'false',
+            maxTimeout: process.env.PDF_MAX_TIMEOUT || '10000',
+            cacheEnabled: process.env.PDF_CACHE_ENABLED || 'true'
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Puppeteer health check failed:', error);
+
+    res.status(503).json({
+      success: false,
+      message: 'Puppeteer health check failed',
+      error: error.message,
+      details: {
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+        environment: {
+          nodeEnv: process.env.NODE_ENV,
+          isRailway: process.env.RAILWAY_ENVIRONMENT !== undefined,
+          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+          skipDownload: process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        },
+        helpMessage: 'Check if Chromium is installed and PUPPETEER_EXECUTABLE_PATH is set correctly'
+      }
+    });
+  }
+});
+
 // Favicon route (prevents 404 errors in browser)
 app.get('/favicon.ico', (req, res) => {
   res.status(204).end(); // No content response

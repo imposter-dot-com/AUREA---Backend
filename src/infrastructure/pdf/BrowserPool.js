@@ -11,8 +11,49 @@
  * - Graceful shutdown handling
  */
 
-import puppeteer from 'puppeteer';
 import logger from '../logging/Logger.js';
+
+// Dynamic imports for production/development Chrome handling
+let puppeteer;
+let chromium;
+
+// Detect environment and load appropriate Chrome binary
+const isProduction = process.env.NODE_ENV === 'production';
+const isRailway = process.env.RAILWAY_ENVIRONMENT !== undefined;
+const isVercel = process.env.VERCEL !== undefined;
+const isServerless = isRailway || isVercel || process.env.AWS_LAMBDA_FUNCTION_NAME !== undefined;
+
+// Initialize Puppeteer with appropriate configuration
+async function initializePuppeteer() {
+  try {
+    if (isServerless || process.env.USE_SERVERLESS_CHROME === 'true') {
+      // Use serverless Chrome for Railway/Vercel/AWS
+      logger.info('Loading serverless Chrome configuration...');
+      const chromiumModule = await import('@sparticuz/chromium');
+      chromium = chromiumModule.default;
+      const puppeteerCore = await import('puppeteer-core');
+      puppeteer = puppeteerCore.default;
+      logger.info('Serverless Chrome loaded successfully');
+    } else {
+      // Use regular Puppeteer for development/VPS
+      const puppeteerModule = await import('puppeteer');
+      puppeteer = puppeteerModule.default;
+      logger.info('Regular Puppeteer loaded successfully');
+    }
+  } catch (error) {
+    logger.error('Failed to initialize Puppeteer', {
+      error: error.message,
+      isProduction,
+      isServerless
+    });
+    // Fallback to regular puppeteer
+    const puppeteerModule = await import('puppeteer');
+    puppeteer = puppeteerModule.default;
+  }
+}
+
+// Initialize on module load
+await initializePuppeteer();
 
 class BrowserPool {
   constructor() {
@@ -20,6 +61,8 @@ class BrowserPool {
     this.inUse = new Set();
     this.maxSize = parseInt(process.env.PDF_BROWSER_POOL_SIZE || '3', 10);
     this.idleTimeout = parseInt(process.env.PDF_BROWSER_IDLE_TIMEOUT || '300000', 10); // 5 minutes
+
+    // Base browser arguments
     this.browserArgs = [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -53,15 +96,53 @@ class BrowserPool {
    */
   async createBrowser() {
     try {
-      const browser = await puppeteer.launch({
-        headless: 'new',
-        args: this.browserArgs,
-        defaultViewport: {
-          width: 1200,
-          height: 1600,
-          deviceScaleFactor: 2
-        }
-      });
+      let launchOptions;
+
+      if (chromium && (isServerless || process.env.USE_SERVERLESS_CHROME === 'true')) {
+        // Use serverless Chrome configuration
+        launchOptions = {
+          args: [...chromium.args, ...this.browserArgs],
+          defaultViewport: chromium.defaultViewport || {
+            width: 1200,
+            height: 1600,
+            deviceScaleFactor: 2
+          },
+          executablePath: await chromium.executablePath(),
+          headless: chromium.headless || 'new'
+        };
+        logger.info('Launching browser with serverless Chrome', {
+          executablePath: launchOptions.executablePath
+        });
+      } else if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+        // Use custom Chrome path (e.g., from Nixpacks)
+        launchOptions = {
+          headless: 'new',
+          args: this.browserArgs,
+          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+          defaultViewport: {
+            width: 1200,
+            height: 1600,
+            deviceScaleFactor: 2
+          }
+        };
+        logger.info('Launching browser with custom executable path', {
+          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
+        });
+      } else {
+        // Use default Puppeteer configuration
+        launchOptions = {
+          headless: 'new',
+          args: this.browserArgs,
+          defaultViewport: {
+            width: 1200,
+            height: 1600,
+            deviceScaleFactor: 2
+          }
+        };
+        logger.info('Launching browser with default Puppeteer configuration');
+      }
+
+      const browser = await puppeteer.launch(launchOptions);
 
       // Add metadata
       browser._createdAt = Date.now();
@@ -75,7 +156,27 @@ class BrowserPool {
 
       return browser;
     } catch (error) {
-      logger.error('Failed to create browser', { error: error.message });
+      logger.error('Failed to create browser', {
+        error: error.message,
+        stack: error.stack,
+        isProduction,
+        isServerless,
+        isRailway,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+        nodeEnv: process.env.NODE_ENV,
+        useServerlessChrome: process.env.USE_SERVERLESS_CHROME
+      });
+
+      // Provide helpful error message for common issues
+      if (error.message.includes('Failed to launch') || error.message.includes('spawn')) {
+        const helpMessage = isServerless
+          ? 'Chrome binary not found. Ensure @sparticuz/chromium is installed and Railway/Vercel has Chromium buildpack configured.'
+          : 'Chrome binary not found. Install Chromium or set PUPPETEER_EXECUTABLE_PATH environment variable.';
+
+        logger.error(helpMessage);
+        throw new Error(`${error.message}\n${helpMessage}`);
+      }
+
       throw error;
     }
   }
