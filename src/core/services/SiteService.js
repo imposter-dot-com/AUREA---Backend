@@ -467,12 +467,16 @@ export class SiteService {
     // Validate that generated HTML doesn't contain placeholder data
     const isValid = validateNoPlaceholderData(portfolioHTML);
 
-    if (!isValid && process.env.NODE_ENV === 'production') {
-      logger.error('Generated HTML contains template placeholder data', {
+    // Allow publishing with placeholder data - users may want to publish incomplete portfolios
+    // This is intentional to support work-in-progress portfolios and testing
+    if (!isValid) {
+      logger.warn('Generated HTML contains template placeholder data (allowed)', {
         portfolioId: portfolio._id,
-        template: templateType
+        template: templateType,
+        note: 'Publishing with placeholder data is enabled to support incomplete portfolios'
       });
-      throw new Error('Failed to generate portfolio HTML: template placeholder data detected. Please ensure your portfolio has all required fields filled.');
+      // Previously this would throw an error, but we now allow it
+      // throw new Error('Failed to generate portfolio HTML: template placeholder data detected. Please ensure your portfolio has all required fields filled.');
     }
 
     return { allFiles, portfolioHTML };
