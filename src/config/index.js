@@ -156,6 +156,38 @@ export const config = {
     return {
       url: getEnv('FRONTEND_URL', 'http://localhost:5173')
     };
+  },
+
+  get email() {
+    return {
+      smtp: {
+        host: getEnv('SMTP_HOST'),
+        port: getEnvInt('SMTP_PORT', 587),
+        user: getEnv('SMTP_USER'),
+        pass: getEnv('SMTP_PASS')
+      },
+      from: getEnv('EMAIL_FROM', 'noreply@aurea.com'),
+      fromName: getEnv('EMAIL_FROM_NAME', 'AUREA'),
+      otpExpiryMinutes: getEnvInt('OTP_EXPIRY_MINUTES', 10),
+      resetTokenExpiryHours: getEnvInt('RESET_TOKEN_EXPIRY_HOURS', 1),
+      verificationTokenExpiryHours: getEnvInt('VERIFICATION_TOKEN_EXPIRY_HOURS', 24)
+    };
+  },
+
+  get oauth() {
+    return {
+      google: {
+        clientId: getEnv('GOOGLE_CLIENT_ID'),
+        clientSecret: getEnv('GOOGLE_CLIENT_SECRET'),
+        callbackUrl: getEnv('GOOGLE_CALLBACK_URL', 'http://localhost:5000/api/auth/google/callback')
+      }
+    };
+  },
+
+  get security() {
+    return {
+      otpSecret: getEnv('OTP_SECRET', 'default-otp-secret-change-in-production')
+    };
   }
 };
 

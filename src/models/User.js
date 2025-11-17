@@ -57,6 +57,40 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // Email OTP verification
+  emailVerificationOTP: {
+    type: String,
+    default: null
+  },
+  emailVerificationOTPExpires: {
+    type: Date,
+    default: null
+  },
+  // Password reset
+  resetPasswordToken: {
+    type: String,
+    default: null
+  },
+  resetPasswordExpires: {
+    type: Date,
+    default: null
+  },
+  // OAuth fields
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  authProvider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local'
+  },
+  // Security
+  lastLoginAt: {
+    type: Date,
+    default: null
+  },
   role: {
     type: String,
     enum: ['user', 'admin'],

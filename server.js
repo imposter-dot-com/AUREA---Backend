@@ -13,15 +13,18 @@ import { fileURLToPath } from 'url';
 // import mongoSanitize from 'express-mongo-sanitize';
 // import xss from 'xss-clean';
 import hpp from 'hpp';
+import passport from 'passport';
 import connectDB from './src/config/database.js';
 import { errorHandler, notFound } from './src/middleware/errorHandler.js';
 import { requestLogger } from './src/middleware/requestLogger.js';
 import { generalApiLimiter } from './src/middleware/rateLimiter.js';
 import { initCloudinary } from './src/config/cloudinary.js';
 import { initRedis } from './src/utils/cache.js';
+import { initializePassport } from './src/config/passport.js';
 // Swagger import moved to dynamic import below for production check
 import Template from './src/models/Template.js';
 import Site from './src/models/Site.js';
+import emailService from './src/infrastructure/email/EmailService.js';
 
 // Route imports
 import authRoutes from './src/routes/authRoutes.js';
@@ -38,10 +41,18 @@ import templateRoutes from './src/routes/templateRoutes.js';
 initCloudinary();
 initRedis();
 
+// Reinitialize EmailService with loaded environment variables
+// This is necessary because the EmailService singleton was created before dotenv.config() ran
+emailService.reinitialize();
+
 const app = express();
 
 // Connect to database
 connectDB();
+
+// Initialize Passport for OAuth
+initializePassport();
+app.use(passport.initialize());
 
 // Initialize templates on startup
 async function initializeTemplates() {

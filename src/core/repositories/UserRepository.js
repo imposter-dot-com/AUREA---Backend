@@ -233,6 +233,158 @@ export class UserRepository {
       lastLogin: user.lastLoginAt
     };
   }
+
+  /**
+   * Find user by Google ID
+   * @param {string} googleId - Google ID
+   * @returns {Promise<User|null>}
+   */
+  async findByGoogleId(googleId) {
+    logger.database('findByGoogleId', 'users', { googleId });
+    return await User.findOne({ googleId });
+  }
+
+  /**
+   * Find user by reset token
+   * @param {string} token - Reset password token
+   * @returns {Promise<User|null>}
+   */
+  async findByResetToken(token) {
+    logger.database('findByResetToken', 'users');
+    return await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+  }
+
+  /**
+   * Update OTP for email verification
+   * @param {string} email - User email
+   * @param {string} otp - OTP code
+   * @param {Date} expires - Expiration date
+   * @returns {Promise<User|null>}
+   */
+  async updateOTP(email, otp, expires) {
+    logger.database('updateOTP', 'users', { email });
+
+    return await User.findOneAndUpdate(
+      { email: email.toLowerCase() },
+      {
+        emailVerificationOTP: otp,
+        emailVerificationOTPExpires: expires
+      },
+      { new: true }
+    );
+  }
+
+  /**
+   * Clear OTP fields
+   * @param {string} userId - User ID
+   * @returns {Promise<User|null>}
+   */
+  async clearOTP(userId) {
+    logger.database('clearOTP', 'users', { userId });
+
+    return await User.findByIdAndUpdate(
+      userId,
+      {
+        emailVerificationOTP: null,
+        emailVerificationOTPExpires: null
+      },
+      { new: true }
+    );
+  }
+
+  /**
+   * Update reset password token
+   * @param {string} userId - User ID
+   * @param {string} token - Reset token
+   * @param {Date} expires - Expiration date
+   * @returns {Promise<User|null>}
+   */
+  async updateResetToken(userId, token, expires) {
+    logger.database('updateResetToken', 'users', { userId });
+
+    return await User.findByIdAndUpdate(
+      userId,
+      {
+        resetPasswordToken: token,
+        resetPasswordExpires: expires
+      },
+      { new: true }
+    );
+  }
+
+  /**
+   * Clear reset password token
+   * @param {string} userId - User ID
+   * @returns {Promise<User|null>}
+   */
+  async clearResetToken(userId) {
+    logger.database('clearResetToken', 'users', { userId });
+
+    return await User.findByIdAndUpdate(
+      userId,
+      {
+        resetPasswordToken: null,
+        resetPasswordExpires: null
+      },
+      { new: true }
+    );
+  }
+
+  /**
+   * Update last login time
+   * @param {string} userId - User ID
+   * @returns {Promise<User|null>}
+   */
+  async updateLastLogin(userId) {
+    logger.database('updateLastLogin', 'users', { userId });
+
+    return await User.findByIdAndUpdate(
+      userId,
+      { lastLoginAt: new Date() },
+      { new: true }
+    );
+  }
+
+  /**
+   * Mark email as verified
+   * @param {string} userId - User ID
+   * @returns {Promise<User|null>}
+   */
+  async markEmailVerified(userId) {
+    logger.database('markEmailVerified', 'users', { userId });
+
+    return await User.findByIdAndUpdate(
+      userId,
+      {
+        emailVerified: true,
+        emailVerificationOTP: null,
+        emailVerificationOTPExpires: null
+      },
+      { new: true }
+    );
+  }
+
+  /**
+   * Link Google account to existing user
+   * @param {string} userId - User ID
+   * @param {string} googleId - Google ID
+   * @returns {Promise<User|null>}
+   */
+  async linkGoogleAccount(userId, googleId) {
+    logger.database('linkGoogleAccount', 'users', { userId });
+
+    return await User.findByIdAndUpdate(
+      userId,
+      {
+        googleId,
+        authProvider: 'google'
+      },
+      { new: true }
+    );
+  }
 }
 
 // Export singleton instance

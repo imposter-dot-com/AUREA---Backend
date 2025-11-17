@@ -31,6 +31,9 @@ node test/test-pdf-generation.js            # PDF generation tests
 
 # Admin Operations
 npm run admin:upgrade-premium  # Upgrade user to premium (requires user ID)
+npm run admin:debug-login      # Debug login issues
+npm run admin:create-user      # Create test user
+npm run admin:clear-brute-force # Clear brute force protection records
 
 # Database Seeding
 node seeds/templateSeeds.js    # Seed template data
@@ -52,27 +55,28 @@ The codebase has been substantially refactored from MVC to **Clean Architecture*
 
 **Key Improvements:**
 - ✅ **10/10 Controllers** refactored to thin pattern (< 360 lines each)
-- ✅ **11 Services** created with all business logic
-- ✅ **5 Repositories** for data access abstraction
+- ✅ **11 Services** created with all business logic (AuthService, PortfolioService, UserService, TemplateService, CaseStudyService, SubdomainService, SiteService, PremiumService, PDFExportService, UploadService, ProposalExtractService)
+- ✅ **6 Repositories** for data access abstraction (UserRepository, PortfolioRepository, TemplateRepository, CaseStudyRepository, SiteRepository, PDFRepository)
 - ✅ **100% Centralized Configuration** (no scattered process.env)
-- ✅ **99% Structured Logging** (replaced console.log)
+- ✅ **99% Structured Logging** (console.log replaced)
 - ✅ **Consistent Error Handling** with custom exceptions
 - ✅ **Standardized Responses** with responseFormatter
 
 **See comprehensive documentation:**
-- `NEW_ARCHITECTURE_WALKTHROUGH.md` - Complete architecture guide
-- `NEW_DEVELOPER_ONBOARDING.md` - Developer onboarding (40 pages)
-- `REFACTORING_BEFORE_AFTER_COMPARISON.md` - Before/after analysis
-- `REFACTORING_PROGRESS.md` - Detailed progress tracking
+- `docs/NEW_ARCHITECTURE_WALKTHROUGH.md` - Complete architecture guide
+- `docs/NEW_DEVELOPER_ONBOARDING.md` - Developer onboarding (40 pages)
+- `docs/REFACTORING_BEFORE_AFTER_COMPARISON.md` - Before/after analysis
+- `docs/REFACTORING_PROGRESS.md` - Detailed progress tracking
 
 **Key Architectural Components**:
 
 1. **Authentication Layer**: JWT-based with optional auth support for public routes
 2. **Ownership Middleware**: Ensures users can only access/modify their own resources
 3. **Rate Limiting**: Endpoint-specific limits (10/min for slug checks, 5/min for publishing, 30/min for CRUD)
-4. **Caching Layer**: Optional Redis with graceful degradation
-5. **File Generation System**: HTML generation via `services/templateConvert.js` with responsive templates
-6. **Dual Publishing Modes**:
+4. **Brute Force Protection**: Progressive delays on login (5 attempts → 30 min lockout)
+5. **Caching Layer**: Optional Redis with graceful degradation
+6. **File Generation System**: HTML generation via `services/templateConvert.js` with responsive templates
+7. **Dual Publishing Modes**:
    - Vercel deployment via `services/deploymentService.js`
    - Local subdomain hosting in `generated-files/{subdomain}/` directory
 
@@ -212,6 +216,8 @@ All protected routes use this middleware order:
 - `VERCEL_ORG_ID` - Vercel organization ID
 - `VERCEL_PROJECT_ID` - Vercel project ID
 - `GEMINI_API_KEY` - Google Gemini AI API key for PDF extraction features
+- `PDF_BROWSER_POOL_SIZE` - Browser instances for PDF generation (default: 3, reduce to 1 for constrained environments)
+- `PDF_BROWSER_IDLE_TIMEOUT` - Browser idle timeout in ms (default: 300000 / 5 minutes)
 
 **Note**: See `.env.example` for complete configuration template
 
@@ -351,6 +357,10 @@ if (!portfolio) {
 13. **HTML Serving Routes**: Portfolio HTML routes (`/:subdomain/html`) must come AFTER API routes in `server.js`
 14. **Puppeteer for PDFs**: PDF generation requires Puppeteer which downloads Chromium on first install
 15. **Gemini AI Optional**: PDF extraction features require `GEMINI_API_KEY`, but server runs without it
+16. **Express 5 Security Limitations**: Some security middleware is incompatible with Express 5.1.0:
+    - `express-mongo-sanitize` - Commented out (Express 5 incompatibility)
+    - `xss-clean` - Commented out (Express 5 incompatibility)
+    - Alternative protections: Input validation via express-validator, Helmet.js, HPP, rate limiting, brute force prevention still active
 
 ## Testing Strategy
 
@@ -439,7 +449,39 @@ AUREA---Backend/
 │   │   ├── errorHandler.js   # Centralized error handling
 │   │   ├── rateLimiter.js    # Endpoint-specific rate limits
 │   │   ├── requestLogger.js  # Request/response logging
+│   │   ├── logSanitizer.js   # Sanitize sensitive data in logs
+│   │   ├── bruteForcePrevention.js # Brute force protection
 │   │   └── upload.js         # Multer configuration for file uploads
+│   │
+│   ├── core/                 # Core business logic (Clean Architecture)
+│   │   ├── services/         # 11 service classes with business rules
+│   │   │   ├── AuthService.js
+│   │   │   ├── PortfolioService.js
+│   │   │   ├── UserService.js
+│   │   │   ├── TemplateService.js
+│   │   │   ├── CaseStudyService.js
+│   │   │   ├── SubdomainService.js
+│   │   │   ├── SiteService.js
+│   │   │   ├── PremiumService.js
+│   │   │   ├── PDFExportService.js
+│   │   │   ├── UploadService.js
+│   │   │   └── ProposalExtractService.js
+│   │   │
+│   │   └── repositories/     # 6 data access abstraction layers
+│   │       ├── UserRepository.js
+│   │       ├── PortfolioRepository.js
+│   │       ├── TemplateRepository.js
+│   │       ├── CaseStudyRepository.js
+│   │       ├── SiteRepository.js
+│   │       └── PDFRepository.js
+│   │
+│   ├── shared/               # Shared utilities and exceptions
+│   │   ├── exceptions/       # Custom error classes
+│   │   ├── constants/        # HTTP status, error codes
+│   │   └── utils/            # Response formatters, validators
+│   │
+│   ├── infrastructure/       # External services
+│   │   └── logging/          # Structured logging system
 │   │
 │   ├── services/             # Template rendering
 │   │   └── templateEngine.js # Puppeteer-based PDF rendering from frontend
@@ -460,7 +502,10 @@ AUREA---Backend/
 │   └── migratePortfolios.js  # Portfolio migration scripts
 │
 ├── scripts/                  # Admin utilities
-│   └── upgrade-user-to-premium.js
+│   ├── upgrade-user-to-premium.js
+│   ├── debug-login.js
+│   ├── create-test-user.js
+│   └── clear-brute-force.js
 │
 ├── test/                     # Test suites
 │   ├── test-user-profile-crud.js (9 tests)
@@ -572,8 +617,8 @@ The `swagger.yaml` file is massive (144,647 lines) and follows OpenAPI 3.0 speci
 
 ### Attack Prevention
 4. **Brute Force Protection**: Progressive delays on login (5 attempts → 30 min lockout), signup (3 attempts), password reset
-5. **NoSQL Injection Protection**: express-mongo-sanitize replaces `$` and `.` characters
-6. **XSS Protection**: xss-clean middleware sanitizes all user input
+5. **NoSQL Injection Protection**: Input validation via express-validator (express-mongo-sanitize disabled due to Express 5)
+6. **XSS Protection**: Input sanitization (xss-clean disabled due to Express 5, validation via express-validator)
 7. **HTTP Parameter Pollution**: hpp middleware prevents duplicate parameter attacks
 
 ### Middleware Stack
@@ -583,21 +628,25 @@ The `swagger.yaml` file is massive (144,647 lines) and follows OpenAPI 3.0 speci
 
 ### Testing Security
 ```bash
-# Test brute force (should block after 5 attempts)
-for i in {1..10}; do
-  curl -X POST http://localhost:5000/api/auth/login \
+# Test brute force protection (should block after 5 attempts)
+for i in {1..7}; do
+  echo "Attempt $i:"
+  curl -s -w "\nHTTP Status: %{http_code}\n" \
+    -X POST http://localhost:5000/api/auth/login \
     -H "Content-Type: application/json" \
-    -d '{"email":"test@test.com","password":"wrong"}' &
+    -d '{"email":"test@test.com","password":"wrong"}'
 done
+
+# Clear brute force records (admin)
+npm run admin:clear-brute-force
 ```
 
-**See `SECURITY.md` for complete security documentation**
+**See `SECURITY.md` for complete security documentation** (if file exists)
 
 ## Additional Documentation
 
 For comprehensive guides on specific features:
-- `SECURITY.md` - **NEW**: Complete security implementation guide
-- `TEMPLATE_SYSTEM_GUIDE.md` - Complete template system documentation
+- `TEMPLATE_SYSTEM/_GUIDE.md` - Complete template system documentation
 - `DYNAMIC_PDF_TEMPLATES.md` - PDF generation architecture
 - `FRONTEND_INTEGRATION_GUIDE.md` - Frontend API integration patterns
 - `PDF_PERFORMANCE.md` - PDF generation optimization
