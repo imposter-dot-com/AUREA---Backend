@@ -185,58 +185,106 @@ class EmailService {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Verify Your Email</title>
         <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             line-height: 1.6;
-            color: #333;
-            background-color: #f4f4f4;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             margin: 0;
-            padding: 0;
+            padding: 20px;
           }
           .container {
             max-width: 600px;
-            margin: 20px auto;
+            margin: 0 auto;
             background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
           }
           .header {
+            background: linear-gradient(135deg, #fb8500 0%, #ff9500 100%);
+            padding: 48px 40px;
             text-align: center;
-            margin-bottom: 30px;
           }
           .logo {
-            font-size: 32px;
-            font-weight: bold;
-            color: #4A90E2;
-            margin-bottom: 10px;
-          }
-          .otp-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-size: 36px;
+            font-weight: 900;
             color: white;
-            padding: 30px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 30px 0;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
           }
-          .otp-code {
-            font-size: 42px;
-            font-weight: bold;
-            letter-spacing: 8px;
-            margin: 10px 0;
-            font-family: 'Courier New', monospace;
+          .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 16px;
+            font-weight: 500;
           }
           .content {
+            padding: 48px 40px;
             text-align: center;
+          }
+          .greeting {
+            font-size: 18px;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+          }
+          .message {
             color: #666;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+          }
+          .otp-box {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin: 32px 0;
+          }
+          .otp-label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 12px;
+          }
+          .otp-code {
+            font-size: 48px;
+            font-weight: 900;
+            letter-spacing: 12px;
+            margin: 16px 0;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            color: #fb8500;
+          }
+          .otp-expiry {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            margin-top: 12px;
+          }
+          .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+            margin: 32px 0;
+          }
+          .security-note {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
           }
           .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+            background: #f8f8f8;
+            padding: 32px 40px;
             text-align: center;
+            border-top: 1px solid #e0e0e0;
+          }
+          .footer-text {
             color: #999;
             font-size: 12px;
+            line-height: 1.8;
+          }
+          @media only screen and (max-width: 600px) {
+            .header, .content, .footer { padding: 32px 24px; }
+            .otp-code { font-size: 36px; letter-spacing: 8px; }
           }
         </style>
       </head>
@@ -244,27 +292,33 @@ class EmailService {
         <div class="container">
           <div class="header">
             <div class="logo">AUREA</div>
-            <h2>Email Verification</h2>
+            <div class="subtitle">Email Verification</div>
           </div>
 
           <div class="content">
-            <p>Hello <strong>${name}</strong>,</p>
-            <p>Thank you for signing up! Please use the verification code below to verify your email address:</p>
-          </div>
+            <div class="greeting">Hello <strong>${name}</strong>,</div>
+            <div class="message">
+              Thank you for signing up! Please use the verification code below to verify your email address and start building your portfolio.
+            </div>
 
-          <div class="otp-box">
-            <div>Your Verification Code</div>
-            <div class="otp-code">${otp}</div>
-            <div style="font-size: 14px; margin-top: 10px;">Valid for 10 minutes</div>
-          </div>
+            <div class="otp-box">
+              <div class="otp-label">Verification Code</div>
+              <div class="otp-code">${otp}</div>
+              <div class="otp-expiry">⏱ Valid for 10 minutes</div>
+            </div>
 
-          <div class="content">
-            <p>If you didn't request this code, please ignore this email.</p>
+            <div class="divider"></div>
+
+            <div class="security-note">
+              If you didn't create an account with AUREA, you can safely ignore this email.
+            </div>
           </div>
 
           <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} AUREA. All rights reserved.</p>
-            <p>This is an automated email. Please do not reply.</p>
+            <div class="footer-text">
+              © ${new Date().getFullYear()} AUREA. All rights reserved.<br>
+              This is an automated message. Please do not reply to this email.
+            </div>
           </div>
         </div>
       </body>
@@ -284,65 +338,117 @@ class EmailService {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Your Login Code</title>
         <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             line-height: 1.6;
-            color: #333;
-            background-color: #f4f4f4;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             margin: 0;
-            padding: 0;
+            padding: 20px;
           }
           .container {
             max-width: 600px;
-            margin: 20px auto;
+            margin: 0 auto;
             background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
           }
           .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 48px 40px;
             text-align: center;
-            margin-bottom: 30px;
           }
           .logo {
-            font-size: 32px;
-            font-weight: bold;
-            color: #4A90E2;
-            margin-bottom: 10px;
-          }
-          .otp-box {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            font-size: 36px;
+            font-weight: 900;
             color: white;
-            padding: 30px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 30px 0;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
           }
-          .otp-code {
-            font-size: 42px;
-            font-weight: bold;
-            letter-spacing: 8px;
-            margin: 10px 0;
-            font-family: 'Courier New', monospace;
+          .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 16px;
+            font-weight: 500;
           }
           .content {
+            padding: 48px 40px;
             text-align: center;
+          }
+          .greeting {
+            font-size: 18px;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+          }
+          .message {
             color: #666;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+          }
+          .otp-box {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin: 32px 0;
+          }
+          .otp-label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 12px;
+          }
+          .otp-code {
+            font-size: 48px;
+            font-weight: 900;
+            letter-spacing: 12px;
+            margin: 16px 0;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            color: #10b981;
+          }
+          .otp-expiry {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            margin-top: 12px;
           }
           .warning {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin: 32px 0;
+            border-radius: 8px;
+            text-align: left;
+          }
+          .warning-title {
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .warning-text {
+            color: #78350f;
+            font-size: 14px;
+            line-height: 1.6;
           }
           .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+            background: #f8f8f8;
+            padding: 32px 40px;
             text-align: center;
+            border-top: 1px solid #e0e0e0;
+          }
+          .footer-text {
             color: #999;
             font-size: 12px;
+            line-height: 1.8;
+          }
+          @media only screen and (max-width: 600px) {
+            .header, .content, .footer { padding: 32px 24px; }
+            .otp-code { font-size: 36px; letter-spacing: 8px; }
           }
         </style>
       </head>
@@ -350,27 +456,37 @@ class EmailService {
         <div class="container">
           <div class="header">
             <div class="logo">AUREA</div>
-            <h2>Login Verification Code</h2>
+            <div class="subtitle">Secure Login</div>
           </div>
 
           <div class="content">
-            <p>Hello <strong>${name}</strong>,</p>
-            <p>Here's your one-time login code:</p>
-          </div>
+            <div class="greeting">Hello <strong>${name}</strong>,</div>
+            <div class="message">
+              Here's your one-time login code. Enter this code to securely access your account.
+            </div>
 
-          <div class="otp-box">
-            <div>Your Login Code</div>
-            <div class="otp-code">${otp}</div>
-            <div style="font-size: 14px; margin-top: 10px;">Valid for 10 minutes</div>
-          </div>
+            <div class="otp-box">
+              <div class="otp-label">Login Code</div>
+              <div class="otp-code">${otp}</div>
+              <div class="otp-expiry">⏱ Valid for 10 minutes</div>
+            </div>
 
-          <div class="warning">
-            <strong>Security Notice:</strong> If you didn't request this code, someone may be trying to access your account. Please secure your account immediately.
+            <div class="warning">
+              <div class="warning-title">
+                <span>🔐</span>
+                <span>Security Notice</span>
+              </div>
+              <div class="warning-text">
+                If you didn't request this code, someone may be trying to access your account. Please secure your account immediately and change your password.
+              </div>
+            </div>
           </div>
 
           <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} AUREA. All rights reserved.</p>
-            <p>This is an automated email. Please do not reply.</p>
+            <div class="footer-text">
+              © ${new Date().getFullYear()} AUREA. All rights reserved.<br>
+              This is an automated message. Please do not reply to this email.
+            </div>
           </div>
         </div>
       </body>
@@ -390,67 +506,131 @@ class EmailService {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Reset Your Password</title>
         <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             line-height: 1.6;
-            color: #333;
-            background-color: #f4f4f4;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             margin: 0;
-            padding: 0;
+            padding: 20px;
           }
           .container {
             max-width: 600px;
-            margin: 20px auto;
+            margin: 0 auto;
             background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
           }
           .header {
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+            padding: 48px 40px;
             text-align: center;
-            margin-bottom: 30px;
           }
           .logo {
-            font-size: 32px;
-            font-weight: bold;
-            color: #4A90E2;
-            margin-bottom: 10px;
+            font-size: 36px;
+            font-weight: 900;
+            color: white;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+          }
+          .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 16px;
+            font-weight: 500;
           }
           .content {
+            padding: 48px 40px;
             text-align: center;
+          }
+          .greeting {
+            font-size: 18px;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+          }
+          .message {
             color: #666;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 32px;
           }
           .button-container {
             text-align: center;
-            margin: 30px 0;
+            margin: 32px 0;
           }
           .reset-button {
             display: inline-block;
-            padding: 15px 40px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 16px 48px;
+            background: linear-gradient(135deg, #fb8500 0%, #ff9500 100%);
             color: white;
             text-decoration: none;
-            border-radius: 50px;
-            font-weight: bold;
+            border-radius: 12px;
+            font-weight: 700;
             font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(251, 133, 0, 0.3);
           }
           .reset-button:hover {
-            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(251, 133, 0, 0.4);
           }
-          .expiry-notice {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
+          .info-box {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 32px 0;
+            border-radius: 8px;
+            text-align: left;
+          }
+          .info-title {
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .info-text {
+            color: #1e3a8a;
+            font-size: 14px;
+            line-height: 1.6;
+          }
+          .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+            margin: 32px 0;
+          }
+          .security-note {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+          }
+          .url-box {
+            background: #f8f8f8;
+            padding: 16px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-size: 12px;
+            color: #666;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            text-align: left;
           }
           .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+            background: #f8f8f8;
+            padding: 32px 40px;
             text-align: center;
+            border-top: 1px solid #e0e0e0;
+          }
+          .footer-text {
             color: #999;
             font-size: 12px;
+            line-height: 1.8;
+          }
+          @media only screen and (max-width: 600px) {
+            .header, .content, .footer { padding: 32px 24px; }
+            .reset-button { padding: 14px 32px; font-size: 15px; }
           }
         </style>
       </head>
@@ -458,33 +638,46 @@ class EmailService {
         <div class="container">
           <div class="header">
             <div class="logo">AUREA</div>
-            <h2>Password Reset Request</h2>
+            <div class="subtitle">Password Reset Request</div>
           </div>
 
           <div class="content">
-            <p>Hello <strong>${name}</strong>,</p>
-            <p>We received a request to reset your password. Click the button below to create a new password:</p>
-          </div>
+            <div class="greeting">Hello <strong>${name}</strong>,</div>
+            <div class="message">
+              We received a request to reset your password. Click the button below to create a new password for your account.
+            </div>
 
-          <div class="button-container">
-            <a href="${resetUrl}" class="reset-button">Reset Password</a>
-          </div>
+            <div class="button-container">
+              <a href="${resetUrl}" class="reset-button">Reset Password</a>
+            </div>
 
-          <div class="expiry-notice">
-            <strong>Note:</strong> This link will expire in 1 hour for security reasons.
-          </div>
+            <div class="info-box">
+              <div class="info-title">
+                <span>⏰</span>
+                <span>Important</span>
+              </div>
+              <div class="info-text">
+                This password reset link will expire in 1 hour for security reasons. If you need to reset your password after that, you'll need to request a new link.
+              </div>
+            </div>
 
-          <div class="content">
-            <p>If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
-            <p style="font-size: 12px; color: #999; margin-top: 20px;">
-              If the button doesn't work, copy and paste this link into your browser:<br>
-              <span style="word-break: break-all;">${resetUrl}</span>
-            </p>
+            <div class="divider"></div>
+
+            <div class="security-note">
+              If you didn't request a password reset, you can safely ignore this email. Your account remains secure.
+            </div>
+
+            <div style="font-size: 13px; color: #999; margin-bottom: 8px;">
+              If the button doesn't work, copy and paste this link into your browser:
+            </div>
+            <div class="url-box">${resetUrl}</div>
           </div>
 
           <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} AUREA. All rights reserved.</p>
-            <p>This is an automated email. Please do not reply.</p>
+            <div class="footer-text">
+              © ${new Date().getFullYear()} AUREA. All rights reserved.<br>
+              This is an automated message. Please do not reply to this email.
+            </div>
           </div>
         </div>
       </body>
@@ -504,84 +697,151 @@ class EmailService {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Welcome to AUREA</title>
         <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             line-height: 1.6;
-            color: #333;
-            background-color: #f4f4f4;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             margin: 0;
-            padding: 0;
+            padding: 20px;
           }
           .container {
             max-width: 600px;
-            margin: 20px auto;
+            margin: 0 auto;
             background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
           }
           .header {
+            background: linear-gradient(135deg, #fb8500 0%, #ff9500 100%);
+            padding: 64px 40px;
             text-align: center;
-            margin-bottom: 30px;
           }
           .logo {
-            font-size: 32px;
-            font-weight: bold;
-            color: #4A90E2;
-            margin-bottom: 10px;
-          }
-          .welcome-banner {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-size: 48px;
+            font-weight: 900;
             color: white;
-            padding: 40px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 30px 0;
+            letter-spacing: -2px;
+            margin-bottom: 16px;
           }
-          .welcome-banner h1 {
-            margin: 0;
-            font-size: 36px;
+          .welcome-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 12px;
+            line-height: 1.2;
+          }
+          .welcome-subtitle {
+            font-size: 16px;
+            color: rgba(255,255,255,0.9);
+            font-weight: 500;
           }
           .content {
-            color: #666;
+            padding: 48px 40px;
           }
-          .features {
-            margin: 30px 0;
+          .greeting {
+            font-size: 18px;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+            text-align: center;
+          }
+          .message {
+            color: #666;
+            font-size: 15px;
+            line-height: 1.6;
+            text-align: center;
+            margin-bottom: 40px;
+          }
+          .features-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 24px;
+            text-align: center;
+          }
+          .features-grid {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 40px;
           }
           .feature {
-            margin: 15px 0;
-            padding-left: 30px;
-            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            transition: transform 0.2s;
           }
-          .feature:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #4A90E2;
-            font-weight: bold;
-            font-size: 20px;
+          .feature-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #fb8500 0%, #ff9500 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 900;
+            font-size: 14px;
           }
-          .button-container {
+          .feature-text {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.5;
+            font-weight: 500;
+          }
+          .cta-container {
             text-align: center;
-            margin: 30px 0;
+            margin: 40px 0;
           }
-          .action-button {
+          .cta-button {
             display: inline-block;
-            padding: 15px 40px;
-            background: #4A90E2;
+            padding: 16px 48px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             color: white;
             text-decoration: none;
-            border-radius: 50px;
-            font-weight: bold;
+            border-radius: 12px;
+            font-weight: 700;
             font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          }
+          .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+          }
+          .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+            margin: 40px 0;
+          }
+          .help-section {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
           }
           .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+            background: #f8f8f8;
+            padding: 32px 40px;
             text-align: center;
+            border-top: 1px solid #e0e0e0;
+          }
+          .footer-text {
             color: #999;
             font-size: 12px;
+            line-height: 1.8;
+          }
+          @media only screen and (max-width: 600px) {
+            .header { padding: 48px 24px; }
+            .content, .footer { padding: 32px 24px; }
+            .logo { font-size: 36px; }
+            .welcome-title { font-size: 24px; }
+            .cta-button { padding: 14px 32px; font-size: 15px; }
           }
         </style>
       </head>
@@ -589,36 +849,56 @@ class EmailService {
         <div class="container">
           <div class="header">
             <div class="logo">AUREA</div>
-          </div>
-
-          <div class="welcome-banner">
-            <h1>Welcome to AUREA!</h1>
-            <p style="font-size: 18px; margin-top: 10px;">We're excited to have you on board</p>
+            <div class="welcome-title">Welcome Aboard!</div>
+            <div class="welcome-subtitle">Start building your dream portfolio today</div>
           </div>
 
           <div class="content">
-            <p>Hello <strong>${name}</strong>,</p>
-            <p>Thank you for joining AUREA - the modern platform for building stunning professional portfolios!</p>
-
-            <div class="features">
-              <h3>Here's what you can do:</h3>
-              <div class="feature">Create beautiful portfolios with customizable templates</div>
-              <div class="feature">Showcase your projects and case studies</div>
-              <div class="feature">Publish with custom subdomains or deploy to Vercel</div>
-              <div class="feature">Export portfolios as professional PDFs</div>
-              <div class="feature">Upgrade to premium for advanced features</div>
+            <div class="greeting">Hello <strong>${name}</strong>,</div>
+            <div class="message">
+              Thank you for joining AUREA! We're thrilled to have you as part of our community. You now have access to everything you need to create a stunning professional portfolio.
             </div>
 
-            <p>Ready to get started? Create your first portfolio and let your work shine!</p>
-          </div>
+            <div class="features-title">What You Can Do</div>
+            <div class="features-grid">
+              <div class="feature">
+                <div class="feature-icon">✓</div>
+                <div class="feature-text">Create beautiful portfolios with customizable templates designed by professionals</div>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">✓</div>
+                <div class="feature-text">Showcase your projects with detailed case studies and rich media</div>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">✓</div>
+                <div class="feature-text">Publish instantly with custom subdomains or deploy to Vercel</div>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">✓</div>
+                <div class="feature-text">Export portfolios as professional PDFs for offline sharing</div>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">✓</div>
+                <div class="feature-text">Access premium features and templates to stand out from the crowd</div>
+              </div>
+            </div>
 
-          <div class="button-container">
-            <a href="${config.frontend.url}/dashboard" class="action-button">Go to Dashboard</a>
+            <div class="cta-container">
+              <a href="${config.frontend.url}/dashboard" class="cta-button">Go to Dashboard</a>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="help-section">
+              Need help getting started? Check out our documentation or reach out to our support team. We're here to help you succeed!
+            </div>
           </div>
 
           <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} AUREA. All rights reserved.</p>
-            <p>Need help? Visit our documentation or contact support.</p>
+            <div class="footer-text">
+              © ${new Date().getFullYear()} AUREA. All rights reserved.<br>
+              This is an automated message. Please do not reply to this email.
+            </div>
           </div>
         </div>
       </body>
