@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project 8 - Serene Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Inter", sans-serif; background: #ffffff; color: #2d3748; }
+    .serene-header { position: fixed; top: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.98); border-bottom: 1px solid #e2e8f0; z-index: 100; backdrop-filter: blur(10px); }
+    .serene-header-inner { max-width: 1400px; margin: 0 auto; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .serene-back-btn { font-size: 14px; color: #4a5568; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; text-decoration: none; transition: opacity 0.3s ease; }
+    .serene-back-btn:hover { opacity: 0.7; }
+    .serene-header-label { font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 0.1em; }
+    .serene-main { padding-top: 80px; max-width: 1200px; margin: 0 auto; padding: 80px 24px 80px; }
+    .serene-title-section { margin-bottom: 48px; text-align: center; }
+    .serene-title { font-size: clamp(32px, 5vw, 56px); color: #4a5568; font-weight: 400; line-height: 1.2; margin-bottom: 16px; }
+    .serene-subtitle { font-size: clamp(16px, 2vw, 20px); color: #718096; font-weight: 500; line-height: 1.6; }
+    .serene-image-container { width: 100%; margin-bottom: 64px; border-radius: 4px; overflow: hidden; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); }
+    .serene-image { width: 100%; height: auto; max-height: 70vh; object-fit: cover; display: block; }
+    .serene-no-image { width: 100%; height: 60vh; background: #f0fff4; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #718096; text-transform: uppercase; letter-spacing: 0.1em; }
+    .serene-description { max-width: 800px; margin: 0 auto 80px; font-size: clamp(16px, 2vw, 18px); color: #2d3748; line-height: 1.8; font-weight: 500; }
+    .serene-footer { background: #f7fafc; border-top: 1px solid #e2e8f0; padding: 40px 24px; text-align: center; }
+    .serene-footer-btn { font-size: 14px; padding: 14px 32px; background: #4a5568; color: #ffffff; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; text-decoration: none; display: inline-block; transition: all 0.3s ease; }
+    .serene-footer-btn:hover { background: #2d3748; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+    @media (max-width: 768px) { .serene-header-inner { padding: 16px 20px; } .serene-main { padding: 80px 20px 60px; } }
+  </style>
+</head>
+<body>
+  <header class="serene-header">
+    <div class="serene-header-inner">
+      <a href="/serene-portfoliod/html" class="serene-back-btn">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10H5M5 10L10 5M5 10L10 15" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to Gallery
+      </a>
+      <span class="serene-header-label">Project Detail</span>
+    </div>
+  </header>
+  <main class="serene-main">
+    <div class="serene-title-section">
+      <h1 class="serene-title">Project 8</h1>
+      
+    </div>
+    <div class="serene-image-container">
+      <div class="serene-no-image">No Image</div>
+    </div>
+    
+  </main>
+  <footer class="serene-footer">
+    <a href="/serene-portfoliod/html" class="serene-footer-btn">View All Projects</a>
+  </footer>
+</body>
+</html>

@@ -438,6 +438,16 @@ export class SiteService {
       // CRITICAL: Clean development scripts from the HTML
       portfolioHTML = this.cleanDevelopmentScripts(portfolioHTML);
 
+      // CRITICAL: Transform case study buttons into proper links
+      // The frontend renders React buttons that lose interactivity when captured as static HTML
+      portfolioHTML = this.transformCaseStudyButtons(portfolioHTML, portfolioWithCaseStudies);
+
+      // Debug: Log what we're passing to generateAllPortfolioFiles
+      console.log('🔍 portfolioWithCaseStudies.content?.work?.projects:',
+        portfolioWithCaseStudies.content?.work?.projects?.length || 0, 'items');
+      console.log('🔍 portfolioWithCaseStudies keys:', Object.keys(portfolioWithCaseStudies).join(', '));
+      console.log('🔍 content keys:', portfolioWithCaseStudies.content ? Object.keys(portfolioWithCaseStudies.content).join(', ') : 'no content');
+
       // Generate case study pages using templateConvert.js
       const caseStudyFiles = generateAllPortfolioFiles(portfolioWithCaseStudies);
       allFiles = caseStudyFiles;
@@ -695,6 +705,237 @@ export class SiteService {
 
     return await this.siteRepository.getDeploymentHistory(userId, options);
   }
+  /**
+   * Get public project data from a published portfolio
+   * @param {string} portfolioIdentifier - Portfolio ID or subdomain/slug
+   * @param {string} projectId - Project ID (e.g., project-1, serene-first-0)
+   * @returns {Promise<Object>} Portfolio and project data
+   */
+  async getPublicProject(portfolioIdentifier, projectId) {
+    logger.service('SiteService', 'getPublicProject', { portfolioIdentifier, projectId });
+
+    // Import models
+    const { default: Portfolio } = await import('../../models/Portfolio.js');
+    const { default: Site } = await import('../../models/Site.js');
+    const { default: CaseStudy } = await import('../../models/CaseStudy.js');
+    const mongoose = (await import('mongoose')).default;
+
+    let portfolio = null;
+    let site = null;
+
+    // Try to find portfolio by different identifiers
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(portfolioIdentifier);
+
+    if (isValidObjectId) {
+      // Try finding by portfolio _id first
+      portfolio = await Portfolio.findById(portfolioIdentifier);
+      if (portfolio) {
+        site = await Site.findOne({ portfolioId: portfolio._id, isActive: true });
+      }
+    }
+
+    // If not found by _id, try by subdomain/slug
+    if (!portfolio) {
+      site = await Site.findOne({ subdomain: portfolioIdentifier, isActive: true });
+      if (site) {
+        portfolio = await Portfolio.findById(site.portfolioId);
+      }
+    }
+
+    // If still not found, try by portfolio slug
+    if (!portfolio) {
+      portfolio = await Portfolio.findOne({ slug: portfolioIdentifier });
+      if (portfolio) {
+        site = await Site.findOne({ portfolioId: portfolio._id, isActive: true });
+      }
+    }
+
+    // Check if portfolio exists and is published
+    if (!portfolio) {
+      throw new NotFoundError('Portfolio not found');
+    }
+
+    if (!portfolio.isPublished) {
+      throw new NotFoundError('Portfolio not found or not published');
+    }
+
+    // Find the project based on template type
+    const project = this.findProjectInPortfolio(portfolio, projectId);
+
+    if (!project) {
+      throw new NotFoundError(`Project '${projectId}' not found in portfolio`);
+    }
+
+    // Fetch case study if exists
+    const caseStudy = await CaseStudy.findOne({
+      portfolioId: portfolio._id,
+      projectId: projectId
+    });
+
+    // Build response data
+    const responseData = {
+      portfolio: {
+        _id: portfolio._id,
+        title: portfolio.title,
+        template: portfolio.template || portfolio.templateId || 'echelon',
+        subdomain: site?.subdomain || portfolio.slug,
+        isPublished: portfolio.isPublished
+      },
+      project: {
+        id: project.id,
+        title: project.title || '',
+        description: project.description || '',
+        detailedDescription: project.detailedDescription || caseStudy?.content?.overview?.description || '',
+        image: project.image || '',
+        images: project.images || [],
+        category: project.category || '',
+        year: project.year || '',
+        meta: project.meta || '',
+        subtitle: project.subtitle || '',
+        awards: project.awards || '',
+        logo: project.logo || '',
+        link: project.link || '',
+        span: project.span || 1,
+        tags: project.tags || [],
+        hasCaseStudy: !!caseStudy
+      }
+    };
+
+    // Include case study data if available
+    if (caseStudy) {
+      responseData.caseStudy = caseStudy.toObject();
+    }
+
+    logger.info('Public project retrieved', {
+      portfolioId: portfolio._id,
+      projectId,
+      hasCaseStudy: !!caseStudy
+    });
+
+    return responseData;
+  }
+
+  /**
+   * Find project in portfolio content based on template type
+   * @param {Object} portfolio - Portfolio document
+   * @param {string} projectId - Project ID to find
+   * @returns {Object|null} Project object or null
+   * @private
+   */
+  findProjectInPortfolio(portfolio, projectId) {
+    const template = portfolio.template || portfolio.templateId || 'echelon';
+    const content = portfolio.content || {};
+
+    logger.info('Finding project in portfolio', {
+      portfolioId: portfolio._id,
+      projectId,
+      template,
+      contentKeys: Object.keys(content)
+    });
+
+    // For Serene template, check gallery rows
+    if (template === 'serene') {
+      const gallery = content.gallery || {};
+      const allProjects = [
+        ...(gallery.firstRow || []),
+        ...(gallery.secondRow || []),
+        ...(gallery.thirdRow || [])
+      ];
+
+      const project = allProjects.find(p => p.id === projectId);
+      if (project) return project;
+    }
+
+    // For Echelon, Chic, BoldFolio - check work.projects
+    if (content.work?.projects) {
+      const project = content.work.projects.find(p => p.id === projectId);
+      if (project) return project;
+    }
+
+    // Also check content.projects directly (alternative structure)
+    if (content.projects) {
+      const project = content.projects.find(p => p.id === projectId);
+      if (project) return project;
+    }
+
+    // Check gallery for non-Serene templates (some templates may use gallery)
+    if (content.gallery?.projects) {
+      const project = content.gallery.projects.find(p => p.id === projectId);
+      if (project) return project;
+    }
+
+    // Also check all gallery rows as fallback for any template
+    const gallery = content.gallery || {};
+    const allGalleryProjects = [
+      ...(gallery.firstRow || []),
+      ...(gallery.secondRow || []),
+      ...(gallery.thirdRow || [])
+    ];
+
+    const galleryProject = allGalleryProjects.find(p => p.id === projectId);
+    if (galleryProject) return galleryProject;
+
+    return null;
+  }
+
+  /**
+   * Transform case study buttons into proper anchor links
+   * The frontend renders React buttons that lose interactivity when captured as static HTML
+   * This method converts those buttons into proper <a> links that work in static HTML
+   * @param {string} html - HTML string to transform
+   * @param {Object} portfolioData - Portfolio data with projects
+   * @returns {string} Transformed HTML
+   * @private
+   */
+  transformCaseStudyButtons(html, portfolioData) {
+    if (!html) return html;
+
+    // Get projects that have case studies
+    const projects = portfolioData.content?.work?.projects || [];
+    const caseStudyProjectIds = Object.keys(portfolioData.caseStudies || {});
+
+    logger.info('Transforming case study buttons', {
+      totalProjects: projects.length,
+      caseStudyCount: caseStudyProjectIds.length
+    });
+
+    if (caseStudyProjectIds.length === 0) {
+      logger.info('No case studies to link - skipping button transformation');
+      return html;
+    }
+
+    // Find all VIEW CASE STUDY buttons and replace them with links
+    // Pattern: <button ...>VIEW CASE STUDY →</button>
+    let buttonIndex = 0;
+
+    html = html.replace(
+      /<button([^>]*)>(VIEW CASE STUDY[^<]*)<\/button>/gi,
+      (match, attributes, buttonText) => {
+        // Get the project ID for this button (buttons appear in project order)
+        const projectId = caseStudyProjectIds[buttonIndex] || projects[buttonIndex]?.id;
+        buttonIndex++;
+
+        if (!projectId) {
+          logger.warn('No project ID found for case study button', { buttonIndex: buttonIndex - 1 });
+          return match; // Keep original button if no project ID
+        }
+
+        // Extract style attribute if present
+        const styleMatch = attributes.match(/style="([^"]*)"/i);
+        const style = styleMatch ? styleMatch[1] : '';
+
+        // Create anchor link with same styling
+        const link = `<a href="./case-study-${projectId}.html" style="${style}; text-decoration: none;">${buttonText}</a>`;
+
+        logger.info('Transformed case study button to link', { projectId });
+        return link;
+      }
+    );
+
+    logger.info('Case study buttons transformation complete', { buttonsTransformed: buttonIndex });
+    return html;
+  }
+
   /**
    * Clean development scripts from HTML
    * Removes Vite HMR, React refresh, and other development-only scripts

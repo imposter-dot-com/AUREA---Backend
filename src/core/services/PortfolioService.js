@@ -118,9 +118,16 @@ export class PortfolioService {
       logger.debug('View count incremented', { portfolioId });
     }
 
+    const portfolioObject = portfolio.toObject();
+    const template = portfolio.template || 'echelon';
+
+    // Ensure project IDs exist in content
+    const contentWithIds = this._ensureProjectIds(portfolioObject.content, template);
+
     return {
-      ...portfolio.toObject(),
-      template: portfolio.template || 'echelon'
+      ...portfolioObject,
+      template,
+      content: contentWithIds
     };
   }
 
@@ -158,8 +165,13 @@ export class PortfolioService {
     if (description !== undefined) updates.description = description;
     if (styling !== undefined) updates.styling = styling;
     if (sections !== undefined) updates.sections = sections;
-    if (content !== undefined) updates.content = content;
     if (customData !== undefined) updates.customData = customData;
+
+    // Handle content update with automatic project ID generation
+    if (content !== undefined) {
+      const templateToUse = template || currentPortfolio.template || 'echelon';
+      updates.content = this._ensureProjectIds(content, templateToUse);
+    }
 
     // Handle template update
     if (template !== undefined) {
@@ -427,6 +439,227 @@ export class PortfolioService {
     await this.repository.incrementViewCount(portfolio._id);
 
     return portfolio;
+  }
+
+  /**
+   * Helper: Ensure project IDs exist in portfolio content
+   * Auto-generates IDs for projects without them
+   * @param {Object} content - Portfolio content object
+   * @param {string} template - Template name
+   * @returns {Object} Updated content with project IDs
+   */
+  _ensureProjectIds(content, template) {
+    if (!content) return content;
+
+    const contentCopy = JSON.parse(JSON.stringify(content));
+
+    // Handle different template structures
+    if (template === 'chic' || template === 'boldfolio') {
+      // Chic & BoldFolio: work.projects array
+      if (contentCopy.work && Array.isArray(contentCopy.work.projects)) {
+        contentCopy.work.projects = contentCopy.work.projects.map((project, index) => ({
+          ...project,
+          id: project.id || `project-${index + 1}`
+        }));
+      }
+    } else if (template === 'serene') {
+      // Serene: gallery.firstRow, gallery.secondRow, and gallery.thirdRow arrays
+      if (contentCopy.gallery) {
+        if (Array.isArray(contentCopy.gallery.firstRow)) {
+          contentCopy.gallery.firstRow = contentCopy.gallery.firstRow.map((project, index) => ({
+            ...project,
+            id: project.id || `project-${index + 1}`
+          }));
+        }
+        if (Array.isArray(contentCopy.gallery.secondRow)) {
+          contentCopy.gallery.secondRow = contentCopy.gallery.secondRow.map((project, index) => {
+            const firstRowLength = contentCopy.gallery.firstRow?.length || 0;
+            return {
+              ...project,
+              id: project.id || `project-${firstRowLength + index + 1}`
+            };
+          });
+        }
+        if (Array.isArray(contentCopy.gallery.thirdRow)) {
+          contentCopy.gallery.thirdRow = contentCopy.gallery.thirdRow.map((project, index) => {
+            const firstRowLength = contentCopy.gallery.firstRow?.length || 0;
+            const secondRowLength = contentCopy.gallery.secondRow?.length || 0;
+            return {
+              ...project,
+              id: project.id || `project-${firstRowLength + secondRowLength + index + 1}`
+            };
+          });
+        }
+      }
+    }
+
+    return contentCopy;
+  }
+
+  /**
+   * Helper: Find project by ID in portfolio content
+   * @param {Object} content - Portfolio content
+   * @param {string} template - Template name
+   * @param {string} projectId - Project ID to find
+   * @returns {Object|null} Project object or null
+   */
+  _findProjectInContent(content, template, projectId) {
+    if (!content) return null;
+
+    if (template === 'chic' || template === 'boldfolio') {
+      const projects = content.work?.projects || [];
+      return projects.find(p => p.id === projectId) || null;
+    } else if (template === 'serene') {
+      const firstRow = content.gallery?.firstRow || [];
+      const secondRow = content.gallery?.secondRow || [];
+      const thirdRow = content.gallery?.thirdRow || [];
+      const allProjects = [...firstRow, ...secondRow, ...thirdRow];
+      return allProjects.find(p => p.id === projectId) || null;
+    }
+
+    return null;
+  }
+
+  /**
+   * Get specific project from portfolio
+   * @param {string} portfolioId - Portfolio ID
+   * @param {string} projectId - Project ID (e.g., "project-1")
+   * @param {string|null} userId - Current user ID (null for public access)
+   * @returns {Promise<Object>}
+   */
+  async getProjectById(portfolioId, projectId, userId = null) {
+    logger.service('PortfolioService', 'getProjectById', { portfolioId, projectId, userId });
+
+    const portfolio = await this.repository.findById(portfolioId);
+
+    if (!portfolio) {
+      throw NotFoundError.resource('Portfolio', portfolioId);
+    }
+
+    // Check access permissions
+    const isOwner = userId && portfolio.userId.toString() === userId.toString();
+    const isPublished = portfolio.isPublished;
+
+    if (!isPublished && !isOwner) {
+      throw new ForbiddenError('Access denied - Portfolio is not published');
+    }
+
+    // Ensure project IDs exist
+    const contentWithIds = this._ensureProjectIds(portfolio.content, portfolio.template);
+
+    // Find the specific project
+    const project = this._findProjectInContent(contentWithIds, portfolio.template, projectId);
+
+    if (!project) {
+      throw NotFoundError.resource('Project', projectId);
+    }
+
+    logger.debug('Project retrieved successfully', { portfolioId, projectId });
+
+    return {
+      ...project,
+      portfolioId: portfolio._id,
+      portfolioTitle: portfolio.title,
+      portfolioTemplate: portfolio.template
+    };
+  }
+
+  /**
+   * Update specific project in portfolio
+   * @param {string} portfolioId - Portfolio ID
+   * @param {string} projectId - Project ID
+   * @param {string} userId - User ID (for ownership check)
+   * @param {Object} projectData - Project data to update
+   * @returns {Promise<Object>}
+   */
+  async updateProject(portfolioId, projectId, userId, projectData) {
+    logger.service('PortfolioService', 'updateProject', { portfolioId, projectId, userId });
+
+    // Check ownership
+    const portfolio = await this.repository.findByIdAndUserId(portfolioId, userId);
+
+    if (!portfolio) {
+      throw NotFoundError.resource('Portfolio', portfolioId);
+    }
+
+    // Ensure project IDs exist
+    const contentWithIds = this._ensureProjectIds(portfolio.content, portfolio.template);
+
+    // Find and update the project
+    let projectFound = false;
+    const updatedContent = JSON.parse(JSON.stringify(contentWithIds));
+
+    if (portfolio.template === 'chic' || portfolio.template === 'boldfolio') {
+      if (updatedContent.work && Array.isArray(updatedContent.work.projects)) {
+        const projectIndex = updatedContent.work.projects.findIndex(p => p.id === projectId);
+        if (projectIndex !== -1) {
+          // Preserve the ID and merge with new data
+          updatedContent.work.projects[projectIndex] = {
+            ...updatedContent.work.projects[projectIndex],
+            ...projectData,
+            id: projectId // Ensure ID is preserved
+          };
+          projectFound = true;
+        }
+      }
+    } else if (portfolio.template === 'serene') {
+      // Check firstRow
+      if (updatedContent.gallery?.firstRow) {
+        const projectIndex = updatedContent.gallery.firstRow.findIndex(p => p.id === projectId);
+        if (projectIndex !== -1) {
+          updatedContent.gallery.firstRow[projectIndex] = {
+            ...updatedContent.gallery.firstRow[projectIndex],
+            ...projectData,
+            id: projectId
+          };
+          projectFound = true;
+        }
+      }
+      // Check secondRow if not found
+      if (!projectFound && updatedContent.gallery?.secondRow) {
+        const projectIndex = updatedContent.gallery.secondRow.findIndex(p => p.id === projectId);
+        if (projectIndex !== -1) {
+          updatedContent.gallery.secondRow[projectIndex] = {
+            ...updatedContent.gallery.secondRow[projectIndex],
+            ...projectData,
+            id: projectId
+          };
+          projectFound = true;
+        }
+      }
+      // Check thirdRow if not found
+      if (!projectFound && updatedContent.gallery?.thirdRow) {
+        const projectIndex = updatedContent.gallery.thirdRow.findIndex(p => p.id === projectId);
+        if (projectIndex !== -1) {
+          updatedContent.gallery.thirdRow[projectIndex] = {
+            ...updatedContent.gallery.thirdRow[projectIndex],
+            ...projectData,
+            id: projectId
+          };
+          projectFound = true;
+        }
+      }
+    }
+
+    if (!projectFound) {
+      throw NotFoundError.resource('Project', projectId);
+    }
+
+    // Update portfolio with new content
+    const updatedPortfolio = await this.repository.update(portfolioId, {
+      content: updatedContent
+    });
+
+    logger.info('Project updated successfully', { portfolioId, projectId });
+
+    // Return the updated project
+    const updatedProject = this._findProjectInContent(updatedContent, portfolio.template, projectId);
+    return {
+      ...updatedProject,
+      portfolioId: updatedPortfolio._id,
+      portfolioTitle: updatedPortfolio.title,
+      portfolioTemplate: updatedPortfolio.template
+    };
   }
 }
 
