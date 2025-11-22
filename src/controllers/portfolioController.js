@@ -160,3 +160,41 @@ export const getPublicPortfolio = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * @desc    Get specific project from portfolio
+ * @route   GET /api/portfolios/:portfolioId/projects/:projectId
+ * @access  Private (owner) or Public (if published)
+ */
+export const getProjectById = async (req, res, next) => {
+  try {
+    const userId = req.user ? req.user._id.toString() : null;
+    const project = await portfolioService.getProjectById(
+      req.params.portfolioId,
+      req.params.projectId,
+      userId
+    );
+    return responseFormatter.success(res, { project });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Update specific project in portfolio
+ * @route   PUT /api/portfolios/:portfolioId/projects/:projectId
+ * @access  Private (owner only)
+ */
+export const updateProject = async (req, res, next) => {
+  try {
+    const project = await portfolioService.updateProject(
+      req.params.portfolioId,
+      req.params.projectId,
+      req.user._id,
+      req.body
+    );
+    return responseFormatter.success(res, { project }, 'Project updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};

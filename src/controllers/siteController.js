@@ -252,6 +252,31 @@ export const recordSiteView = async (req, res, next) => {
 };
 
 /**
+ * @desc    Get public project data from a published portfolio
+ * @route   GET /api/sites/:portfolioId/project/:projectId
+ * @access  Public (no auth required)
+ */
+export const getPublicProject = async (req, res, next) => {
+  try {
+    const { portfolioId, projectId } = req.params;
+
+    if (!portfolioId || !projectId) {
+      return responseFormatter.validationError(res, 'Portfolio ID and Project ID are required');
+    }
+
+    const result = await siteService.getPublicProject(portfolioId, projectId);
+
+    return responseFormatter.success(
+      res,
+      result,
+      'Project data retrieved successfully'
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @desc    Debug: Generate HTML/CSS files for testing
  * @route   POST /api/sites/debug/generate
  * @access  Private
@@ -360,5 +385,6 @@ export default {
   recordSiteView,
   debugGenerate,
   getUserSites,
-  getDeploymentHistory
+  getDeploymentHistory,
+  getPublicProject
 };

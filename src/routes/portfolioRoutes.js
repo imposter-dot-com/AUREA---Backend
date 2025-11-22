@@ -27,7 +27,9 @@ import {
   checkSlug,
   publishPortfolio,
   unpublishPortfolio,
-  getPublicPortfolio
+  getPublicPortfolio,
+  getProjectById,
+  updateProject
 } from '../controllers/portfolioController.js';
 
 const router = express.Router();
@@ -99,12 +101,28 @@ router.put('/:id/publish',
   publishPortfolio
 );
 
-router.put('/:id/unpublish', 
-  auth, 
-  publishLimiter, 
-  validateObjectId('id'), 
-  checkPortfolioOwnership, 
+router.put('/:id/unpublish',
+  auth,
+  publishLimiter,
+  validateObjectId('id'),
+  checkPortfolioOwnership,
   unpublishPortfolio
+);
+
+// Project-specific routes
+router.get('/:portfolioId/projects/:projectId',
+  optionalAuth,
+  portfolioCrudLimiter,
+  validateObjectId('portfolioId'),
+  getProjectById
+);
+
+router.put('/:portfolioId/projects/:projectId',
+  auth,
+  portfolioCrudLimiter,
+  validateObjectId('portfolioId'),
+  checkPortfolioOwnership,
+  updateProject
 );
 
 export default router;

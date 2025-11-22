@@ -1294,8 +1294,221 @@ export function generatePortfolioHTML(portfolioData) {
 }
 
 /**
- * Generate all HTML files for portfolio including case studies
- * Returns object with index.html and all case study HTML files
+ * Generate Serene template project detail HTML
+ */
+function generateSereneProjectHTML(project, portfolioData, subdomain) {
+  const title = project.title || 'Project';
+  const description = project.description || '';
+  const detailedDescription = (project.detailedDescription || '').replace(/\n/g, '<br>');
+  const image = project.image || '';
+  const portfolioTitle = portfolioData.title || portfolioData.hero?.title || 'Portfolio';
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title} - ${portfolioTitle}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Inter", sans-serif; background: #ffffff; color: #2d3748; }
+    .serene-header { position: fixed; top: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.98); border-bottom: 1px solid #e2e8f0; z-index: 100; backdrop-filter: blur(10px); }
+    .serene-header-inner { max-width: 1400px; margin: 0 auto; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .serene-back-btn { font-size: 14px; color: #4a5568; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; text-decoration: none; transition: opacity 0.3s ease; }
+    .serene-back-btn:hover { opacity: 0.7; }
+    .serene-header-label { font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 0.1em; }
+    .serene-main { padding-top: 80px; max-width: 1200px; margin: 0 auto; padding: 80px 24px 80px; }
+    .serene-title-section { margin-bottom: 48px; text-align: center; }
+    .serene-title { font-size: clamp(32px, 5vw, 56px); color: #4a5568; font-weight: 400; line-height: 1.2; margin-bottom: 16px; }
+    .serene-subtitle { font-size: clamp(16px, 2vw, 20px); color: #718096; font-weight: 500; line-height: 1.6; }
+    .serene-image-container { width: 100%; margin-bottom: 64px; border-radius: 4px; overflow: hidden; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); }
+    .serene-image { width: 100%; height: auto; max-height: 70vh; object-fit: cover; display: block; }
+    .serene-no-image { width: 100%; height: 60vh; background: #f0fff4; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #718096; text-transform: uppercase; letter-spacing: 0.1em; }
+    .serene-description { max-width: 800px; margin: 0 auto 80px; font-size: clamp(16px, 2vw, 18px); color: #2d3748; line-height: 1.8; font-weight: 500; }
+    .serene-footer { background: #f7fafc; border-top: 1px solid #e2e8f0; padding: 40px 24px; text-align: center; }
+    .serene-footer-btn { font-size: 14px; padding: 14px 32px; background: #4a5568; color: #ffffff; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; text-decoration: none; display: inline-block; transition: all 0.3s ease; }
+    .serene-footer-btn:hover { background: #2d3748; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+    @media (max-width: 768px) { .serene-header-inner { padding: 16px 20px; } .serene-main { padding: 80px 20px 60px; } }
+  </style>
+</head>
+<body>
+  <header class="serene-header">
+    <div class="serene-header-inner">
+      <a href="/${subdomain}/html" class="serene-back-btn">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10H5M5 10L10 5M5 10L10 15" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to Gallery
+      </a>
+      <span class="serene-header-label">Project Detail</span>
+    </div>
+  </header>
+  <main class="serene-main">
+    <div class="serene-title-section">
+      <h1 class="serene-title">${title}</h1>
+      ${description ? `<p class="serene-subtitle">${description}</p>` : ''}
+    </div>
+    <div class="serene-image-container">
+      ${image ? `<img src="${image}" alt="${title}" class="serene-image">` : '<div class="serene-no-image">No Image</div>'}
+    </div>
+    ${detailedDescription ? `<div class="serene-description">${detailedDescription}</div>` : ''}
+  </main>
+  <footer class="serene-footer">
+    <a href="/${subdomain}/html" class="serene-footer-btn">View All Projects</a>
+  </footer>
+</body>
+</html>`;
+}
+
+/**
+ * Generate Chic template project detail HTML
+ */
+function generateChicProjectHTML(project, portfolioData, subdomain) {
+  const title = project.title || 'Project';
+  const subtitle = project.subtitle || '';
+  const description = project.description || '';
+  const detailedDescription = (project.detailedDescription || '').replace(/\n/g, '<br>');
+  const image = project.image || '';
+  const category = project.category || '';
+  const year = project.year || '';
+  const awards = project.awards || '';
+  const portfolioTitle = portfolioData.title || portfolioData.hero?.name || 'Portfolio';
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title} - ${portfolioTitle}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Helvetica Neue", -apple-system, BlinkMacSystemFont, sans-serif; background: #ffffff; color: #000000; }
+    .chic-header { position: fixed; top: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.98); border-bottom: 1px solid #e5e5e5; z-index: 100; backdrop-filter: blur(10px); }
+    .chic-header-inner { max-width: 1400px; margin: 0 auto; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .chic-back-btn { font-size: 11px; color: #000000; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; text-decoration: none; transition: opacity 0.3s ease; }
+    .chic-back-btn:hover { opacity: 0.6; }
+    .chic-header-label { font-family: "SF Mono", "Monaco", monospace; font-size: 10px; color: #666666; text-transform: uppercase; letter-spacing: 0.1em; }
+    .chic-main { padding-top: 80px; max-width: 1200px; margin: 0 auto; padding: 80px 32px 80px; }
+    .chic-meta-section { margin-bottom: 48px; border-bottom: 1px solid #e5e5e5; padding-bottom: 32px; }
+    .chic-title { font-size: clamp(32px, 5vw, 56px); color: #000000; font-weight: 600; line-height: 1.1; margin-bottom: 16px; letter-spacing: -0.02em; }
+    .chic-subtitle { font-size: clamp(16px, 2vw, 20px); color: #666666; font-weight: 500; line-height: 1.4; margin-bottom: 24px; }
+    .chic-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 24px; margin-top: 24px; }
+    .chic-meta-item-label { font-family: "SF Mono", "Monaco", monospace; font-size: 10px; color: #999999; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-weight: 600; }
+    .chic-meta-item-value { font-size: 14px; color: #000000; font-weight: 500; }
+    .chic-image-container { width: 100%; margin-bottom: 64px; overflow: hidden; }
+    .chic-image { width: 100%; height: auto; max-height: 70vh; object-fit: contain; display: block; background: #f5f5f5; }
+    .chic-no-image { width: 100%; height: 60vh; background: #f5f5f5; display: flex; align-items: center; justify-content: center; font-family: "SF Mono", "Monaco", monospace; font-size: 11px; color: #cccccc; text-transform: uppercase; letter-spacing: 0.1em; }
+    .chic-description { max-width: 700px; margin: 0 auto 80px; font-size: clamp(15px, 2vw, 17px); color: #333333; line-height: 1.7; font-weight: 400; }
+    .chic-footer { background: #fafafa; border-top: 1px solid #e5e5e5; padding: 40px 32px; text-align: center; }
+    .chic-footer-btn { font-size: 11px; padding: 14px 32px; background: #000000; color: #ffffff; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; text-decoration: none; display: inline-block; transition: all 0.3s ease; }
+    .chic-footer-btn:hover { background: #333333; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+    @media (max-width: 768px) { .chic-header-inner { padding: 16px 20px; } .chic-main { padding: 80px 20px 60px; } }
+  </style>
+</head>
+<body>
+  <header class="chic-header">
+    <div class="chic-header-inner">
+      <a href="/${subdomain}/html" class="chic-back-btn">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 10H5M5 10L10 5M5 10L10 15" stroke-linecap="square" stroke-linejoin="miter"/></svg>
+        BACK
+      </a>
+      <span class="chic-header-label">Project Detail</span>
+    </div>
+  </header>
+  <main class="chic-main">
+    <div class="chic-meta-section">
+      <h1 class="chic-title">${title}</h1>
+      ${subtitle ? `<p class="chic-subtitle">${subtitle}</p>` : ''}
+      <div class="chic-meta-grid">
+        ${category ? `<div><div class="chic-meta-item-label">Category</div><div class="chic-meta-item-value">${category}</div></div>` : ''}
+        ${year ? `<div><div class="chic-meta-item-label">Year</div><div class="chic-meta-item-value">${year}</div></div>` : ''}
+        ${awards ? `<div><div class="chic-meta-item-label">Awards</div><div class="chic-meta-item-value">${awards}</div></div>` : ''}
+      </div>
+    </div>
+    <div class="chic-image-container">
+      ${image ? `<img src="${image}" alt="${title}" class="chic-image">` : '<div class="chic-no-image">No Image</div>'}
+    </div>
+    ${detailedDescription ? `<div class="chic-description">${detailedDescription}</div>` : ''}
+  </main>
+  <footer class="chic-footer">
+    <a href="/${subdomain}/html" class="chic-footer-btn">View All Projects</a>
+  </footer>
+</body>
+</html>`;
+}
+
+/**
+ * Generate BoldFolio template project detail HTML
+ */
+function generateBoldFolioProjectHTML(project, portfolioData, subdomain) {
+  const title = project.title || 'Project';
+  const description = (project.description || '').replace(/\n/g, '<br>');
+  const detailedDescription = (project.detailedDescription || '').replace(/\n/g, '<br>');
+  const images = project.images || [];
+  const logo = project.logo || '';
+  const portfolioTitle = portfolioData.title || portfolioData.hero?.name || 'Portfolio';
+
+  const imagesHTML = images.filter(img => img && img.src).map((img, i) =>
+    `<div class="boldfolio-gallery-image"><img src="${img.src}" alt="${title} - Image ${i + 1}" style="width: ${img.width || 'auto'}; height: ${img.height || 'auto'};"></div>`
+  ).join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title} - ${portfolioTitle}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Graphik", -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #ffffff; color: #000000; font-weight: 500; }
+    .boldfolio-header { position: fixed; top: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.98); border-bottom: 1px solid #e5e5e5; z-index: 100; backdrop-filter: blur(10px); }
+    .boldfolio-header-inner { max-width: 1400px; margin: 0 auto; padding: 24px 40px; display: flex; align-items: center; justify-content: space-between; }
+    .boldfolio-back-btn { font-size: 14px; color: #ff0080; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; text-decoration: none; transition: all 0.3s ease; }
+    .boldfolio-back-btn:hover { opacity: 0.7; transform: translateX(-4px); }
+    .boldfolio-header-label { font-size: 12px; color: #666666; text-transform: uppercase; letter-spacing: 0.1em; }
+    .boldfolio-main { padding-top: 100px; max-width: 1200px; margin: 0 auto; padding: 100px 40px 100px; }
+    .boldfolio-title-section { margin-bottom: 60px; text-align: center; }
+    .boldfolio-title { font-size: clamp(36px, 6vw, 72px); color: #000000; font-weight: 700; line-height: 1.1; margin-bottom: 20px; letter-spacing: -0.01em; }
+    .boldfolio-description { font-size: clamp(18px, 2.5vw, 24px); color: #666666; font-weight: 400; line-height: 1.6; max-width: 800px; margin: 0 auto 30px; }
+    .boldfolio-detail-logo { margin-top: 40px; display: flex; align-items: center; justify-content: center; color: #ff0080; font-size: clamp(48px, 10vw, 120px); font-weight: 300; }
+    .boldfolio-images-gallery { display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; margin-bottom: 80px; }
+    .boldfolio-gallery-image { overflow: hidden; border-radius: 4px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); }
+    .boldfolio-gallery-image img { max-width: 100%; height: auto; object-fit: cover; display: block; }
+    .boldfolio-detailed { max-width: 800px; margin: 0 auto 100px; font-size: clamp(16px, 2vw, 18px); color: #000000; line-height: 1.8; font-weight: 400; }
+    .boldfolio-footer { background: #fafafa; border-top: 1px solid #e5e5e5; padding: 60px 40px; text-align: center; }
+    .boldfolio-footer-btn { font-size: 14px; padding: 18px 40px; background: #ff0080; color: #ffffff; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; border-radius: 4px; text-decoration: none; display: inline-block; transition: all 0.3s ease; }
+    .boldfolio-footer-btn:hover { background: #e60073; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 0, 128, 0.3); }
+    @media (max-width: 768px) { .boldfolio-header-inner { padding: 20px; } .boldfolio-main { padding: 100px 20px 80px; } .boldfolio-images-gallery { gap: 16px; } }
+  </style>
+</head>
+<body>
+  <header class="boldfolio-header">
+    <div class="boldfolio-header-inner">
+      <a href="/${subdomain}/html" class="boldfolio-back-btn">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 10H5M5 10L10 5M5 10L10 15" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        BACK TO WORK
+      </a>
+      <span class="boldfolio-header-label">Project Detail</span>
+    </div>
+  </header>
+  <main class="boldfolio-main">
+    <div class="boldfolio-title-section">
+      <h1 class="boldfolio-title">${title}</h1>
+      ${description ? `<div class="boldfolio-description">${description}</div>` : ''}
+      ${logo ? `<div class="boldfolio-detail-logo">${logo}</div>` : ''}
+    </div>
+    ${imagesHTML ? `<div class="boldfolio-images-gallery">${imagesHTML}</div>` : ''}
+    ${detailedDescription ? `<div class="boldfolio-detailed">${detailedDescription}</div>` : ''}
+  </main>
+  <footer class="boldfolio-footer">
+    <a href="/${subdomain}/html" class="boldfolio-footer-btn">View All Projects</a>
+  </footer>
+</body>
+</html>`;
+}
+
+/**
+ * Generate all HTML files for portfolio including case studies and project pages
+ * Returns object with index.html, case study HTML files, and template-specific project pages
  */
 export function generateAllPortfolioFiles(portfolioData, options = {}) {
   try {
@@ -1312,9 +1525,79 @@ export function generateAllPortfolioFiles(portfolioData, options = {}) {
     const fullHTML = HTML_TEMPLATE(processedData).replace('{CONTENT}', htmlContent);
     files['index.html'] = fullHTML;
 
-    let caseStudiesGenerated = 0;
+    // Get template type and subdomain for project page generation
+    // Handle both processed data and raw portfolio data
+    const rawData = portfolioData.toObject ? portfolioData.toObject() : portfolioData;
+    const templateType = (rawData.template || '').toLowerCase();
+    const subdomain = rawData.slug || rawData.subdomain || 'portfolio';
 
-    // Generate case study pages if they exist
+    let caseStudiesGenerated = 0;
+    let projectPagesGenerated = 0;
+
+    // ========================================
+    // TEMPLATE-SPECIFIC PROJECT PAGE GENERATION
+    // ========================================
+    // Echelon uses case study system (handled below)
+    // Serene, Chic, BoldFolio get individual project pages
+
+    if (templateType === 'serene') {
+      // Serene: Projects are in gallery rows (firstRow, secondRow, thirdRow)
+      const gallery = rawData.content?.gallery || {};
+      const allProjects = [
+        ...(gallery.firstRow || []),
+        ...(gallery.secondRow || []),
+        ...(gallery.thirdRow || [])
+      ];
+
+      console.log(`\n🎨 Serene template: Generating ${allProjects.length} project pages`);
+
+      allProjects.forEach((project) => {
+        if (project && project.id) {
+          const projectHTML = generateSereneProjectHTML(project, rawData, subdomain);
+          files[`project-${project.id}.html`] = projectHTML;
+          projectPagesGenerated++;
+          console.log(`  ✅ Generated: project-${project.id}.html`);
+        }
+      });
+    } else if (templateType === 'chic') {
+      // Chic: Projects are in content.work.projects
+      const projects = rawData.content?.work?.projects || [];
+
+      console.log(`\n🎨 Chic template: Generating ${projects.length} project pages`);
+
+      projects.forEach((project, index) => {
+        const projectId = project.id || `chic-${index}`;
+        const projectWithId = { ...project, id: projectId };
+        const projectHTML = generateChicProjectHTML(projectWithId, rawData, subdomain);
+        files[`project-${projectId}.html`] = projectHTML;
+        projectPagesGenerated++;
+        console.log(`  ✅ Generated: project-${projectId}.html`);
+      });
+    } else if (templateType === 'boldfolio') {
+      // BoldFolio: Projects are in content.work.projects
+      const projects = rawData.content?.work?.projects || [];
+
+      console.log(`\n🎨 BoldFolio template: Generating ${projects.length} project pages`);
+
+      projects.forEach((project, index) => {
+        const projectId = project.id || `boldfolio-${index}`;
+        const projectWithId = { ...project, id: projectId };
+        const projectHTML = generateBoldFolioProjectHTML(projectWithId, rawData, subdomain);
+        files[`project-${projectId}.html`] = projectHTML;
+        projectPagesGenerated++;
+        console.log(`  ✅ Generated: project-${projectId}.html`);
+      });
+    } else if (templateType === 'echolon' || templateType === 'echelon') {
+      // Echelon: Uses case study system - only generate case study pages when they exist
+      console.log(`\n🎨 Echelon template: Using case study system (no automatic project pages)`);
+    } else {
+      console.log(`\nℹ️  Unknown template "${templateType}" - skipping project page generation`);
+    }
+
+    // ========================================
+    // CASE STUDY PAGE GENERATION (ALL TEMPLATES)
+    // ========================================
+    // Generate case study pages if they exist (primarily for Echelon)
     if (processedData.caseStudies && typeof processedData.caseStudies === 'object') {
       for (const [projectId, caseStudy] of Object.entries(processedData.caseStudies)) {
         const caseStudyHTML = generateCaseStudyHTML(projectId, caseStudy, processedData, { forPDF });
@@ -1334,12 +1617,14 @@ export function generateAllPortfolioFiles(portfolioData, options = {}) {
         }
       });
     }
-    
-    // Log if no case studies were generated
-    if (caseStudiesGenerated === 0) {
-      console.log('ℹ️  No case studies found in database - only real case studies will be exported');
-    }
-    
+
+    // Summary logging
+    console.log(`\n📊 Generation Summary:`);
+    console.log(`  - Main page: index.html`);
+    console.log(`  - Project pages: ${projectPagesGenerated}`);
+    console.log(`  - Case study pages: ${caseStudiesGenerated}`);
+    console.log(`  - Total files: ${Object.keys(files).length}`);
+
     return files;
   } catch (error) {
     console.error('❌ HTML generation failed:', error);
@@ -1384,7 +1669,8 @@ function processPortfolioData(inputData) {
   const data = inputData.toObject ? inputData.toObject() : inputData;
   
   // Check if it's portfolio JSON structure (with sections array)
-  if (data.sections) {
+  // Note: Must check for non-empty array, as empty [] is truthy
+  if (data.sections && Array.isArray(data.sections) && data.sections.length > 0) {
     const sections = {};
     data.sections.forEach(section => {
       sections[section.type] = section.content;

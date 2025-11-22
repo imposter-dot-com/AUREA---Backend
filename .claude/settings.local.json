@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node test/test-project-routing.js:*)",
+      "Bash(node -e:*)",
+      "Bash(node check-publish-status.js:*)",
+      "Bash(node test/test-project-pages-flow.js:*)",
+      "Bash(curl:*)",
+      "Bash(node test/test-public-project-endpoint.js:*)",
+      "Bash(git checkout:*)",
+      "Bash(node --check:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

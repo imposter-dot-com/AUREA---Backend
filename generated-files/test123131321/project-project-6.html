@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROJECT SIX - Chic Portfolio</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Helvetica Neue", -apple-system, BlinkMacSystemFont, sans-serif; background: #ffffff; color: #000000; }
+    .chic-header { position: fixed; top: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.98); border-bottom: 1px solid #e5e5e5; z-index: 100; backdrop-filter: blur(10px); }
+    .chic-header-inner { max-width: 1400px; margin: 0 auto; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .chic-back-btn { font-size: 11px; color: #000000; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; text-decoration: none; transition: opacity 0.3s ease; }
+    .chic-back-btn:hover { opacity: 0.6; }
+    .chic-header-label { font-family: "SF Mono", "Monaco", monospace; font-size: 10px; color: #666666; text-transform: uppercase; letter-spacing: 0.1em; }
+    .chic-main { padding-top: 80px; max-width: 1200px; margin: 0 auto; padding: 80px 32px 80px; }
+    .chic-meta-section { margin-bottom: 48px; border-bottom: 1px solid #e5e5e5; padding-bottom: 32px; }
+    .chic-title { font-size: clamp(32px, 5vw, 56px); color: #000000; font-weight: 600; line-height: 1.1; margin-bottom: 16px; letter-spacing: -0.02em; }
+    .chic-subtitle { font-size: clamp(16px, 2vw, 20px); color: #666666; font-weight: 500; line-height: 1.4; margin-bottom: 24px; }
+    .chic-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 24px; margin-top: 24px; }
+    .chic-meta-item-label { font-family: "SF Mono", "Monaco", monospace; font-size: 10px; color: #999999; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-weight: 600; }
+    .chic-meta-item-value { font-size: 14px; color: #000000; font-weight: 500; }
+    .chic-image-container { width: 100%; margin-bottom: 64px; overflow: hidden; }
+    .chic-image { width: 100%; height: auto; max-height: 70vh; object-fit: contain; display: block; background: #f5f5f5; }
+    .chic-no-image { width: 100%; height: 60vh; background: #f5f5f5; display: flex; align-items: center; justify-content: center; font-family: "SF Mono", "Monaco", monospace; font-size: 11px; color: #cccccc; text-transform: uppercase; letter-spacing: 0.1em; }
+    .chic-description { max-width: 700px; margin: 0 auto 80px; font-size: clamp(15px, 2vw, 17px); color: #333333; line-height: 1.7; font-weight: 400; }
+    .chic-footer { background: #fafafa; border-top: 1px solid #e5e5e5; padding: 40px 32px; text-align: center; }
+    .chic-footer-btn { font-size: 11px; padding: 14px 32px; background: #000000; color: #ffffff; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; text-decoration: none; display: inline-block; transition: all 0.3s ease; }
+    .chic-footer-btn:hover { background: #333333; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+    @media (max-width: 768px) { .chic-header-inner { padding: 16px 20px; } .chic-main { padding: 80px 20px 60px; } }
+  </style>
+</head>
+<body>
+  <header class="chic-header">
+    <div class="chic-header-inner">
+      <a href="/test123131321/html" class="chic-back-btn">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 10H5M5 10L10 5M5 10L10 15" stroke-linecap="square" stroke-linejoin="miter"/></svg>
+        BACK
+      </a>
+      <span class="chic-header-label">Project Detail</span>
+    </div>
+  </header>
+  <main class="chic-main">
+    <div class="chic-meta-section">
+      <h1 class="chic-title">PROJECT SIX</h1>
+      <p class="chic-subtitle">Print Design</p>
+      <div class="chic-meta-grid">
+        <div><div class="chic-meta-item-label">Category</div><div class="chic-meta-item-value">Print</div></div>
+        <div><div class="chic-meta-item-label">Year</div><div class="chic-meta-item-value">2023</div></div>
+        
+      </div>
+    </div>
+    <div class="chic-image-container">
+      <div class="chic-no-image">No Image</div>
+    </div>
+    <div class="chic-description">Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.<br><br>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis.</div>
+  </main>
+  <footer class="chic-footer">
+    <a href="/test123131321/html" class="chic-footer-btn">View All Projects</a>
+  </footer>
+</body>
+</html>

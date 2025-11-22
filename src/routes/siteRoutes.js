@@ -10,7 +10,8 @@ import {
   getSiteStatus,
   getSiteConfig,
   updateSiteConfig,
-  recordSiteView
+  recordSiteView,
+  getPublicProject
 } from '../controllers/siteController.js';
 
 const router = express.Router();
@@ -124,6 +125,14 @@ router.post('/:portfolioId/regenerate', auth, publishLimiter, async (req, res, n
     next(error);
   }
 });
+
+// ==========================================
+// PUBLIC PROJECT DATA ROUTE (must be before /:subdomain catch-all)
+// ==========================================
+
+// GET /api/sites/:portfolioId/project/:projectId - Get public project data from published portfolio
+// Accepts portfolioId as MongoDB _id OR subdomain/slug
+router.get('/:portfolioId/project/:projectId', publicViewLimiter, getPublicProject);
 
 // ==========================================
 // PARAMETERIZED ROUTES

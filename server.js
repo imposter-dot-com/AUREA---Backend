@@ -36,6 +36,7 @@ import siteRoutes from './src/routes/siteRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
 import pdfRoutes from './src/routes/pdfRoutes.js';
 import templateRoutes from './src/routes/templateRoutes.js';
+import adminRoutes from './src/routes/adminRoutes.js';
 
 // Initialize services after environment variables are loaded
 initCloudinary();
@@ -377,6 +378,7 @@ app.use('/api/proposals', proposalExtractRoutes);
 app.use('/api/sites', siteRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/pdf', pdfRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Setup Swagger documentation (only in development)
 if (process.env.NODE_ENV !== 'production') {
@@ -452,7 +454,51 @@ const relaxCSPForPortfolios = (req, res, next) => {
   next();
 };
 
-// Serve case study HTML files
+// Serve project pages with clean URL format: /:subdomain/project/:projectId
+// This handles frontend routing to project pages
+app.get('/:subdomain/project/:projectId', relaxCSPForPortfolios, async (req, res) => {
+  try {
+    const { subdomain, projectId } = req.params;
+    const site = await Site.findBySubdomain(subdomain, false);
+
+    if (!site) {
+      return res.status(404).send(renderErrorPage(
+        '📁 Portfolio Not Found',
+        "The portfolio you're looking for doesn't exist or has been unpublished."
+      ));
+    }
+
+    // Try to find project file - check multiple naming conventions
+    const possibleFiles = [
+      `${projectId}.html`,                   // Direct match: project-1.html, serene-first-0.html
+      `project-${projectId}.html`,           // New format: project-{id}.html
+      `case-study-${projectId}.html`,        // Legacy format: case-study-{id}.html
+      `case-study-project-${projectId}.html` // Alternative legacy format
+    ];
+
+    for (const fileName of possibleFiles) {
+      const projectPath = path.join(__dirname, 'generated-files', subdomain, fileName);
+      if (fs.existsSync(projectPath)) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.sendFile(projectPath);
+      }
+    }
+
+    // If no project file found, return not found with helpful message
+    res.status(404).send(renderErrorPage(
+      '📄 Project Page Not Found',
+      `No project page found for "${projectId}". Please republish your portfolio to generate project pages.`
+    ));
+  } catch (error) {
+    console.error('Error serving project page:', error);
+    res.status(500).send(renderErrorPage(
+      '❌ Error',
+      'An error occurred while loading the project page.'
+    ));
+  }
+});
+
+// Serve case study HTML files (legacy format with .html extension)
 app.get('/:subdomain/case-study-:projectId.html', relaxCSPForPortfolios, async (req, res) => {
   try {
     const { subdomain, projectId } = req.params;
