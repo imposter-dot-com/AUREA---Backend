@@ -16,7 +16,8 @@
     "admin:upgrade-premium": "node scripts/upgrade-user-to-premium.js",
     "admin:debug-login": "node scripts/debug-login.js",
     "admin:create-user": "node scripts/create-test-user.js",
-    "admin:clear-brute-force": "node scripts/clear-brute-force.js"
+    "admin:clear-brute-force": "node scripts/clear-brute-force.js",
+    "admin:verify-all-users": "node scripts/verify-all-users.js"
   },
   "keywords": [
     "portfolio",

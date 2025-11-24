@@ -96,7 +96,7 @@ export class SiteService {
     });
 
     // Generate HTML files with case studies
-    const { allFiles, portfolioHTML } = await this.generatePortfolioHTML(portfolio);
+    const { allFiles, portfolioHTML } = await this.generatePortfolioHTML(portfolio, subdomain);
 
     // Validate deployment
     const siteConfig = {
@@ -345,11 +345,12 @@ export class SiteService {
   /**
    * Generate portfolio HTML with case studies
    * @param {Object} portfolio - Portfolio object
+   * @param {string} subdomain - Subdomain for absolute URL generation
    * @returns {Promise<Object>} { allFiles: Object, portfolioHTML: string }
    * @private
    */
-  async generatePortfolioHTML(portfolio) {
-    logger.service('SiteService', 'generatePortfolioHTML', { portfolioId: portfolio._id });
+  async generatePortfolioHTML(portfolio, subdomain = null) {
+    logger.service('SiteService', 'generatePortfolioHTML', { portfolioId: portfolio._id, subdomain });
 
     // Import CaseStudy model dynamically to avoid circular dependency
     const { default: CaseStudy } = await import('../../models/CaseStudy.js');
@@ -440,7 +441,7 @@ export class SiteService {
 
       // CRITICAL: Transform case study buttons into proper links
       // The frontend renders React buttons that lose interactivity when captured as static HTML
-      portfolioHTML = this.transformCaseStudyButtons(portfolioHTML, portfolioWithCaseStudies);
+      portfolioHTML = this.transformCaseStudyButtons(portfolioHTML, portfolioWithCaseStudies, subdomain);
 
       // Debug: Log what we're passing to generateAllPortfolioFiles
       console.log('🔍 portfolioWithCaseStudies.content?.work?.projects:',
@@ -449,7 +450,7 @@ export class SiteService {
       console.log('🔍 content keys:', portfolioWithCaseStudies.content ? Object.keys(portfolioWithCaseStudies.content).join(', ') : 'no content');
 
       // Generate case study pages using templateConvert.js
-      const caseStudyFiles = generateAllPortfolioFiles(portfolioWithCaseStudies);
+      const caseStudyFiles = generateAllPortfolioFiles(portfolioWithCaseStudies, { forPDF: false, subdomain });
       allFiles = caseStudyFiles;
 
       // Replace index.html with template-specific version
@@ -467,7 +468,7 @@ export class SiteService {
       });
 
       // Fallback to templateConvert.js (already generates clean HTML)
-      allFiles = generateAllPortfolioFiles(portfolioWithCaseStudies);
+      allFiles = generateAllPortfolioFiles(portfolioWithCaseStudies, { forPDF: false, subdomain });
       portfolioHTML = allFiles['index.html'];
     }
 
@@ -884,10 +885,11 @@ export class SiteService {
    * This method converts those buttons into proper <a> links that work in static HTML
    * @param {string} html - HTML string to transform
    * @param {Object} portfolioData - Portfolio data with projects
+   * @param {string} subdomain - Subdomain for absolute URL generation
    * @returns {string} Transformed HTML
    * @private
    */
-  transformCaseStudyButtons(html, portfolioData) {
+  transformCaseStudyButtons(html, portfolioData, subdomain = null) {
     if (!html) return html;
 
     // Get projects that have case studies
@@ -924,8 +926,9 @@ export class SiteService {
         const styleMatch = attributes.match(/style="([^"]*)"/i);
         const style = styleMatch ? styleMatch[1] : '';
 
-        // Create anchor link with same styling
-        const link = `<a href="./case-study-${projectId}.html" style="${style}; text-decoration: none;">${buttonText}</a>`;
+        // Create anchor link with same styling - use absolute path with subdomain
+        const linkPath = subdomain ? `/${subdomain}/case-study/${projectId}` : `./case-study-${projectId}.html`;
+        const link = `<a href="${linkPath}" style="${style}; text-decoration: none;">${buttonText}</a>`;
 
         logger.info('Transformed case study button to link', { projectId });
         return link;
