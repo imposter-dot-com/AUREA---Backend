@@ -375,6 +375,33 @@ export const getDeploymentHistory = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get all public published sites (for discover/gallery page)
+ * @route   GET /api/sites/public/all
+ * @access  Public (no auth required)
+ */
+export const getPublicSites = async (req, res, next) => {
+  try {
+    const { page, limit, sortBy, order } = req.query;
+
+    const result = await siteService.getPublicSites({
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 12,
+      sortBy: sortBy || 'lastDeployedAt',
+      order: order || 'desc'
+    });
+
+    return responseFormatter.paginated(
+      res,
+      result.sites,
+      result.pagination,
+      'Published sites retrieved successfully'
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   subPublish,
   publishSite,
@@ -386,5 +413,6 @@ export default {
   debugGenerate,
   getUserSites,
   getDeploymentHistory,
-  getPublicProject
+  getPublicProject,
+  getPublicSites
 };
