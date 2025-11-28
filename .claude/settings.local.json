@@ -8,7 +8,8 @@
       "Bash(curl:*)",
       "Bash(node test/test-public-project-endpoint.js:*)",
       "Bash(git checkout:*)",
-      "Bash(node --check:*)"
+      "Bash(node --check:*)",
+      "Bash(node scripts/cleanup-orphaned-portfolios.js:*)"
     ],
     "deny": [],
     "ask": []

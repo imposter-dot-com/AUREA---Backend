@@ -696,6 +696,73 @@ export class SiteService {
   }
 
   /**
+   * Get all public published sites (for discover/gallery page)
+   * No authentication required - public endpoint
+   * @param {Object} options - Query options (page, limit, sortBy, order)
+   * @returns {Promise<Object>} Sites with pagination
+   */
+  async getPublicSites(options = {}) {
+    const {
+      page = 1,
+      limit = 12,
+      sortBy = 'lastDeployedAt',
+      order = 'desc'
+    } = options;
+
+    logger.service('SiteService', 'getPublicSites', { page, limit, sortBy, order });
+
+    const { default: Site } = await import('../../models/Site.js');
+
+    const query = {
+      published: true,
+      isActive: true,
+      deploymentStatus: 'success'
+    };
+
+    const sortOrder = order === 'desc' ? -1 : 1;
+    const sortOptions = { [sortBy]: sortOrder };
+
+    const [sites, total] = await Promise.all([
+      Site.find(query)
+        .populate('portfolioId', 'title slug content.about.name content.about.headline content.about.avatarUrl templateId')
+        .select('subdomain title description viewCount lastDeployedAt metadata.ownerName seo.image')
+        .sort(sortOptions)
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
+        .lean(),
+      Site.countDocuments(query)
+    ]);
+
+    // Generate frontend URL
+    const frontendUrl = config.frontend.url || 'http://localhost:5173';
+
+    // Transform sites for public consumption (hide sensitive data)
+    const publicSites = sites.map(site => ({
+      subdomain: site.subdomain,
+      title: site.title,
+      description: site.description || '',
+      ownerName: site.metadata?.ownerName || site.portfolioId?.content?.about?.name || 'Anonymous',
+      headline: site.portfolioId?.content?.about?.headline || '',
+      avatarUrl: site.portfolioId?.content?.about?.avatarUrl || '',
+      coverImage: site.seo?.image || '',
+      viewCount: site.viewCount || 0,
+      template: site.portfolioId?.templateId || 'echelon',
+      url: `${frontendUrl}/${site.subdomain}/html`,
+      lastDeployedAt: site.lastDeployedAt
+    }));
+
+    return {
+      sites: publicSites,
+      pagination: {
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / limit),
+        limit: Number(limit)
+      }
+    };
+  }
+
+  /**
    * Get deployment history for user
    * @param {string} userId - User ID
    * @param {Object} options - Query options

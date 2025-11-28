@@ -11,7 +11,8 @@ import {
   getSiteConfig,
   updateSiteConfig,
   recordSiteView,
-  getPublicProject
+  getPublicProject,
+  getPublicSites
 } from '../controllers/siteController.js';
 
 const router = express.Router();
@@ -43,6 +44,9 @@ router.put('/config', auth, updateSiteConfig);
 
 // POST /api/sites/analytics/view - Record site view for analytics (with rate limiting)
 router.post('/analytics/view', publicViewLimiter, recordSiteView);
+
+// GET /api/sites/public/all - Get all public published sites (for discover/gallery page)
+router.get('/public/all', publicViewLimiter, getPublicSites);
 
 // POST /api/sites/:portfolioId/regenerate - Force regeneration of portfolio HTML files
 router.post('/:portfolioId/regenerate', auth, publishLimiter, async (req, res, next) => {

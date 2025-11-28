@@ -32,6 +32,31 @@ export const getDashboardStats = async (req, res, next) => {
 };
 
 /**
+ * @desc    Get all portfolios (optionally filter by user)
+ * @route   GET /api/admin/portfolios
+ * @access  Private (Admin only)
+ */
+export const getAllPortfolios = async (req, res, next) => {
+  try {
+    logger.info('AdminController.getAllPortfolios', {
+      adminId: req.user?._id,
+      query: req.query
+    });
+
+    const result = await adminService.getAllPortfolios(req.query);
+
+    return responseFormatter.paginated(
+      res,
+      result.portfolios,
+      result.pagination,
+      'Portfolios retrieved successfully'
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @desc    Get non-test users list
  * @route   GET /api/admin/users/non-test
  * @access  Private (Admin only)
@@ -49,6 +74,31 @@ export const getNonTestUsers = async (req, res, next) => {
       res,
       result.users,
       result.pagination
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get all published sites
+ * @route   GET /api/admin/sites
+ * @access  Private (Admin only)
+ */
+export const getAllSites = async (req, res, next) => {
+  try {
+    logger.info('AdminController.getAllSites', {
+      adminId: req.user?._id,
+      query: req.query
+    });
+
+    const result = await adminService.getAllSites(req.query);
+
+    return responseFormatter.paginated(
+      res,
+      result.sites,
+      result.pagination,
+      'Sites retrieved successfully'
     );
   } catch (error) {
     next(error);

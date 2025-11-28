@@ -7,7 +7,9 @@
 import express from 'express';
 import {
   getDashboardStats,
-  getNonTestUsers
+  getNonTestUsers,
+  getAllPortfolios,
+  getAllSites
 } from '../controllers/adminController.js';
 import { auth } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/admin.js';
@@ -46,6 +48,38 @@ router.get(
   requireAdmin,
   adminLimiter,
   getNonTestUsers
+);
+
+// ============================================
+// ADMIN PORTFOLIO ROUTES
+// ============================================
+
+/**
+ * @route   GET /api/admin/portfolios
+ * @desc    Get all portfolios (optionally filter by userId)
+ * @query   page, limit, userId, sortBy, order, isPublished
+ * @access  Private (Admin only)
+ */
+router.get(
+  '/portfolios',
+  auth,
+  requireAdmin,
+  adminLimiter,
+  getAllPortfolios
+);
+
+/**
+ * @route   GET /api/admin/sites
+ * @desc    Get all published sites
+ * @query   page, limit, sortBy, order, published, deploymentStatus
+ * @access  Private (Admin only)
+ */
+router.get(
+  '/sites',
+  auth,
+  requireAdmin,
+  adminLimiter,
+  getAllSites
 );
 
 export default router;
