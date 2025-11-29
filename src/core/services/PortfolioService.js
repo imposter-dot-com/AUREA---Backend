@@ -41,7 +41,8 @@ export class PortfolioService {
       customData,
       content,
       styling,
-      sections
+      sections,
+      cover
     } = portfolioData;
 
     // Handle both template (string) and templateId (legacy ObjectId) for backwards compatibility
@@ -64,6 +65,11 @@ export class PortfolioService {
       customData: customData || {},
       styling: styling || {}
     };
+
+    // Include cover if provided
+    if (cover !== undefined) {
+      portfolioToCreate.cover = cover;
+    }
 
     // Include legacy templateId if provided (for backward compatibility)
     if (templateId) {
@@ -156,7 +162,8 @@ export class PortfolioService {
       customData,
       content,
       styling,
-      sections
+      sections,
+      cover
     } = updateData;
 
     // Build update object with only provided fields
@@ -166,6 +173,7 @@ export class PortfolioService {
     if (styling !== undefined) updates.styling = styling;
     if (sections !== undefined) updates.sections = sections;
     if (customData !== undefined) updates.customData = customData;
+    if (cover !== undefined) updates.cover = cover;
 
     // Handle content update with automatic project ID generation
     if (content !== undefined) {
@@ -270,6 +278,7 @@ export class PortfolioService {
       description: portfolio.description,
       template: portfolio.template || 'echelon',
       templateId: portfolio.templateId,
+      cover: portfolio.cover,
       isPublished: portfolio.isPublished,
       published: portfolio.isPublished,
       createdAt: portfolio.createdAt,
