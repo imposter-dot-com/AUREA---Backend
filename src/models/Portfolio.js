@@ -87,6 +87,11 @@ const portfolioSchema = new mongoose.Schema({
     trim: true,
     default: null
   },
+  cover: {
+    type: String,
+    trim: true,
+    default: null
+  },
   exportCount: {
     type: Number,
     default: 0

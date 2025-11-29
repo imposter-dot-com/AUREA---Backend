@@ -724,7 +724,7 @@ export class SiteService {
 
     const [sites, total] = await Promise.all([
       Site.find(query)
-        .populate('portfolioId', 'title slug content.about.name content.about.headline content.about.avatarUrl templateId')
+        .populate('portfolioId', 'title slug content.about.name content.about.headline content.about.avatarUrl templateId cover')
         .select('subdomain title description viewCount lastDeployedAt metadata.ownerName seo.image')
         .sort(sortOptions)
         .limit(limit * 1)
@@ -744,7 +744,8 @@ export class SiteService {
       ownerName: site.metadata?.ownerName || site.portfolioId?.content?.about?.name || 'Anonymous',
       headline: site.portfolioId?.content?.about?.headline || '',
       avatarUrl: site.portfolioId?.content?.about?.avatarUrl || '',
-      coverImage: site.seo?.image || '',
+      cover: site.portfolioId?.cover || site.seo?.image || '',
+      coverImage: site.portfolioId?.cover || site.seo?.image || '',
       viewCount: site.viewCount || 0,
       template: site.portfolioId?.templateId || 'echelon',
       url: `${frontendUrl}/${site.subdomain}/html`,
