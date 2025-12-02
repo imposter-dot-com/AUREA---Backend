@@ -351,10 +351,13 @@ router.get('/:subdomain/case-study/:projectId/raw-html', async (req, res) => {
 });
 
 // GET /api/sites/:subdomain - Get portfolio data as JSON for frontend
-// Note: Raw HTML is served via /api/sites/:subdomain/raw-html
+// Also includes staticHtml if available in generated-files
 router.get('/:subdomain', async (req, res) => {
   try {
     const { subdomain } = req.params;
+    const path = (await import('path')).default;
+    const fs = (await import('fs')).default;
+    const { fileURLToPath } = await import('url');
 
     // Check if site is active in database
     const Site = (await import('../models/Site.js')).default;
@@ -383,12 +386,28 @@ router.get('/:subdomain', async (req, res) => {
     // Fetch case studies
     const caseStudies = await CaseStudy.find({ portfolioId: portfolio._id });
 
-    // Return portfolio data with case studies
+    // Try to read static HTML file if it exists
+    let staticHtml = null;
+    try {
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const htmlPath = path.resolve(__dirname, '..', '..', 'generated-files', subdomain, 'index.html');
+
+      if (fs.existsSync(htmlPath)) {
+        staticHtml = fs.readFileSync(htmlPath, 'utf-8');
+        logger.info('Static HTML loaded for subdomain', { subdomain, size: staticHtml.length });
+      }
+    } catch (htmlError) {
+      logger.debug('No static HTML found for subdomain', { subdomain, error: htmlError.message });
+    }
+
+    // Return portfolio data with case studies and static HTML
     res.json({
       success: true,
       data: {
         ...portfolio.toObject(),
         caseStudies: caseStudies.map(cs => cs.toObject()),
+        staticHtml, // Include static HTML if available
         site: {
           subdomain: site.subdomain,
           url: site.url,

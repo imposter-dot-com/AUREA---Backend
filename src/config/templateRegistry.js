@@ -68,8 +68,8 @@ export const TEMPLATES = {
     description: 'Botanical and elegant portfolio template with soft, organic design',
     category: 'creative',
     previewUrl: `${FRONTEND_BASE_URL}/template-preview/serene`,
-    caseStudyUrl: null, // No case study page yet
-    hasCaseStudySupport: false, // Serene doesn't have case study support yet
+    caseStudyUrl: `${FRONTEND_BASE_URL}/template-preview/serene/case-study`,
+    hasCaseStudySupport: true, // Enabled - falls back to templateConvert.js
     pdfSettings: {
       format: 'A4',
       printBackground: true,
@@ -108,8 +108,8 @@ export const TEMPLATES = {
     description: 'Editorial/Magazine-inspired portfolio with sophisticated typography',
     category: 'modern',
     previewUrl: `${FRONTEND_BASE_URL}/template-preview/chic`,
-    caseStudyUrl: null, // No case study page yet
-    hasCaseStudySupport: false, // Chic doesn't have case study support yet
+    caseStudyUrl: `${FRONTEND_BASE_URL}/template-preview/chic/case-study`,
+    hasCaseStudySupport: true, // Enabled - falls back to templateConvert.js
     pdfSettings: {
       format: 'A4',
       printBackground: true,
@@ -148,8 +148,8 @@ export const TEMPLATES = {
     description: 'Bold statement design with impactful visuals and strong typography',
     category: 'creative',
     previewUrl: `${FRONTEND_BASE_URL}/template-preview/boldfolio`,
-    caseStudyUrl: null, // No case study page yet
-    hasCaseStudySupport: false, // BoldFolio doesn't have case study support yet
+    caseStudyUrl: `${FRONTEND_BASE_URL}/template-preview/boldfolio/case-study`,
+    hasCaseStudySupport: true, // Enabled - falls back to templateConvert.js
     pdfSettings: {
       format: 'A4',
       printBackground: true,

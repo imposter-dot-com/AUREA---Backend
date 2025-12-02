@@ -4,651 +4,356 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AUREA Backend is a comprehensive portfolio management platform API built with Node.js, Express, and MongoDB. It enables users to create, manage, and publish professional portfolios with case studies, supporting both Vercel deployment and local subdomain hosting with Gmail-style custom subdomain selection.
+AUREA Backend is a Node.js/Express 5.1.0 API with MongoDB for the portfolio builder platform. It provides 65+ endpoints for portfolio management, template system, case studies, PDF generation, and dual publishing (Vercel + custom subdomain).
 
-**Technology Stack**: Node.js 18+, Express 5, MongoDB (Mongoose), JWT authentication, Cloudinary, Puppeteer, Google Gemini AI, Redis (optional), ES6 modules
+**Tech Stack**: Node.js 18+, Express 5.1.0, MongoDB/Mongoose 8.18.1, JWT auth, Cloudinary, Puppeteer, Redis (optional), ES6 modules
 
-## Common Development Commands
+## Development Commands
 
 ```bash
 # Development
-npm run dev                    # Start development server with nodemon
-npm start                      # Start production server
+npm install && npm run dev          # Start with nodemon (port 5000)
+npm start                           # Production server
 
-# Build & Verification
-npm run build                  # Run production build checks and audit
+# Testing (19 test files)
+npm test                            # Frontend integration tests
+npm run test:integration            # Full integration suite
+node test/test-user-profile-crud.js # User CRUD (9 tests)
+node test/test-custom-subdomain.js  # Subdomain feature (7 tests)
+node test/test-template-system.js   # Template validation
+node test/test-pdf-generation.js    # PDF generation
+node test/test-full-authentication.js # Auth flow
 
-# Testing
-npm test                       # Run frontend integration tests
-npm run test:integration       # Run integration test suite
-npm run test:user              # Test user authentication flow
-node test/test-user-profile-crud.js         # Full user CRUD test suite (9 tests)
-node test/test-custom-subdomain.js          # Custom subdomain feature tests (7 tests)
-node test/test-vercel-deployment-improved.js # Case study generation tests
-node test/test-template-system.js           # Template system tests
-node test/test-publish-flow.js              # Publishing flow tests
-node test/test-pdf-generation.js            # PDF generation tests
+# Admin Scripts
+npm run admin:upgrade-premium       # Upgrade user to premium
+npm run admin:clear-brute-force     # Clear brute force records
+npm run admin:create-user           # Create test user
+npm run admin:debug-login           # Debug login issues
 
-# Admin Operations
-npm run admin:upgrade-premium  # Upgrade user to premium (requires user ID)
-npm run admin:debug-login      # Debug login issues
-npm run admin:create-user      # Create test user
-npm run admin:clear-brute-force # Clear brute force protection records
+# Database
+node seeds/templateSeeds.js         # Seed templates
+node seeds/migratePortfolios.js     # Migrate portfolios
 
-# Database Seeding
-node seeds/templateSeeds.js    # Seed template data
-node seeds/migratePortfolios.js # Migrate existing portfolios to new template system
-
-# Health Check
+# Health check
 curl http://localhost:5000/health
 ```
 
-## Architecture Overview
+## Architecture (Clean Architecture - 80% Complete)
 
-### Core Architecture Pattern
+### Request Flow
+```
+HTTP Request → Routes → Middleware Chain → Controller (thin) → Service (logic) → Repository (data) → MongoDB
+```
 
-**Status:** **80% Refactored to Clean Architecture** ✅ (October 31, 2025)
+### Directory Structure (83 source files)
+```
+src/
+├── controllers/              # 10 thin HTTP handlers (< 360 lines each)
+│   ├── authController.js
+│   ├── userController.js
+│   ├── portfolioController.js
+│   ├── templateController.js
+│   ├── caseStudyController.js
+│   ├── siteController.js
+│   ├── pdfExportController.js
+│   ├── uploadController.js
+│   ├── adminController.js
+│   └── proposalExtract.controller.js
+│
+├── routes/                   # 10 route files (65+ endpoints)
+│   ├── authRoutes.js         # signup, login, me, refresh
+│   ├── userRoutes.js         # profile, storage, stats
+│   ├── portfolioRoutes.js    # CRUD, publishing
+│   ├── templateRoutes.js     # template CRUD, validation, rating
+│   ├── caseStudyRoutes.js    # case study CRUD
+│   ├── siteRoutes.js         # Vercel/subdomain publishing (13k lines)
+│   ├── pdfRoutes.js          # PDF generation
+│   ├── uploadRoutes.js       # Cloudinary upload
+│   ├── adminRoutes.js        # admin operations
+│   └── proposalExtract.routes.js
+│
+├── middleware/               # 11 middleware files
+│   ├── auth.js               # JWT verification, optionalAuth
+│   ├── validation.js         # express-validator rules
+│   ├── ownership.js          # resource ownership checks
+│   ├── errorHandler.js       # global error handling
+│   ├── rateLimiter.js        # endpoint-specific limits
+│   ├── requestLogger.js      # request/response logging
+│   ├── logSanitizer.js       # sensitive data redaction
+│   ├── bruteForcePrevention.js # login protection (8k lines)
+│   ├── upload.js             # Multer configuration
+│   ├── premium.js            # premium feature access
+│   └── admin.js              # admin-only protection
+│
+├── models/                   # 5 Mongoose schemas
+│   ├── User.js               # auth, profile, premium, storage
+│   ├── Portfolio.js          # content, slug, template link
+│   ├── Template.js           # schema, version, rating
+│   ├── CaseStudy.js          # hero, content, sections
+│   └── Site.js               # subdomain, vercelURL, status
+│
+├── core/
+│   ├── services/             # 13 service classes (business logic)
+│   │   ├── AuthService.js          # 20.7k lines - auth, JWT, 2FA
+│   │   ├── PortfolioService.js     # 21k lines - CRUD, publishing
+│   │   ├── TemplateService.js      # 8.6k lines - template ops
+│   │   ├── CaseStudyService.js     # 9.4k lines - case study ops
+│   │   ├── SiteService.js          # 36.4k lines - publishing
+│   │   ├── SubdomainService.js     # 13.2k lines - subdomain logic
+│   │   ├── UserService.js          # 13.8k lines - user management
+│   │   ├── AdminService.js         # 13.9k lines - admin ops
+│   │   ├── PremiumService.js       # 5.9k lines - premium features
+│   │   ├── PDFExportService.js     # 8.6k lines - PDF generation
+│   │   ├── UploadService.js        # 3.6k lines - Cloudinary
+│   │   └── ProposalExtractService.js # Gemini AI extraction
+│   │
+│   └── repositories/         # 6 data access layers
+│       ├── UserRepository.js
+│       ├── PortfolioRepository.js
+│       ├── TemplateRepository.js
+│       ├── CaseStudyRepository.js
+│       ├── SiteRepository.js
+│       └── PDFRepository.js
+│
+├── shared/
+│   ├── exceptions/           # 8 custom error classes
+│   │   ├── ApplicationError.js   # Base class with HTTP mapping
+│   │   ├── ValidationError.js    # 400
+│   │   ├── UnauthorizedError.js  # 401
+│   │   ├── ForbiddenError.js     # 403
+│   │   ├── NotFoundError.js      # 404
+│   │   ├── ConflictError.js      # 409
+│   │   └── ServiceError.js       # Custom business errors
+│   ├── constants/
+│   │   ├── httpStatus.js
+│   │   └── errorCodes.js
+│   └── utils/
+│       └── responseFormatter.js  # Standardized responses
+│
+├── infrastructure/
+│   ├── logging/Logger.js         # 5k lines - structured logging
+│   ├── pdf/BrowserPool.js        # 14k lines - Puppeteer pooling
+│   ├── cache/PDFCache.js         # 9.5k lines - PDF caching
+│   └── email/EmailService.js     # Nodemailer
+│
+├── config/
+│   ├── index.js              # Centralized config (USE THIS)
+│   ├── database.js           # MongoDB connection
+│   ├── cloudinary.js         # Cloudinary setup
+│   ├── passport.js           # OAuth strategies
+│   ├── swagger.js            # Swagger UI
+│   └── templateRegistry.js   # Template registration
+│
+└── utils/
+    ├── cache.js              # Redis with memory fallback
+    ├── slugGenerator.js      # URL-safe slugs
+    ├── subdomainValidator.js # 5.7k lines - validation
+    └── templateValidator.js  # 11k lines - schema validation
 
-The codebase has been substantially refactored from MVC to **Clean Architecture** with clear separation of concerns:
+services/                     # Root-level legacy services (being migrated)
+├── templateConvert.js        # 98k lines - HTML generation
+├── pdfGenerationService.js   # 19.6k lines - PDF with Puppeteer
+└── deploymentService.js      # 15.5k lines - Vercel deployment
+```
 
-**Request Flow**: `Route → Middleware → Thin Controller → Service (Business Logic) → Repository (Data Access) → Model → Database`
+## Key Patterns
 
-**Key Improvements:**
-- ✅ **10/10 Controllers** refactored to thin pattern (< 360 lines each)
-- ✅ **11 Services** created with all business logic (AuthService, PortfolioService, UserService, TemplateService, CaseStudyService, SubdomainService, SiteService, PremiumService, PDFExportService, UploadService, ProposalExtractService)
-- ✅ **6 Repositories** for data access abstraction (UserRepository, PortfolioRepository, TemplateRepository, CaseStudyRepository, SiteRepository, PDFRepository)
-- ✅ **100% Centralized Configuration** (no scattered process.env)
-- ✅ **99% Structured Logging** (console.log replaced)
-- ✅ **Consistent Error Handling** with custom exceptions
-- ✅ **Standardized Responses** with responseFormatter
+### 1. Thin Controllers (HTTP I/O only)
+```javascript
+export const createPortfolio = async (req, res, next) => {
+  try {
+    const portfolio = await portfolioService.createPortfolio(req.user._id, req.body);
+    return responseFormatter.created(res, { portfolio }, 'Portfolio created');
+  } catch (error) {
+    next(error);
+  }
+};
+```
 
-**See comprehensive documentation:**
-- `docs/NEW_ARCHITECTURE_WALKTHROUGH.md` - Complete architecture guide
-- `docs/NEW_DEVELOPER_ONBOARDING.md` - Developer onboarding (40 pages)
-- `docs/REFACTORING_BEFORE_AFTER_COMPARISON.md` - Before/after analysis
-- `docs/REFACTORING_PROGRESS.md` - Detailed progress tracking
+### 2. Custom Exceptions (throw, don't return)
+```javascript
+import { NotFoundError, ConflictError } from '../shared/exceptions/index.js';
 
-**Key Architectural Components**:
+if (!portfolio) throw NotFoundError.resource('Portfolio', portfolioId);
+if (slugTaken) throw ConflictError.slugTaken(slug);
+```
 
-1. **Authentication Layer**: JWT-based with optional auth support for public routes
-2. **Ownership Middleware**: Ensures users can only access/modify their own resources
-3. **Rate Limiting**: Endpoint-specific limits (10/min for slug checks, 5/min for publishing, 30/min for CRUD)
-4. **Brute Force Protection**: Progressive delays on login (5 attempts → 30 min lockout)
-5. **Caching Layer**: Optional Redis with graceful degradation
-6. **File Generation System**: HTML generation via `services/templateConvert.js` with responsive templates
-7. **Dual Publishing Modes**:
-   - Vercel deployment via `services/deploymentService.js`
-   - Local subdomain hosting in `generated-files/{subdomain}/` directory
+### 3. Response Formatting
+```javascript
+import responseFormatter from '../shared/utils/responseFormatter.js';
 
-### Data Model Relationships
+responseFormatter.success(res, data, 'Success');
+responseFormatter.created(res, data, 'Created');
+responseFormatter.paginated(res, items, { page, limit, total });
+```
+
+### 4. Structured Logging (no console.log)
+```javascript
+import logger from '../infrastructure/logging/Logger.js';
+
+logger.info('Portfolio created', { portfolioId, userId });
+logger.error('Database error', { error, context });
+logger.service('PortfolioService', 'create', { userId });
+```
+
+### 5. Centralized Config
+```javascript
+import config from '../config/index.js';
+// NOT: process.env.JWT_SECRET
+```
+
+### 6. Repository Pattern
+```javascript
+class PortfolioService {
+  async getPortfolio(id) {
+    const portfolio = await this.repository.findById(id);
+    if (!portfolio) throw NotFoundError.resource('Portfolio', id);
+    return portfolio;
+  }
+}
+```
+
+## Database Schema
 
 ```
 User (1) → (*) Portfolio → (*) CaseStudy
 User (1) → (*) Site
 Portfolio (1) → (1) Site
 Portfolio (*) → (1) Template
+
+Strategic Indexes:
+- { userId: 1, createdAt: -1 }     # User portfolio listing
+- { isPublished: 1, publishedAt: -1 } # Public portfolios
+- { slug: 1 }                      # Unique sparse for SEO
 ```
 
-**Key Models**:
-- `User`: Authentication, profile, premium status, storage quotas
-- `Portfolio`: Main portfolio data with flexible content structure, slug, publishing status, linked to Template
-- `Template`: Dynamic template definitions with JSON schemas, versioning, and ratings
-- `CaseStudy`: Linked to specific portfolio projects with structured content (hero, overview, sections)
-- `Site`: Deployment records with subdomain, URLs, deployment status
-
-### Critical Middleware Chain
-
-All protected routes use this middleware order:
-1. `auth.js` - JWT validation and user attachment to req.user
-2. `validation.js` - Input validation using express-validator
-3. `ownership.js` - Resource ownership verification
-4. `rateLimiter.js` - Endpoint-specific rate limiting
-
-### Gmail-Style Custom Subdomain System
-
-**Feature**: Users can choose custom portfolio subdomains (like Gmail usernames)
-
-**Implementation**: `src/controllers/siteController.js:subPublish()`
-
-**Key Behavior**:
-- Custom subdomain format: 3-30 lowercase letters, numbers, hyphens (regex: `/^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$/`)
-- Ownership protection: 409 Conflict if subdomain taken by another user
-- Auto-cleanup: Old folder deleted when user changes subdomain
-- Fallback logic: Custom → Existing slug → Auto-generated from portfolio designer name
-- File location: `generated-files/{subdomain}/index.html` + case study HTML files
-
-**Priority Order**:
-1. User-provided `customSubdomain` parameter
-2. Existing `portfolio.slug` if already published
-3. Auto-generated from `portfolio.content.about.name` or user data
-
-### HTML Generation & Case Studies
-
-**Service**: `services/templateConvert.js` (2000+ lines)
-
-**Architecture**:
-- Single function generates all files: `generateAllPortfolioFiles(portfolioData)`
-- Returns object with keys: `'index.html'`, `'case-study-{projectId}.html'`
-- Smart fallback logic: Uses real database content when available, professional defaults when empty
-- Responsive HTML with inline CSS (no external stylesheets)
-
-**Case Study Flow** (src/controllers/siteController.js):
-1. Fetch case studies: `CaseStudy.find({ portfolioId })`
-2. Convert to object keyed by projectId: `portfolioData.caseStudies[projectId] = cs.toObject()`
-3. Mark projects with `hasCaseStudy: true` flag
-4. Generate all HTML files including case studies
-5. Save to `generated-files/{subdomain}/` directory
-
-**Important**: Always pass complete case study objects using `cs.toObject()`, not just `cs.content`
-
-### Authentication & Authorization
-
-**JWT Configuration**:
-- Secret: `process.env.JWT_SECRET`
-- Expiration: 30 days
-- Token format: `Authorization: Bearer <token>`
-
-**Middleware Usage**:
-- `auth` - Required authentication (throws 401 if no token)
-- `optionalAuth` - Continues without user if no token (for public routes)
-
-**Premium Feature System**:
-- User model has `isPremium`, `premiumType` ('monthly', 'yearly', 'lifetime'), and expiration dates
-- Method: `user.checkPremiumStatus()` checks active premium status
-- Middleware: `src/middleware/premium.js` for premium-only routes
-
-### File Upload System
-
-**Cloudinary Integration**: `src/config/cloudinary.js`
-- Initialized on server start via `initCloudinary()`
-- Upload: `POST /api/upload/image` (multipart/form-data)
-- Validation: File type (jpg, jpeg, png, webp), size limits
-- Organized storage with structured paths
-
-**Multer Configuration**: `src/middleware/upload.js`
-- Temporary storage in `uploads/` directory
-- Auto-cleanup after Cloudinary upload
-
-### Error Handling Strategy
-
-**Standardized Response Format**:
-```javascript
-{
-  success: boolean,
-  message: string,
-  data?: object,
-  error?: string (only in development)
-}
-```
-
-**Error Handler**: `src/middleware/errorHandler.js`
-- Catches all unhandled errors
-- Mongoose validation errors → 400 with field details
-- Development: Full error messages
-- Production: Generic error messages (no stack traces)
-
-### Database Optimization
-
-**Strategic Indexes** (src/models/Portfolio.js):
-- `{ userId: 1, createdAt: -1 }` - User portfolio listing
-- `{ isPublished: 1, publishedAt: -1 }` - Public portfolio queries
-- `{ userId: 1, isPublished: 1 }` - User's published portfolios
-- `{ slug: 1 }` - Unique sparse index for SEO URLs
-
-**Password Hashing** (src/models/User.js):
-- Pre-save hook with bcrypt (cost factor: 12)
-- Only hashes when password is modified
-- Instance method: `user.comparePassword(candidatePassword)`
-
-## Environment Configuration
-
-**Required Variables**:
-- `MONGODB_URI` - MongoDB connection string (use FULL password, no placeholders)
-- `JWT_SECRET` - JWT signing secret for token generation
-- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` - Cloudinary image storage
-- `PORT` - Server port (default: 5000)
-- `NODE_ENV` - Environment: 'development' or 'production'
-- `FRONTEND_URL` - Frontend URL for CORS (e.g., http://localhost:5173)
-
-**Optional Variables**:
-- `REDIS_URL` - Redis connection (gracefully degrades if unavailable)
-- `VERCEL_TOKEN` - Vercel API token for deployments
-- `VERCEL_ORG_ID` - Vercel organization ID
-- `VERCEL_PROJECT_ID` - Vercel project ID
-- `GEMINI_API_KEY` - Google Gemini AI API key for PDF extraction features
-- `PDF_BROWSER_POOL_SIZE` - Browser instances for PDF generation (default: 3, reduce to 1 for constrained environments)
-- `PDF_BROWSER_IDLE_TIMEOUT` - Browser idle timeout in ms (default: 300000 / 5 minutes)
-
-**Note**: See `.env.example` for complete configuration template
-
-## Common Patterns & Conventions
-
-### Controller Response Pattern
-
-```javascript
-// Success response
-res.status(200).json({
-  success: true,
-  message: 'Operation successful',
-  data: { /* result data */ }
-});
-
-// Error response
-res.status(400).json({
-  success: false,
-  message: 'Validation error',
-  error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-});
-```
-
-### Async/Await Error Handling
-
-All controllers use try-catch with proper error logging:
-```javascript
-export const controllerFunction = async (req, res) => {
-  try {
-    // Controller logic
-  } catch (error) {
-    console.error('Controller error:', error);
-    res.status(500).json({ success: false, message: 'Error message' });
-  }
-};
-```
-
-### Ownership Validation Pattern
-
-```javascript
-// Always validate resource ownership
-const portfolio = await Portfolio.findOne({
-  _id: portfolioId,
-  userId: req.user._id
-});
-
-if (!portfolio) {
-  return res.status(404).json({
-    success: false,
-    message: 'Portfolio not found or access denied'
-  });
-}
-```
-
-### Template System Architecture
-
-**Dynamic Schema-Driven Templates** (see `TEMPLATE_SYSTEM_GUIDE.md` for details):
-
-**Core Files**:
-- `src/models/Template.js` - Template model with schema validation
-- `src/controllers/templateController.js` - Template CRUD and validation
-- `src/routes/templateRoutes.js` - 14 template endpoints
-- `src/config/templateRegistry.js` - Template registration system
-- `services/templateConvert.js` - HTML generation (1452 lines)
-- `src/services/templateEngine.js` - PDF template rendering engine
-
-**Key Features**:
-- JSON schema definitions for template structure and validation
-- Real-time content validation against template schemas
-- Template versioning with semantic versioning (major.minor.patch)
-- User rating system for templates
-- Category and tag-based organization
-- Premium template tiers
-
-**Template Selection Priority** (for PDF generation):
-1. `templateId` query parameter (explicit override)
-2. Portfolio's `templateId` field
-3. Portfolio's legacy `template` field
-4. Default template (echelon)
-
-### PDF Export System
-
-**Dual PDF Generation Approach**:
-
-1. **Template-Based Portfolio PDFs** (`src/services/templateEngine.js`):
-   - Fetches rendered HTML from frontend preview pages using Puppeteer
-   - Supports template-specific designs (Echelon, Serene, etc.)
-   - Query parameters: `portfolioId`, `pdfMode`
-   - Fallback to `templateConvert.js` if frontend unavailable
-
-2. **Case Study PDFs** (`services/templateConvert.js`):
-   - Uniform design for all case studies
-   - Responsive HTML with inline CSS
-   - Generated directly from database content
-
-**PDF Endpoints** (5 total):
-- `GET /api/pdf/portfolio/:id` - View portfolio PDF inline
-- `GET /api/pdf/portfolio/:id/complete` - Complete PDF with all case studies
-- `GET /api/pdf/portfolio/:id/download` - Force download PDF
-- `GET /api/pdf/portfolio/:id/info` - PDF generation metadata
-- `POST /api/pdf/cleanup` - Cleanup old PDFs (admin only)
-
-## API Endpoint Organization
-
-**65+ Total Endpoints across 9 route files**:
-
-- `authRoutes.js` - Authentication (4): signup, login, me, update profile
-- `userRoutes.js` - User management (13): profile CRUD, admin operations, premium status
-- `portfolioRoutes.js` - Portfolio management (9): CRUD, publishing, slug checking, statistics
-- `templateRoutes.js` - Template system (14): CRUD, validation, versioning, rating
-- `caseStudyRoutes.js` - Case studies (6): CRUD linked to portfolios, public access
-- `siteRoutes.js` - Site publishing (10): Vercel/subdomain publish, analytics, HTML serving
-- `pdfRoutes.js` - PDF export (5): Portfolio/case study PDF generation and download
-- `uploadRoutes.js` - File upload (2): single/batch image upload via Cloudinary
-- `proposalExtract.routes.js` - AI PDF extraction (3): Gemini AI-powered document analysis
-
-**Swagger Documentation**: `http://localhost:5000/api-docs`
-- Complete API specs in `swagger.yaml` (144k+ lines)
-- Interactive UI via swagger-ui-express
-- Test endpoints directly from browser
-- JWT token support for protected endpoints
-
-## Known Quirks & Important Notes
-
-1. **Environment Variable Name**: Use `MONGODB_URI` not `MONGO_URI` (common error in documentation)
-2. **Password in MONGODB_URI**: Common error is using `<password>` placeholder instead of actual password
-3. **Redis is Optional**: Server starts without Redis, caching is gracefully disabled
-4. **ES6 Modules**: All files use `import/export`, not `require()` - important for dynamic imports
-5. **Subdomain Folder Cleanup**: When subdomain changes, old folder is auto-deleted via `fs.rmSync()`
-6. **Case Study Data**: Must pass `caseStudy.toObject()` not just `caseStudy.content` to template converter
-7. **Slug Validation**: Portfolio slugs must be unique across all users, checked before publishing
-8. **Virtual Fields**: Portfolio model has virtuals (`url`, `publicUrl`) - use `.toObject()` or `.toJSON()` to include them
-9. **Rate Limiting**: Different endpoints have different rate limits - check `src/middleware/rateLimiter.js`
-10. **CORS in Development**: Localhost origins are auto-allowed in development mode
-11. **File Generation**: `templateConvert.js` generates all files (portfolio + case studies) in single call
-12. **Template Initialization**: Templates auto-seed on first server start if database is empty
-13. **HTML Serving Routes**: Portfolio HTML routes (`/:subdomain/html`) must come AFTER API routes in `server.js`
-14. **Puppeteer for PDFs**: PDF generation requires Puppeteer which downloads Chromium on first install
-15. **Gemini AI Optional**: PDF extraction features require `GEMINI_API_KEY`, but server runs without it
-16. **Express 5 Security Limitations**: Some security middleware is incompatible with Express 5.1.0:
-    - `express-mongo-sanitize` - Commented out (Express 5 incompatibility)
-    - `xss-clean` - Commented out (Express 5 incompatibility)
-    - Alternative protections: Input validation via express-validator, Helmet.js, HPP, rate limiting, brute force prevention still active
-
-## Testing Strategy
-
-**Test Files Location**: `test/` directory
-
-**Key Test Suites**:
-- `test-user-profile-crud.js` - Complete user CRUD operations (9 tests)
-- `test-custom-subdomain.js` - Custom subdomain feature validation (7 tests)
-- `test-vercel-deployment-improved.js` - HTML generation and case study verification
-- `test-frontend-integration.js` - Frontend API integration tests
-
-**Test Pattern**:
-- Use unique timestamps in test data to avoid conflicts
-- Clean up test data after runs
-- Test both success and error cases
-- Verify folder cleanup for subdomain changes
-
-## Troubleshooting Common Issues
-
-**MongoDB Connection Error "bad auth"**:
-- Replace `<password>` with actual password in `MONGODB_URI`
-- Ensure no special characters need URL encoding
-- Use `MONGODB_URI` not `MONGO_URI` (correct env var name)
-
-**Case Studies Not Showing**:
-- Check `caseStudies` array is passed to `generateAllPortfolioFiles()`
-- Verify using `cs.toObject()` not `cs.content`
-- Check `projectId` matches between portfolio projects and case studies
-
-**Subdomain Conflicts (409)**:
-- Subdomain already taken by another user
-- Check `Site.findOne({ subdomain })` for existing records
-- Allow same user to update their own portfolio's subdomain
-
-**Rate Limit Errors (429)**:
-- Check endpoint-specific limits in `rateLimiter.js`
-- Slug checks: 10/min, Publishing: 5/min, CRUD: 30/min
-
-**CORS Errors**:
-- Add frontend URL to `allowedOrigins` in `server.js`
-- Development mode auto-allows localhost
-- Check for trailing slashes in origins
-
-## Project File Structure
-
-```
-AUREA---Backend/
-├── server.js                 # Application entry point, route registration, CORS setup
-├── package.json              # Dependencies and npm scripts
-├── swagger.yaml              # OpenAPI 3.0 specification (144k+ lines)
-├── .env                      # Environment variables (gitignored)
-├── .env.example              # Environment template
-│
-├── src/
-│   ├── config/               # Configuration files
-│   │   ├── database.js       # MongoDB connection with error handling
-│   │   ├── cloudinary.js     # Cloudinary SDK initialization
-│   │   ├── swagger.js        # Swagger UI setup
-│   │   └── templateRegistry.js # Template registration for PDF generation
-│   │
-│   ├── models/               # Mongoose schemas (5 models)
-│   │   ├── User.js           # User authentication, premium status, bcrypt hooks
-│   │   ├── Portfolio.js      # Portfolio with template linkage, virtuals
-│   │   ├── Template.js       # Dynamic templates with JSON schemas
-│   │   ├── CaseStudy.js      # Project case studies with structured content
-│   │   └── Site.js           # Published sites with subdomain records
-│   │
-│   ├── controllers/          # Business logic layer (9 controllers)
-│   │   ├── authController.js
-│   │   ├── userController.js
-│   │   ├── portfolioController.js
-│   │   ├── templateController.js
-│   │   ├── caseStudyController.js
-│   │   ├── siteController.js    # Subdomain publishing, HTML serving
-│   │   ├── pdfExportController.js
-│   │   ├── uploadController.js
-│   │   └── proposalExtract.genai.controller.js
-│   │
-│   ├── routes/               # API route definitions (9 route files)
-│   │   └── [All route files map to controllers]
-│   │
-│   ├── middleware/           # Express middleware
-│   │   ├── auth.js           # JWT verification, optionalAuth for public routes
-│   │   ├── ownership.js      # Resource ownership verification
-│   │   ├── validation.js     # express-validator rules
-│   │   ├── errorHandler.js   # Centralized error handling
-│   │   ├── rateLimiter.js    # Endpoint-specific rate limits
-│   │   ├── requestLogger.js  # Request/response logging
-│   │   ├── logSanitizer.js   # Sanitize sensitive data in logs
-│   │   ├── bruteForcePrevention.js # Brute force protection
-│   │   └── upload.js         # Multer configuration for file uploads
-│   │
-│   ├── core/                 # Core business logic (Clean Architecture)
-│   │   ├── services/         # 11 service classes with business rules
-│   │   │   ├── AuthService.js
-│   │   │   ├── PortfolioService.js
-│   │   │   ├── UserService.js
-│   │   │   ├── TemplateService.js
-│   │   │   ├── CaseStudyService.js
-│   │   │   ├── SubdomainService.js
-│   │   │   ├── SiteService.js
-│   │   │   ├── PremiumService.js
-│   │   │   ├── PDFExportService.js
-│   │   │   ├── UploadService.js
-│   │   │   └── ProposalExtractService.js
-│   │   │
-│   │   └── repositories/     # 6 data access abstraction layers
-│   │       ├── UserRepository.js
-│   │       ├── PortfolioRepository.js
-│   │       ├── TemplateRepository.js
-│   │       ├── CaseStudyRepository.js
-│   │       ├── SiteRepository.js
-│   │       └── PDFRepository.js
-│   │
-│   ├── shared/               # Shared utilities and exceptions
-│   │   ├── exceptions/       # Custom error classes
-│   │   ├── constants/        # HTTP status, error codes
-│   │   └── utils/            # Response formatters, validators
-│   │
-│   ├── infrastructure/       # External services
-│   │   └── logging/          # Structured logging system
-│   │
-│   ├── services/             # Template rendering
-│   │   └── templateEngine.js # Puppeteer-based PDF rendering from frontend
-│   │
-│   └── utils/                # Helper utilities
-│       ├── cache.js          # Redis caching with graceful degradation
-│       ├── slugGenerator.js  # Slug generation and validation
-│       ├── subdomainValidator.js # Subdomain format validation
-│       └── templateValidator.js  # Template schema validation
-│
-├── services/                 # Root-level services
-│   ├── deploymentService.js  # Vercel API deployment (15k lines)
-│   ├── pdfGenerationService.js # Puppeteer PDF generation (16k lines)
-│   └── templateConvert.js    # HTML generation from portfolio data (1452 lines)
-│
-├── seeds/                    # Database seeders
-│   ├── templateSeeds.js      # Initial template data
-│   └── migratePortfolios.js  # Portfolio migration scripts
-│
-├── scripts/                  # Admin utilities
-│   ├── upgrade-user-to-premium.js
-│   ├── debug-login.js
-│   ├── create-test-user.js
-│   └── clear-brute-force.js
-│
-├── test/                     # Test suites
-│   ├── test-user-profile-crud.js (9 tests)
-│   ├── test-custom-subdomain.js (7 tests)
-│   ├── test-vercel-deployment-improved.js
-│   ├── test-template-system.js
-│   ├── test-publish-flow.js
-│   └── test-frontend-integration.js
-│
-├── generated-files/          # Published portfolio HTML files
-│   └── {subdomain}/
-│       ├── index.html
-│       └── case-study-{projectId}.html
-│
-└── uploads/                  # Temporary file uploads (auto-cleanup)
-    └── pdfs/
-```
+## Middleware Chain
+
+Protected routes use this order:
+1. `auth.js` - JWT validation, attach req.user
+2. `validation.js` - express-validator rules
+3. `ownership.js` - resource ownership check
+4. `rateLimiter.js` - endpoint-specific limits
+
+## API Endpoints (65+ Total)
+
+**Swagger**: http://localhost:5000/api-docs
+
+| Route | Endpoints | Purpose |
+|-------|-----------|---------|
+| `/api/auth/*` | 4 | signup, login, me, refresh |
+| `/api/users/*` | 13 | profile, storage, stats |
+| `/api/portfolios/*` | 9 | CRUD, publishing, slug checking |
+| `/api/templates/*` | 14 | CRUD, validation, rating |
+| `/api/case-studies/*` | 6 | CRUD linked to portfolios |
+| `/api/sites/*` | 10 | Vercel/subdomain publishing |
+| `/api/pdf/*` | 5 | PDF generation/download |
+| `/api/upload/*` | 2 | Cloudinary upload |
+| `/api/admin/*` | varies | User/system management |
 
 ## Critical Implementation Details
 
-### Server Initialization Sequence
+### Custom Subdomain Publishing
+```javascript
+// Regex: Gmail-style validation
+/^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$/
 
-The `server.js` file follows a specific initialization order that's critical to understand:
-
-1. **Environment Setup**: `dotenv.config()` loads environment variables first
-2. **Service Initialization**: Cloudinary and Redis initialize immediately after env load
-3. **Database Connection**: MongoDB connects asynchronously
-4. **Template Auto-Seeding**: 2-second delay, then checks if templates exist, seeds if empty
-5. **Middleware Registration**: Security (Helmet) → CORS → Body Parsers → Request Logger → Rate Limiting
-6. **Route Registration**: API routes registered BEFORE catch-all HTML serving routes
-7. **HTML Serving**: Portfolio HTML routes (`/:subdomain/html`) registered last to avoid conflicts
-8. **Error Handlers**: 404 handler and global error handler registered last
-
-**Critical Order**: API routes MUST be registered before HTML serving routes, or API calls will be caught by the subdomain matcher.
-
-### Portfolio HTML Serving Architecture
-
-The system serves static HTML files generated during publishing:
-
-**Routes**:
-- `/:subdomain/html` → Main portfolio page
-- `/:subdomain/case-study-:projectId.html` → Individual case study pages
-
-**Flow**:
-1. Request hits route handler in `server.js` (lines 229-292)
-2. Queries database for `Site` record with matching subdomain
-3. If site not found or unpublished → returns styled 404 error page
-4. Constructs file path: `generated-files/{subdomain}/[filename]`
-5. Checks if file exists with `fs.existsSync()`
-6. If exists → serves HTML with correct Content-Type header
-7. If missing → returns styled error page suggesting republish
-
-**Error Pages**: Custom styled error pages rendered inline via `renderErrorPage()` helper function (lines 188-226).
-
-### Swagger YAML Architecture
-
-The `swagger.yaml` file is massive (144,647 lines) and follows OpenAPI 3.0 specification:
-
-**Structure**:
-- Complete request/response schemas for all 65+ endpoints
-- Reusable component definitions for models
-- Security scheme definitions (JWT Bearer tokens)
-- Example requests and responses
-- Validation rules and constraints
-
-**Usage**: Accessible at `/api-docs` via swagger-ui-express, provides interactive API testing interface.
-
-## Recent Major Changes
-
-**Dynamic Template System** (October 2025):
-- Migrated from static template files to database-driven template system
-- JSON schema validation for portfolio content
-- Template versioning with semantic versioning
-- User rating and feedback system
-- 14 new template-specific API endpoints
-
-**Custom Subdomain Feature** (October 2025):
-- Gmail-style subdomain selection with format validation
-- Ownership protection prevents subdomain conflicts
-- Auto-cleanup of old folders when subdomain changes
-- Comprehensive test suite in `test-custom-subdomain.js`
-
-**PDF Export System** (October 2025):
-- Template-aware PDF generation using Puppeteer
-- Fetches rendered HTML from frontend preview pages
-- Fallback to server-side HTML generation
-- Separate endpoints for portfolio and complete (with case studies) PDFs
-- See `DYNAMIC_PDF_TEMPLATES.md` for architecture details
-
-**Case Study System Enhancements**:
-- Fixed data transformation to use real database content
-- Smart fallback logic for empty/template values
-- Responsive HTML generation with mobile optimization
-- Projects automatically flagged with `hasCaseStudy: true`
-
-**Premium Subscription System**:
-- User model supports premium tiers (free, pro, enterprise)
-- Premium status checking with expiration logic
-- Storage quotas and limits per user
-
-## Security Implementation
-
-**Comprehensive security measures implemented** (October 2025):
-
-### Critical Fixes
-1. **Cloudinary Credential Protection**: Removed all API keys from frontend bundle, all uploads proxied through backend
-2. **Log Sanitization**: Automatic redaction of passwords, tokens, credit cards, SSNs, emails in all logs
-3. **Production CORS**: Strict origin validation, no-origin requests blocked in production
-
-### Attack Prevention
-4. **Brute Force Protection**: Progressive delays on login (5 attempts → 30 min lockout), signup (3 attempts), password reset
-5. **NoSQL Injection Protection**: Input validation via express-validator (express-mongo-sanitize disabled due to Express 5)
-6. **XSS Protection**: Input sanitization (xss-clean disabled due to Express 5, validation via express-validator)
-7. **HTTP Parameter Pollution**: hpp middleware prevents duplicate parameter attacks
-
-### Middleware Stack
-- `src/middleware/logSanitizer.js` - Sanitizes 10+ sensitive data types
-- `src/middleware/bruteForcePrevention.js` - 4 protection levels with Redis/memory storage
-- Input sanitization applied globally in `server.js`
-
-### Testing Security
-```bash
-# Test brute force protection (should block after 5 attempts)
-for i in {1..7}; do
-  echo "Attempt $i:"
-  curl -s -w "\nHTTP Status: %{http_code}\n" \
-    -X POST http://localhost:5000/api/auth/login \
-    -H "Content-Type: application/json" \
-    -d '{"email":"test@test.com","password":"wrong"}'
-done
-
-# Clear brute force records (admin)
-npm run admin:clear-brute-force
+// Flow: validate → check ownership → generate HTML → save files
+// Files: generated-files/{subdomain}/index.html + case-study-{id}.html
+// Auto-cleanup when subdomain changes
 ```
 
-**See `SECURITY.md` for complete security documentation** (if file exists)
+### Case Study Integration
+```javascript
+// CRITICAL: Pass full object, not just .content
+portfolioData.caseStudies[projectId] = caseStudy.toObject(); // ✅
+// NOT: caseStudy.content ❌
+```
 
-## Additional Documentation
+### HTML Generation
+`services/templateConvert.js` (98k lines) generates all portfolio files:
+```javascript
+const files = generateAllPortfolioFiles(portfolioData);
+// Returns: { 'index.html': '...', 'case-study-{id}.html': '...' }
+```
 
-For comprehensive guides on specific features:
-- `TEMPLATE_SYSTEM/_GUIDE.md` - Complete template system documentation
-- `DYNAMIC_PDF_TEMPLATES.md` - PDF generation architecture
-- `FRONTEND_INTEGRATION_GUIDE.md` - Frontend API integration patterns
-- `PDF_PERFORMANCE.md` - PDF generation optimization
-- `BACKEND_IMPROVEMENTS_IMPLEMENTED.md` - Recent feature implementations
-- `README.md` - User-facing documentation with 65+ endpoint reference
+## Environment Variables
+
+```bash
+# Required
+MONGODB_URI=mongodb+srv://user:PASSWORD@cluster.mongodb.net/aurea
+JWT_SECRET=your-secret-key
+CLOUDINARY_CLOUD_NAME=your-cloud
+CLOUDINARY_API_KEY=your-key
+CLOUDINARY_API_SECRET=your-secret
+PORT=5000
+NODE_ENV=development
+FRONTEND_URL=http://localhost:5173
+
+# Optional
+REDIS_URL=redis://localhost:6379
+VERCEL_TOKEN=your-vercel-token
+GEMINI_API_KEY=your-gemini-key
+PDF_BROWSER_POOL_SIZE=3
+PDF_BROWSER_IDLE_TIMEOUT=300000
+```
+
+## Rate Limiting
+
+| Endpoint | Limit |
+|----------|-------|
+| Slug checks | 10/minute |
+| Publishing | 5/minute |
+| CRUD operations | 30/minute |
+| Login attempts | 5 attempts → 30 min lockout |
+
+## Security
+
+- **JWT**: 30-day expiry, Bearer token format
+- **Passwords**: Bcrypt (cost factor 12)
+- **Brute Force**: Progressive delays, lockout after 5 attempts
+- **Log Sanitization**: Auto-redaction of passwords, tokens, emails
+- **Headers**: Helmet.js with CSP, X-Frame-Options, HSTS
+- **Rate Limiting**: Endpoint-specific
+- **Express 5 Note**: `express-mongo-sanitize` and `xss-clean` disabled (incompatible)
+
+## Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| MongoDB "bad auth" | Replace `<password>` with actual password in MONGODB_URI |
+| 409 Subdomain conflict | Subdomain taken by another user |
+| Case studies show template data | Use `cs.toObject()` not `cs.content` |
+| 429 Rate limit | Check rateLimiter.js for limits |
+| Redis connection failed | Server continues with memory cache fallback |
+
+## Debugging
+
+```bash
+# Server logs
+tail -f logs/combined.log
+
+# Test endpoint with auth
+curl -X GET http://localhost:5000/api/portfolios \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Check health
+curl http://localhost:5000/health
+
+# Swagger docs
+open http://localhost:5000/api-docs
+```
+
+## Key Dependencies
+
+- **express 5.1.0** - Web framework (some middleware incompatible)
+- **mongoose 8.18.1** - MongoDB ODM
+- **jsonwebtoken 9.0.2** - JWT auth
+- **bcrypt 6.0.0** - Password hashing
+- **cloudinary 2.7.0** - Image storage
+- **puppeteer 24.25.0** - PDF generation
+- **express-validator 7.2.1** - Input validation
+- **helmet 8.0.0** - Security headers
+- **express-rate-limit 7.4.0** - Rate limiting
+- **redis 4.7.0** - Caching (optional)
+- **@google/genai 1.21.0** - Gemini AI
