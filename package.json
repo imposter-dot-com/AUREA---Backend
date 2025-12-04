@@ -9,15 +9,7 @@
     "dev": "nodemon server.js",
     "build": "echo 'Running production build checks...' && npm audit --audit-level high && echo 'Build completed successfully - Ready for production deployment'",
     "audit": "npm audit --audit-level moderate",
-    "audit:fix": "npm audit fix",
-    "test": "node test/test-frontend-integration.js",
-    "test:integration": "node test/test-frontend-integration.js",
-    "test:user": "node test/test-user-info.js",
-    "admin:upgrade-premium": "node scripts/upgrade-user-to-premium.js",
-    "admin:debug-login": "node scripts/debug-login.js",
-    "admin:create-user": "node scripts/create-test-user.js",
-    "admin:clear-brute-force": "node scripts/clear-brute-force.js",
-    "admin:verify-all-users": "node scripts/verify-all-users.js"
+    "audit:fix": "npm audit fix"
   },
   "keywords": [
     "portfolio",
